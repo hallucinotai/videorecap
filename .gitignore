@@ -25,6 +25,7 @@ env/
 # Environment Variables
 .env
 .env.local
+.env.staging
 .env.*.local
 
 # IDE
