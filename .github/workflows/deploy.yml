@@ -2,8 +2,17 @@ name: Deploy Video Recap Agent
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - production
+          - staging
 
 jobs:
   deploy:
@@ -11,7 +20,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            ENV="production"
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            ENV="staging"
+          else
+            echo "Unknown branch, skipping deploy"
+            exit 1
+          fi
+
+          if [[ "$ENV" == "production" ]]; then
+            echo "env=production" >> "$GITHUB_OUTPUT"
+            echo "deploy_dir=videorecap" >> "$GITHUB_OUTPUT"
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "compose_override=docker-compose.prod.yml" >> "$GITHUB_OUTPUT"
+            echo "project_name=videorecap" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=staging" >> "$GITHUB_OUTPUT"
+            echo "deploy_dir=videorecap-staging" >> "$GITHUB_OUTPUT"
+            echo "branch=staging" >> "$GITHUB_OUTPUT"
+            echo "compose_override=docker-compose.staging.yml" >> "$GITHUB_OUTPUT"
+            echo "project_name=videorecap-staging" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy ${{ steps.env.outputs.env }} via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -22,10 +59,19 @@ jobs:
           script: |
             set -e
 
+            DEPLOY_DIR="${{ steps.env.outputs.deploy_dir }}"
+            BRANCH="${{ steps.env.outputs.branch }}"
+            COMPOSE_OVERRIDE="${{ steps.env.outputs.compose_override }}"
+            PROJECT_NAME="${{ steps.env.outputs.project_name }}"
+
+            echo "=== Deploying ${{ steps.env.outputs.env }} ==="
+            echo "Directory: ~/${DEPLOY_DIR}"
+            echo "Branch: ${BRANCH}"
+
             echo "=== Pulling latest code ==="
-            cd ~/videorecap
+            cd ~/${DEPLOY_DIR}
             git reset --hard HEAD
-            git pull origin main
+            git pull origin ${BRANCH}
 
             echo "=== Computing build version ==="
             BUILD_NUM=$(git rev-list --count HEAD)
@@ -33,19 +79,19 @@ jobs:
             echo "Version: ${APP_VERSION}"
 
             echo "=== Building containers ==="
-            APP_VERSION=${APP_VERSION} docker compose -f docker-compose.yml -f docker-compose.prod.yml build --build-arg APP_VERSION=${APP_VERSION}
+            APP_VERSION=${APP_VERSION} docker compose -p ${PROJECT_NAME} -f docker-compose.yml -f ${COMPOSE_OVERRIDE} build --build-arg APP_VERSION=${APP_VERSION}
 
             echo "=== Starting services ==="
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+            docker compose -p ${PROJECT_NAME} -f docker-compose.yml -f ${COMPOSE_OVERRIDE} up -d
 
             echo "=== Waiting for backend to be ready ==="
             sleep 10
 
             echo "=== Running database migrations ==="
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T -e PYTHONPATH=/app backend alembic upgrade head || echo "Migration skipped (may not have new migrations)"
+            docker compose -p ${PROJECT_NAME} -f docker-compose.yml -f ${COMPOSE_OVERRIDE} exec -T -e PYTHONPATH=/app backend alembic upgrade head || echo "Migration skipped (may not have new migrations)"
 
             echo "=== Cleaning up old images ==="
             docker image prune -f
 
             echo "=== Deployment complete ==="
-            docker compose ps
+            docker compose -p ${PROJECT_NAME} ps
