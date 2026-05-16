@@ -156,6 +156,8 @@ class RecapPipeline:
                 logger.info(f"Resuming job {self.job_id} from step {resume_from_step}")
 
             # Step 1: Transcribe (+ emotions if PREMIUM tier)
+            emotion_analysis_status = None
+            emotion_analysis_error = None
             if resume_from_step <= 1:
                 self._update_job(current_step=1, current_step_name="Transcribing video")
                 self.progress.report(1, "Starting transcription...", 0.0)
@@ -169,9 +171,24 @@ class RecapPipeline:
                 emotions_file = result.get("emotions_file")  # None for BASIC tier, path for PREMIUM
                 active_transcription = transcription_file
                 self._upload_intermediate(intermediate_keys, "transcription", transcription_file)
-                if emotions_file:
-                    self._upload_intermediate(intermediate_keys, "emotions", emotions_file)
-                    logger.info(f"Emotion analysis completed: {emotions_file}")
+
+                # Track emotion analysis status
+                if include_emotions:
+                    if emotions_file:
+                        emotion_analysis_status = "completed"
+                        self._upload_intermediate(intermediate_keys, "emotions", emotions_file)
+                        logger.info(f"✅ Emotion analysis completed: {emotions_file}")
+                    else:
+                        emotion_analysis_status = "failed"
+                        emotion_analysis_error = "Google Cloud Speech API error. Check logs for details."
+                        logger.warning(f"❌ Emotion analysis failed for job {self.job_id}. Continuing with basic transcription.")
+                else:
+                    emotion_analysis_status = "skipped"
+
+                self._update_job(
+                    emotion_analysis_status=emotion_analysis_status,
+                    emotion_analysis_error=emotion_analysis_error
+                )
                 self.progress.report(1, "Transcription complete", 1.0)
             else:
                 self.progress.report(1, "Transcription (cached)", 1.0)

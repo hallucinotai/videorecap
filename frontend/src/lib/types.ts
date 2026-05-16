@@ -54,6 +54,8 @@ export interface Job {
   expires_at: string | null;
   has_original_in_storage: boolean;
   keep_original_video?: boolean | null;
+  emotion_analysis_status?: string | null; // "completed", "failed", "skipped"
+  emotion_analysis_error?: string | null;
 }
 
 export interface JobListResponse {

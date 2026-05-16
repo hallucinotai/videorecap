@@ -412,20 +412,58 @@ export function JobDetailContent({
       {job && (
         <div className="mb-6">
           {job.config?.include_emotions ? (
-            <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 sm:p-6 dark:border-purple-900 dark:bg-purple-950/30">
+            <div
+              className={`rounded-lg border p-4 sm:p-6 ${
+                job.emotion_analysis_status === "failed"
+                  ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30"
+                  : "border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950/30"
+              }`}
+            >
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-purple-500 text-white">
-                  <span className="text-xs font-bold">♫</span>
+                <div
+                  className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full text-white ${
+                    job.emotion_analysis_status === "failed" ? "bg-red-500" : "bg-purple-500"
+                  }`}
+                >
+                  <span className="text-xs font-bold">{job.emotion_analysis_status === "failed" ? "✕" : "♫"}</span>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-purple-900 dark:text-purple-100">🎵 Audio Emotion Analysis</h3>
-                  <p className="mt-1 text-sm text-purple-800 dark:text-purple-200">
-                    {job.status === "completed" ? (
+                  <h3
+                    className={`font-semibold ${
+                      job.emotion_analysis_status === "failed"
+                        ? "text-red-900 dark:text-red-100"
+                        : "text-purple-900 dark:text-purple-100"
+                    }`}
+                  >
+                    🎵 Audio Emotion Analysis
+                  </h3>
+                  <p
+                    className={`mt-1 text-sm ${
+                      job.emotion_analysis_status === "failed"
+                        ? "text-red-800 dark:text-red-200"
+                        : "text-purple-800 dark:text-purple-200"
+                    }`}
+                  >
+                    {job.emotion_analysis_status === "completed" ? (
                       <>
                         ✓ <span className="font-medium">Emotion analysis completed (PREMIUM)</span>
                         <br />
-                        <span className="text-xs text-purple-700 dark:text-purple-300">
+                        <span
+                          className={`text-xs ${
+                            job.emotion_analysis_status === "failed"
+                              ? "text-red-700 dark:text-red-300"
+                              : "text-purple-700 dark:text-purple-300"
+                          }`}
+                        >
                           Speaker emotions detected and used for intelligent clip weighting
+                        </span>
+                      </>
+                    ) : job.emotion_analysis_status === "failed" ? (
+                      <>
+                        ❌ <span className="font-medium">Emotion analysis failed</span>
+                        <br />
+                        <span className="text-xs text-red-700 dark:text-red-300">
+                          {job.emotion_analysis_error || "Google Cloud Speech API error. Check system logs for details."}
                         </span>
                       </>
                     ) : job.status === "processing" || job.status === "pending" ? (
@@ -434,14 +472,6 @@ export function JobDetailContent({
                         <br />
                         <span className="text-xs text-purple-700 dark:text-purple-300">
                           Processing speech tone, intensity, and emotional characteristics
-                        </span>
-                      </>
-                    ) : job.status === "failed" || job.status === "stopped" ? (
-                      <>
-                        ❌ <span className="font-medium text-red-600">Emotion analysis failed</span>
-                        <br />
-                        <span className="text-xs text-red-600 dark:text-red-400">
-                          Google Cloud Speech API may not be configured. Check system logs for details.
                         </span>
                       </>
                     ) : null}

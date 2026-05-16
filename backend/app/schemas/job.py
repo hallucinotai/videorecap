@@ -43,6 +43,8 @@ class JobResponse(BaseModel):
     expires_at: datetime | None
     has_original_in_storage: bool
     keep_original_video: bool | None = None
+    emotion_analysis_status: str | None = None  # "completed", "failed", "skipped"
+    emotion_analysis_error: str | None = None
 
     model_config = {"from_attributes": True}
 

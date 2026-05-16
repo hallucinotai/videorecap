@@ -25,6 +25,8 @@ class RecapJob(Base, TimestampMixin):
     intermediate_keys: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     keep_original_video: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    emotion_analysis_status: Mapped[str | None] = mapped_column(String, nullable=True)  # "completed", "failed", "skipped"
+    emotion_analysis_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     celery_task_id: Mapped[str | None] = mapped_column(String, nullable=True)
 
