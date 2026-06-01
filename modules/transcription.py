@@ -13,6 +13,11 @@ from typing import Any
 import whisper
 from moviepy.editor import VideoFileClip
 
+try:
+    import assemblyai as aai
+except ImportError:
+    aai = None
+
 # Get the directory where this file is located (parent of modules/)
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -165,6 +170,194 @@ def transcribe_video(video_path, output_dir="output/transcriptions", model_size=
     return json_file
 
 
+def transcribe_video_with_assemblyai(
+    video_path,
+    output_dir="output/transcriptions",
+    api_key=None,
+    language_code="en"
+):
+    """
+    Transcribe video using AssemblyAI with speaker diarization support.
+
+    This function transcribes audio and identifies different speakers,
+    providing speaker labels (A, B, C, etc.) and confidence scores.
+
+    Args:
+        video_path: Path to input video file
+        output_dir: Directory to save transcription
+        api_key: AssemblyAI API key (required)
+        language_code: Language code (default: "en")
+
+    Returns:
+        Path to transcription file (with speaker diarization)
+    """
+    if not aai:
+        raise ImportError("assemblyai package not installed. Install with: pip install assemblyai")
+
+    if not api_key:
+        raise ValueError("AssemblyAI API key is required but not provided")
+
+    print(f"\n{'='*70}")
+    print(f"STEP 1: TRANSCRIBING VIDEO WITH SPEAKER DIARIZATION (AssemblyAI)")
+    print(f"{'='*70}")
+    print(f"Video: {video_path}")
+    print(f"Language: {language_code}")
+    print(f"Provider: AssemblyAI with speaker diarization")
+
+    # Set up AssemblyAI client
+    aai.settings.api_key = api_key
+
+    # Extract audio from video (AssemblyAI works with audio files)
+    print("Extracting audio from video...")
+    video = VideoFileClip(video_path)
+    temp_audio = os.path.join(get_output_path("output/original"), "extracted_audio.wav")
+    os.makedirs(os.path.dirname(temp_audio), exist_ok=True)
+    video.audio.write_audiofile(temp_audio, verbose=False, logger=None)
+    video.close()
+    print(f"Audio extracted to: {temp_audio}")
+
+    # Transcribe with AssemblyAI
+    print("Transcribing audio with speaker diarization...")
+
+    try:
+        settings = aai.Settings(api_key=api_key)
+        client = aai.Client(settings=settings)
+    except Exception as e:
+        raise RuntimeError(f"Failed to initialize AssemblyAI client: {e}") from e
+
+    try:
+        config = aai.TranscriptionConfig(
+            speaker_labels=True,
+            speech_models=["universal-3-pro", "universal-2"],
+            language_code=language_code,
+        )
+        transcriber = aai.Transcriber(client=client)
+        transcript = transcriber.transcribe(temp_audio, config=config)
+    except Exception as e:
+        raise RuntimeError(f"AssemblyAI transcription failed: {e}") from e
+
+    # Check if transcription was successful
+    if not transcript or transcript.status.value != "completed":
+        status_value = transcript.status.value if transcript and hasattr(transcript, 'status') else 'unknown'
+        raise RuntimeError(f"AssemblyAI transcription did not complete: {status_value}")
+
+    # Extract speaker names from text (e.g., "I'm John" or "I am Jane")
+    # Strategy: Count all name mentions per speaker, use most frequent as final name
+    # This handles self-corrections: "I'm James" (1x) → "I'm Lanes" (2x) = choose "Lanes"
+    import re
+    speaker_names = {}
+    speaker_name_counts = {}  # Track mention counts for each speaker
+
+    for segment in transcript.utterances:
+        speaker_id = segment.speaker or "Unknown"
+        if speaker_id not in speaker_name_counts:
+            speaker_name_counts[speaker_id] = {}
+
+        # Find all name mentions in this segment
+        matches = re.finditer(r"[Ii](?:'m| am) ([A-Z][a-z]+)", segment.text)
+        for match in matches:
+            name = match.group(1)
+            speaker_name_counts[speaker_id][name] = speaker_name_counts[speaker_id].get(name, 0) + 1
+
+    # Choose most frequent name per speaker (handles self-corrections naturally)
+    for speaker_id, names_dict in speaker_name_counts.items():
+        if names_dict:
+            speaker_names[speaker_id] = max(names_dict, key=names_dict.get)
+
+    # Process segments with speaker information
+    transcript_data = {}
+    speakers_info = {}
+
+    for i, segment in enumerate(transcript.utterances):
+        speaker_id = segment.speaker or "Unknown"
+
+        # Build transcript entry with speaker
+        segment_entry = {
+            "text": segment.text.strip(),
+            "start": float(segment.start / 1000),  # Convert ms to seconds
+            "end": float(segment.end / 1000),
+            "speaker": speaker_id,
+            "speaker_confidence": float(segment.confidence) if segment.confidence else 0.0,
+        }
+        # Use canonical speaker-level name (not segment-level extraction)
+        # This ensures consistency: all segments for Speaker A use the same final name
+        if speaker_id in speaker_names:
+            segment_entry["speaker_name"] = speaker_names[speaker_id]
+        transcript_data[str(i)] = segment_entry
+
+        # Track speaker stats
+        if speaker_id not in speakers_info:
+            speakers_info[speaker_id] = {
+                "speaker_id": speaker_id,
+                "name": speaker_names.get(speaker_id),  # Add extracted name if found
+                "total_words": 0,
+                "total_duration_seconds": 0.0,
+                "confidence_scores": []
+            }
+
+        speakers_info[speaker_id]["total_words"] += len(segment.text.split())
+        speakers_info[speaker_id]["total_duration_seconds"] += (segment.end - segment.start) / 1000
+        if segment.confidence:
+            speakers_info[speaker_id]["confidence_scores"].append(float(segment.confidence))
+
+    # Calculate average confidence for each speaker and track name corrections
+    for speaker_id, info in speakers_info.items():
+        if info["confidence_scores"]:
+            info["avg_confidence"] = sum(info["confidence_scores"]) / len(info["confidence_scores"])
+        else:
+            info["avg_confidence"] = 0.0
+        # Clean up intermediate data
+        del info["confidence_scores"]
+
+        # Track name mentions and corrections if speaker identified themselves multiple times
+        if speaker_id in speaker_name_counts and speaker_name_counts[speaker_id]:
+            info["name_mentions"] = speaker_name_counts[speaker_id]
+            # Flag if speaker corrected themselves (mentioned different names)
+            if len(speaker_name_counts[speaker_id]) > 1:
+                final_name = info["name"]
+                corrected_from = [n for n in speaker_name_counts[speaker_id].keys() if n != final_name]
+                if corrected_from:
+                    info["corrected_from"] = corrected_from
+
+    # Create output structure with metadata
+    output_structure = {
+        "metadata": {
+            "provider": "assemblyai",
+            "speaker_diarization_enabled": True,
+            "language_code": language_code,
+        },
+        "speakers": speakers_info,
+        "segments": transcript_data
+    }
+
+    # Save transcription
+    output_path = get_output_path(output_dir)
+    os.makedirs(output_path, exist_ok=True)
+
+    # Save as JSON
+    json_file = os.path.join(output_path, "transcription.json")
+    with open(json_file, "w") as f:
+        json.dump(output_structure, f, indent=2)
+
+    # Save as human-readable text
+    txt_file = os.path.join(output_path, "transcription.txt")
+    with open(txt_file, "w") as f:
+        for seg_id, segment in transcript_data.items():
+            f.write(f"[{segment['start']:.2f}s - {segment['end']:.2f}s] [{segment['speaker']}]: {segment['text']}\n")
+
+    print(f"✅ Transcription complete with speaker diarization!")
+    print(f"   Segments: {len(transcript_data)}")
+    print(f"   Speakers found: {len(speakers_info)}")
+    for speaker_id, info in speakers_info.items():
+        name_str = f" ({info['name']})" if info.get('name') else ""
+        print(f"     - Speaker {speaker_id}{name_str}: {info['total_words']} words, {info['total_duration_seconds']:.1f}s, confidence: {info['avg_confidence']:.2f}")
+    print(f"   JSON: {json_file}")
+    print(f"   Text: {txt_file}")
+    print(f"   Extracted audio: {temp_audio} (preserved)")
+
+    return json_file
+
+
 def transcribe_video_with_emotions(
     video_path,
     output_dir="output/transcriptions",
@@ -240,14 +433,18 @@ def transcribe_with_optional_emotions(
     output_dir="output/transcriptions",
     model_size="small",
     language=None,
-    include_emotions=False
+    include_emotions=False,
+    enable_assemblyai_diarization=False,
+    assemblyai_api_key=None,
+    assemblyai_language_code="en"
 ):
     """
-    Unified transcription function that respects subscription tier.
+    Unified transcription function that respects subscription tier and feature flags.
 
-    This is the MAIN function to use. It dispatches to either:
+    This is the MAIN function to use. It dispatches to:
+    - transcribe_video_with_assemblyai() if AssemblyAI diarization enabled
+    - transcribe_video_with_emotions() for PREMIUM tier (with emotions)
     - transcribe_video() for FREE/BASIC tier
-    - transcribe_video_with_emotions() for PREMIUM tier
 
     Args:
         video_path: Path to input video file
@@ -255,15 +452,25 @@ def transcribe_with_optional_emotions(
         model_size: Whisper model size
         language: Language code
         include_emotions: Boolean - whether to include emotion analysis
-                         (controlled by subscription tier or job config)
+        enable_assemblyai_diarization: Boolean - whether to use AssemblyAI with speaker diarization
+        assemblyai_api_key: AssemblyAI API key (required if diarization enabled)
+        assemblyai_language_code: Language code for AssemblyAI
 
     Returns:
         Tuple: (transcription_file, emotions_file or None)
-
-    Cost Implications:
-        - include_emotions=False: FREE (local Whisper only)
-        - include_emotions=True: +$0.02-0.05 per video (Google Cloud Speech)
     """
+    # Priority: AssemblyAI with diarization if enabled
+    if enable_assemblyai_diarization and assemblyai_api_key:
+        print("🎤 Using AssemblyAI with SPEAKER DIARIZATION")
+        transcript_file = transcribe_video_with_assemblyai(
+            video_path,
+            output_dir,
+            api_key=assemblyai_api_key,
+            language_code=assemblyai_language_code
+        )
+        return transcript_file, None
+
+    # Fallback: Emotion analysis if enabled
     if include_emotions:
         print("🎙️  Using PREMIUM tier (with emotion analysis)")
         return transcribe_video_with_emotions(
@@ -273,10 +480,11 @@ def transcribe_with_optional_emotions(
             language,
             skip_emotions_on_error=True
         )
-    else:
-        print("📝 Using BASIC tier (transcription only)")
-        transcript_file = transcribe_video(video_path, output_dir, model_size, language)
-        return transcript_file, None
+
+    # Default: Basic Whisper transcription
+    print("📝 Using BASIC tier (transcription only)")
+    transcript_file = transcribe_video(video_path, output_dir, model_size, language)
+    return transcript_file, None
 
 
 def translate_transcription(input_file, source_lang, target_lang, output_dir="output/transcriptions"):

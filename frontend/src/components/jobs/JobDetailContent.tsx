@@ -130,16 +130,9 @@ export function JobDetailContent({
 
   const handleDownload = async () => {
     try {
-      const response = await api.get(`/jobs/${jobId}/download`, { responseType: "blob" });
-      const disposition = response.headers["content-disposition"] || "";
-      const match = disposition.match(/filename="?(.+?)"?$/);
-      const filename = match?.[1] || "recap_video.mp4";
-      const url = URL.createObjectURL(response.data);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      const response = await api.get(`/jobs/${jobId}/download`);
+      const { download_url } = response.data;
+      window.open(download_url, "_blank");
     } catch {
       toast.error("Download not available");
     }

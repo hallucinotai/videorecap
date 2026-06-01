@@ -98,18 +98,12 @@ async def download_job(
     if job.status != "completed" or not job.output_video_key:
         raise HTTPException(status_code=400, detail="Job not ready for download")
 
-    filename = job.original_filename.rsplit(".", 1)[0] + "_recap.mp4"
-
-    def stream():
-        body = storage.client.get_object(Bucket=storage.bucket, Key=job.output_video_key)["Body"]
-        for chunk in body.iter_chunks(chunk_size=1024 * 1024):
-            yield chunk
-
-    return StreamingResponse(
-        stream(),
-        media_type="video/mp4",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    # - Server generates a temporary URL (valid for 600 seconds / 10 minutes)
+    # - Client receives just the URL 
+    # - Client downloads directly from S3 using that URL
+    # - Server doesn't handle the actual file transfer
+    url = storage.generate_presigned_url(job.output_video_key, expires_in=600)
+    return {"download_url": url}
 
 
 @router.post("/{job_id}/stop", response_model=JobResponse)

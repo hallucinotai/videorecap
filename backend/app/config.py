@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 
 
 class Settings(BaseSettings):
@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     WHISPER_MODEL_SIZE: str = "small"
 
+    # AssemblyAI (for speaker diarization)
+    ASSEMBLYAI_API_KEY: str = ""
+    ASSEMBLYAI_LANGUAGE_CODE: str = "en"
+
     # Feature Flags
     ENABLE_USER_API_KEYS: bool = False
     API_KEY_ALLOWED_EMAILS: List[str] = []
@@ -49,6 +53,7 @@ class Settings(BaseSettings):
     ENABLE_BILLING: bool = False
     BILLING_DISABLED_MESSAGE: str = "Billing is not available yet. All features are currently free."
     ENABLE_TRANSLATION: bool = False
+    ENABLE_ASSEMBLYAI_DIARIZATION: bool = False
 
     # Email (Resend)
     RESEND_API_KEY: str = ""
@@ -64,11 +69,21 @@ class Settings(BaseSettings):
     # Storage: remove uploaded original from object storage after pipeline succeeds (output retained)
     DELETE_INPUT_VIDEO_ON_COMPLETE: bool = True
 
+    # When True (or unset with DEBUG=true), Celery recap jobs keep tempfile workspace on disk for inspection.
+    # When unset, defaults to preserving only when DEBUG is true (typical localhost).
+    KEEP_PIPELINE_WORKING_DIR: Optional[bool] = None
+
     # Celery
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
 
     model_config = {"env_file": ".env", "case_sensitive": True}
+
+    def preserve_pipeline_working_dir(self) -> bool:
+        """If True, pipeline tempfile output/ tree is kept after jobs finish."""
+        if self.KEEP_PIPELINE_WORKING_DIR is not None:
+            return self.KEEP_PIPELINE_WORKING_DIR
+        return self.DEBUG
 
 
 settings = Settings()

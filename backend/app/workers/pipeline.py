@@ -216,10 +216,11 @@ class RecapPipeline:
             if resume_from_step <= 3:
                 self._update_job(current_step=3, current_step_name="Generating recap")
                 self.progress.report(3, "Generating recap suggestions...", 0.0)
+                narration_lang = translate_to or language or "English"
                 result = generate_recap_service(
                     active_transcription, working_dir,
                     target_duration=target_duration,
-                    narration_language=translate_to,
+                    narration_language=narration_lang,
                     emotions_file=emotions_file,  # None for BASIC, path for PREMIUM
                     progress_callback=self._progress_callback,
                 )
@@ -430,5 +431,10 @@ class RecapPipeline:
                 logger.info(f"Job {self.job_id} was stopped by user, not marking as failed")
             raise
         finally:
-            if self.working_dir and os.path.exists(self.working_dir):
+            if settings.preserve_pipeline_working_dir() and self.working_dir:
+                logger.info(
+                    "Preserved recap job workspace (DEBUG or KEEP_PIPELINE_WORKING_DIR): %s",
+                    self.working_dir,
+                )
+            elif self.working_dir and os.path.exists(self.working_dir):
                 shutil.rmtree(self.working_dir, ignore_errors=True)

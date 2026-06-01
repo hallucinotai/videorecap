@@ -32,6 +32,11 @@ def transcribe_video_service(
 ) -> dict:
     """Wrap modules.transcription.transcribe_with_optional_emotions with path isolation.
 
+    Supports multiple transcription backends:
+    - AssemblyAI with speaker diarization (if ENABLE_ASSEMBLYAI_DIARIZATION=true)
+    - Emotion analysis via Google Cloud Speech (if include_emotions=true)
+    - Default Whisper transcription (free/local)
+
     Args:
         include_emotions: If True, performs emotion analysis (PREMIUM tier).
                          If False, transcription only (BASIC/FREE tier).
@@ -47,9 +52,20 @@ def transcribe_video_service(
 
     with patched_module_paths(working_dir):
         sync_whisper_cache_invalidation(settings.REDIS_URL)
+
+        # Determine which transcription method to use
+        tier = ""
+        if settings.ENABLE_ASSEMBLYAI_DIARIZATION and settings.ASSEMBLYAI_API_KEY:
+            tier = "AssemblyAI with SPEAKER DIARIZATION"
+        elif include_emotions:
+            tier = "PREMIUM (with emotion analysis)"
+        else:
+            tier = "BASIC (transcription only)"
+
         if progress_callback:
-            tier = "PREMIUM (with emotion analysis)" if include_emotions else "BASIC (transcription only)"
-            if is_whisper_model_cached(model_size):
+            if settings.ENABLE_ASSEMBLYAI_DIARIZATION and settings.ASSEMBLYAI_API_KEY:
+                progress_callback(step=1, message=f"Transcribing [{tier}] - identifying speakers…")
+            elif is_whisper_model_cached(model_size):
                 progress_callback(step=1, message=f"Transcribing [{tier}] (Whisper model already loaded)…")
             else:
                 progress_callback(
@@ -63,11 +79,17 @@ def transcribe_video_service(
             model_size=model_size,
             language=language,
             include_emotions=include_emotions,
+            enable_assemblyai_diarization=settings.ENABLE_ASSEMBLYAI_DIARIZATION,
+            assemblyai_api_key=settings.ASSEMBLYAI_API_KEY,
+            assemblyai_language_code=settings.ASSEMBLYAI_LANGUAGE_CODE,
         )
 
         if progress_callback:
-            msg = "Transcription + emotion analysis complete" if include_emotions else "Transcription complete"
-            progress_callback(step=1, message=msg)
+            if settings.ENABLE_ASSEMBLYAI_DIARIZATION and settings.ASSEMBLYAI_API_KEY:
+                progress_callback(step=1, message="Transcription + speaker diarization complete")
+            else:
+                msg = "Transcription + emotion analysis complete" if include_emotions else "Transcription complete"
+                progress_callback(step=1, message=msg)
 
         return {
             "transcription_file": transcription_file,

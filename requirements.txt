@@ -2,3 +2,4 @@ pyautogen
 openai-whisper
 openai
 moviepy
+assemblyai==0.64.0

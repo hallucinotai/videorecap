@@ -30,10 +30,42 @@ def _parse_llm_json(raw: str) -> dict:
 
 
 def _read_transcript_segments(path: str) -> list[dict]:
-    """Load transcript segments from JSON or legacy .txt."""
+    """Load transcript segments from JSON or legacy .txt.
+
+    Handles enhanced transcript format (with speaker diarization) and legacy format.
+    For enhanced format, extracts segments and includes speaker/speaker_name info.
+    """
     if path.endswith(".json"):
         with open(path, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+
+        # Check if this is enhanced format with metadata and segments
+        if isinstance(data, dict) and "segments" in data and "metadata" in data:
+            # Enhanced transcript format from AssemblyAI with speaker diarization
+            segments_dict = data.get("segments", {})
+            segments = []
+            for seg_id, segment in segments_dict.items():
+                seg = {
+                    "start": segment.get("start", 0),
+                    "end": segment.get("end", 0),
+                    "text": segment.get("text", ""),
+                }
+                # Include speaker info if available
+                if "speaker" in segment:
+                    seg["speaker"] = segment["speaker"]
+                if "speaker_name" in segment:
+                    seg["speaker_name"] = segment["speaker_name"]
+                if "speaker_confidence" in segment:
+                    seg["speaker_confidence"] = segment["speaker_confidence"]
+                segments.append(seg)
+            return segments
+        elif isinstance(data, list):
+            # Legacy or simple array format
+            return data
+        else:
+            return []
+
+    # Legacy .txt format
     segments = []
     with open(path, "r") as f:
         for line in f:
@@ -285,24 +317,30 @@ Return JSON only — no explanation, no markdown fences:
     # CALL 2 — Narration
     # ------------------------------------------------------------------
     clip_summary = json.dumps(clip_timings, indent=2)
-    lang_label = narration_language or "the same language as the transcript"
+    LANG_MAP = {"en": "English", "es": "Spanish", "fr": "French", "de": "German",
+                "pt": "Portuguese", "it": "Italian", "ja": "Japanese", "ko": "Korean",
+                "zh": "Chinese", "hi": "Hindi", "ta": "Tamil", "ar": "Arabic", "ru": "Russian"}
+    lang_label = LANG_MAP.get(narration_language, narration_language) if narration_language else "English"
     narr_system = (
-        "You are a professional scriptwriter for video narrations. You write "
-        "tight, speech-ready voiceover copy that matches a given clip timeline. "
+        "You are a friend casually telling someone about a video you just watched. "
+        "You speak naturally and conversationally — like you're excited to share what happened. "
+        "Use character or speaker names when the transcript reveals them. "
+        "Hit the key highlights and interesting moments, don't retell every detail. "
+        "Your tone is engaging, warm, and personal — not formal or documentary-like. "
+        "Never say 'the video shows' or 'in this clip' — just tell the story directly. "
         "Always respond with valid JSON only."
     )
     if emotions_file:
         narr_system += (
-            " When emotion data is available in the transcript, match your narration tone "
-            "and pacing to the emotional arc: build energy during high-intensity moments, "
-            "ease up during lower-intensity segments, and use vocal emphasis to mirror "
-            "dominant emotions (joy, surprise, anger) in the content."
+            " Match your energy to the emotional moments — get excited during high points, "
+            "slow down during emotional or tense scenes, and let your personality shine through."
         )
 
     emotion_guidance = ""
     if emotions_file:
-        # Extract dominant emotions from selected clips for guidance
+        # Extract dominant emotions and speaker context from selected clips for guidance
         selected_emotions = []
+        selected_speakers = set()
         for clip in clip_timings:
             # Find the strongest emotion in this clip
             for segment in segments:
@@ -311,30 +349,77 @@ Return JSON only — no explanation, no markdown fences:
                     intensity = segment.get("intensity", 0.5)
                     if emotion != "neutral" and intensity > 0.5:
                         selected_emotions.append(emotion)
+                    # Track speaker names
+                    if segment.get("speaker_name"):
+                        selected_speakers.add(segment["speaker_name"])
+
+        speaker_guidance = ""
+        if selected_speakers:
+            speaker_guidance = f"\n\nKey speakers: {', '.join(sorted(selected_speakers))}"
 
         if selected_emotions:
             emotion_guidance = (
                 f"\n\nEmotional arc guidance: The clips contain strong moments of "
                 f"{', '.join(set(selected_emotions))}. Reflect this emotional journey "
-                f"in your narration tone and pacing."
+                f"in your narration tone and pacing.{speaker_guidance}"
             )
+        else:
+            emotion_guidance = speaker_guidance
+    else:
+        # No emotions file, but still extract speaker context including corrections
+        selected_speakers = set()
+        speaker_corrections = {}  # Track which speakers corrected their names
 
-    narr_prompt = f"""A {target_duration}-second video recap has been assembled from these clips:
+        for segment in segments:
+            if segment.get("speaker_name"):
+                speaker_id = segment.get("speaker", "Unknown")
+                selected_speakers.add(segment["speaker_name"])
+                # Check if this speaker had name corrections (from metadata)
+                if segment.get("corrected_from"):
+                    if speaker_id not in speaker_corrections:
+                        speaker_corrections[speaker_id] = segment.get("corrected_from", [])
+
+        speaker_guidance = ""
+        if selected_speakers:
+            speaker_list = sorted(selected_speakers)
+            # Add correction context if available
+            if speaker_corrections:
+                speaker_notes = []
+                for speaker_name in speaker_list:
+                    # Find if this speaker had corrections
+                    has_correction = any(speaker_name == seg.get("speaker_name") and seg.get("corrected_from")
+                                        for seg in segments)
+                    if has_correction:
+                        corrected_from = next((seg.get("corrected_from", []) for seg in segments
+                                              if seg.get("speaker_name") == speaker_name and seg.get("corrected_from")), [])
+                        if corrected_from:
+                            corrections_str = ", ".join(corrected_from)
+                            speaker_notes.append(f"{speaker_name} (initially said name was {corrections_str}, then corrected)")
+                        else:
+                            speaker_notes.append(speaker_name)
+                    else:
+                        speaker_notes.append(speaker_name)
+                speaker_guidance = f"\n\nKey speakers: {', '.join(speaker_notes)}"
+            else:
+                speaker_guidance = f"\n\nKey speakers: {', '.join(speaker_list)}"
+
+    narr_prompt = f"""Here's a {target_duration}-second recap assembled from these clips:
 
 {clip_summary}
 
-The original transcript for context:
+The original transcript:
 {transcript_json}{emotion_guidance}
 
-Write a cohesive voiceover narration for this clip timeline.
+Tell this story like you're excitedly sharing it with a friend. Hit the highlights, use character names if you can spot them, and make it flow naturally.
 
 RULES:
 1. About {narration_word_target} spoken words (stay within {narration_word_min}-{narration_word_max} words).
-2. Write the narration ENTIRELY in {lang_label}. Do not mix languages.
-3. The narration must feel natural when played over the selected clips in order.
-4. Account for transitions between clips — smooth bridges, not abrupt topic jumps.
-5. Do not add filler silence or padding instructions — write tight, speech-ready copy only.
-6. Never reference transcription quality, errors, or technical issues.
+2. Write ENTIRELY in {lang_label}. Do not mix languages.
+3. Tell it as one continuous, flowing story — not clip-by-clip descriptions.
+4. Use character or speaker names from the transcript whenever possible.
+5. Skip boring parts — focus on what makes this interesting, surprising, or funny.
+6. Sound natural and conversational — like spoken words, not written prose.
+7. No filler, no padding instructions, no meta-commentary about the video itself.
 
 Return JSON only:
 {{

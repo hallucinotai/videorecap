@@ -35,6 +35,7 @@ openai-whisper==20240930
 moviepy==1.0.3
 pydub==0.25.1
 google-cloud-speech==2.29.0
+assemblyai==0.64.0
 
 # Encryption
 cryptography>=42.0.0
