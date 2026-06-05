@@ -59,6 +59,36 @@ class RecapPipeline:
         keys_dict[name] = s3_key
         self._update_job(intermediate_keys=dict(keys_dict))
 
+    def _get_file_metrics(self, local_path: str) -> dict:
+        """Extract metrics from intermediate file for logging."""
+        if not os.path.exists(local_path):
+            return {}
+
+        size_mb = os.path.getsize(local_path) / (1024 * 1024)
+        metrics = {"size_mb": round(size_mb, 2)}
+
+        # Parse JSON files for additional metrics
+        if local_path.endswith(".json"):
+            try:
+                import json
+                with open(local_path, "r") as f:
+                    data = json.load(f)
+                if isinstance(data, list):
+                    metrics["count"] = len(data)
+            except Exception:
+                pass
+
+        # Count words in text files
+        elif local_path.endswith(".txt"):
+            try:
+                with open(local_path, "r") as f:
+                    content = f.read()
+                    metrics["words"] = len(content.split())
+            except Exception:
+                pass
+
+        return metrics
+
     def _download_intermediate(self, keys_dict: dict, name: str, local_path: str) -> str | None:
         """Download a previously saved intermediate artifact from S3."""
         s3_key = keys_dict.get(name)
@@ -160,6 +190,15 @@ class RecapPipeline:
                 transcription_file = result["transcription_file"]
                 active_transcription = transcription_file
                 self._upload_intermediate(intermediate_keys, "transcription", transcription_file)
+
+                # Log metrics
+                metrics = self._get_file_metrics(transcription_file)
+                log_msg = f"Step 1 complete: Transcription | Size: {metrics.get('size_mb', 'N/A')}MB"
+                if "count" in metrics:
+                    log_msg += f" | Segments: {metrics['count']}"
+                log_msg += f" | S3: {intermediate_keys.get('transcription', 'N/A')}"
+                logger.info(log_msg)
+
                 self.progress.report(1, "Transcription complete", 1.0)
             else:
                 self.progress.report(1, "Transcription (cached)", 1.0)
@@ -177,9 +216,19 @@ class RecapPipeline:
                     )
                     active_transcription = result["translated_file"]
                     self._upload_intermediate(intermediate_keys, "translation", active_transcription)
+
+                    # Log metrics
+                    metrics = self._get_file_metrics(active_transcription)
+                    log_msg = f"Step 2 complete: Translation ({source_lang}→{translate_to}) | Size: {metrics.get('size_mb', 'N/A')}MB"
+                    if "count" in metrics:
+                        log_msg += f" | Segments: {metrics['count']}"
+                    log_msg += f" | S3: {intermediate_keys.get('translation', 'N/A')}"
+                    logger.info(log_msg)
+
                     self.progress.report(2, "Translation complete", 1.0)
                 else:
                     self.progress.report(2, "Translation skipped", 1.0)
+                    logger.info("Step 2 skipped: Translation (not requested)")
             else:
                 self.progress.report(2, "Translation (cached)", 1.0)
 
@@ -195,6 +244,18 @@ class RecapPipeline:
                 )
                 recap_data_file = result["recap_data_file"]
                 self._upload_intermediate(intermediate_keys, "recap_data", recap_data_file)
+
+                # Log metrics
+                metrics = self._get_file_metrics(recap_data_file)
+                recap_text_metrics = self._get_file_metrics(recap_text_file)
+                log_msg = f"Step 3 complete: Recap Generation | Size: {metrics.get('size_mb', 'N/A')}MB"
+                if "count" in metrics:
+                    log_msg += f" | Clips: {metrics['count']}"
+                if "words" in recap_text_metrics:
+                    log_msg += f" | Narration: {recap_text_metrics['words']} words"
+                log_msg += f" | S3: {intermediate_keys.get('recap_data', 'N/A')}"
+                logger.info(log_msg)
+
                 self.progress.report(3, "Recap generated", 1.0)
             else:
                 self.progress.report(3, "Recap (cached)", 1.0)
@@ -212,6 +273,13 @@ class RecapPipeline:
                 tts_audio_file = result["tts_audio_file"]
                 actual_audio_duration = result["actual_audio_duration"]
                 self._upload_intermediate(intermediate_keys, "tts_audio", tts_audio_file)
+
+                # Log metrics
+                metrics = self._get_file_metrics(tts_audio_file)
+                log_msg = f"Step 4 complete: TTS Narration | Size: {metrics.get('size_mb', 'N/A')}MB | Duration: {actual_audio_duration:.1f}s | Voice: {tts_voice}"
+                log_msg += f" | S3: {intermediate_keys.get('tts_audio', 'N/A')}"
+                logger.info(log_msg)
+
                 if actual_audio_duration < target_duration * 0.6:
                     logger.warning(
                         "TTS audio (%.1fs) is much shorter than target (%ds) — "
@@ -243,6 +311,23 @@ class RecapPipeline:
                 )
                 recap_video_file = result["recap_video_file"]
                 self._upload_intermediate(intermediate_keys, "recap_video", recap_video_file)
+
+                # Log metrics
+                metrics = self._get_file_metrics(recap_video_file)
+                try:
+                    from moviepy.editor import VideoFileClip as _VFC
+                    _probe = _VFC(recap_video_file)
+                    video_duration = _probe.duration
+                    _probe.close()
+                except Exception:
+                    video_duration = None
+
+                log_msg = f"Step 5 complete: Clip Extraction | Size: {metrics.get('size_mb', 'N/A')}MB"
+                if video_duration:
+                    log_msg += f" | Duration: {video_duration:.1f}s"
+                log_msg += f" | S3: {intermediate_keys.get('recap_video', 'N/A')}"
+                logger.info(log_msg)
+
                 self.progress.report(5, "Clips extracted", 1.0)
             else:
                 self.progress.report(5, "Clips (cached)", 1.0)
@@ -308,6 +393,22 @@ class RecapPipeline:
             output_key = f"results/{self.job_id}/recap_video_with_narration.mp4"
             with open(final_video, "rb") as f:
                 storage.upload_file(output_key, f)
+
+            # Log final output metrics
+            metrics = self._get_file_metrics(final_video)
+            try:
+                from moviepy.editor import VideoFileClip as _VFC
+                _probe = _VFC(final_video)
+                final_duration = _probe.duration
+                _probe.close()
+            except Exception:
+                final_duration = None
+
+            log_msg = f"Step 7 complete: Final Merge | Size: {metrics.get('size_mb', 'N/A')}MB"
+            if final_duration:
+                log_msg += f" | Duration: {final_duration:.1f}s"
+            log_msg += f" | S3: {output_key}"
+            logger.info(log_msg)
 
             # Calculate expiry based on tier (default 7 days for free)
             expires_at = datetime.now(timezone.utc) + timedelta(days=7)
