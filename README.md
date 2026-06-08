@@ -309,45 +309,82 @@ curl -X POST http://localhost:8000/api/v1/jobs/{job_id}/resume
 
 | Category | Config File | Source | Scope | Purpose |
 |----------|---|---|---|---|
-| **External Skills** | `skills-lock.json` | GitHub (Fallow) | Project (committed) | External dependencies |
-| **Custom Skills** | `/skills/*.md` | Local (single source) | Both tools | Shared across Claude Code + Cursor |
-| **Tool Config** | `.claude/settings.json` | Local | Claude Code only | References `/skills/` |
-| **Tool Config** | `.cursor/settings.json` | Local | Cursor only | References `/skills/` |
+| **Project Skills** | `.agents/skills/` | Local (committed) | Project | Single source of truth for all skills |
+| **Tool Config** | `.claude/settings.json` | Local | Claude Code | References `.agents/skills/` |
+| **Tool Config** | `.cursor/settings.json` | Local | Cursor | References `.agents/skills/` |
 | **Local Overrides** | `.claude/settings.local.json` | Local (gitignored) | Personal | Individual preferences |
 
-**Single source of truth:** All custom skills defined in `/skills/` and referenced from both `.claude/` and `.cursor/`
+**Single source of truth:** All skills live in `.agents/skills/` and are referenced from both `.claude/` and `.cursor/`
 
-### Installed Skills
+### Custom Project Skills
 
-- **Fallow Skills** (`skills-lock.json`) - [fallow-rs/fallow-skills](https://github.com/fallow-rs/fallow-skills)
-- **docs-router** (`.claude/settings.json`) - Route documentation to README.md or separate linked files
-- **GitHub MCP** (`.mcp.json`) - Create/manage PRs, view issues, check workflows
+These skills are configured in `.claude/settings.json` with auto-trigger phrases:
 
-### Project-Specific Custom Skills
+#### 1. **docs-router** — Documentation workflow orchestrator
+- **Purpose:** Route documentation requests to README.md (inline) or separate linked files
+- **Triggers:** "create documentation", "write docs", "add a README section", "document this", "generate a guide", "write a CHANGELOG", "add API docs", "create guide", "write guide"
+- **Workflow:** Ask → Route (inline or separate file) → Update README if needed
+- **Details:** [`.agents/skills/docs-router/SKILL.md`](./.agents/skills/docs-router/SKILL.md)
 
-**docs-router** — Ensures all documentation either lives in `README.md` (inline) or in separate files linked from `README.md`
+#### 2. **fallow** — Codebase intelligence & quality audits
+- **Purpose:** JavaScript/TypeScript code health analysis, unused code detection, circular dependencies, complexity hotspots
+- **Triggers:** "analyze code health", "audit PR risk", "find cleanup opportunities", "unused code", "detect duplicates", "circular dependencies", "audit complexity", "run fallow", "fallow health", "clean up codebase"
+- **Use cases:** 
+  - Identify dead code before cleanup
+  - Detect circular dependency risks
+  - Find performance bottlenecks
+  - Quality audit before PR merge
+- **Details:** [`.agents/skills/fallow/SKILL.md`](./.agents/skills/fallow/SKILL.md)
 
-```bash
-# Triggered automatically when documentation is requested
-# Workflow: Ask → Route (inline or separate file) → Update README if needed
-```
-
-See [`/skills/docs-router.md`](./skills/docs-router.md) for full details.
+#### 3. **frontend-design** — Production-grade UI design
+- **Purpose:** Create distinctive, high-quality frontend interfaces with design principles and best practices
+- **Triggers:** "build web component", "design UI", "landing page", "dashboard", "style UI", "beautify UI", "frontend design", "build page"
+- **Use cases:**
+  - Design new UI components
+  - Create polished dashboards
+  - Build landing pages
+  - Improve visual consistency
+- **Details:** [`.agents/skills/frontend-design/SKILL.md`](./.agents/skills/frontend-design/SKILL.md)
 
 ### Built-in Claude Code Skills
 
-| Skill | Command | Purpose |
+| Skill | Trigger/Command | Purpose |
 |-------|---------|---------|
-| Verify | `/verify` | Test changes in browser |
-| Code Review | `/code-review` | Review for bugs/quality |
-| Simplify | `/simplify` | Refactor for efficiency |
-| Security Review | `/security-review` | Security audit |
-| Run | `/run` | Start dev server |
+| Verify | `/verify` | Run and test changes in browser (validates feature works) |
+| Code Review | `/code-review` | Audit code for bugs, security issues, and quality improvements |
+| Simplify | `/simplify` | Refactor code for efficiency and readability |
+| Security Review | `/security-review` | Security audit of pending changes |
+| Run | `/run` | Start and manage dev server for this project |
+| Init | `/init` | Initialize CLAUDE.md documentation for codebase |
+| Review | `/review` | Review pull requests |
+| Loop | `/loop` | Run a command/prompt on recurring interval |
+| Schedule | `/schedule` | Create scheduled remote agents (cron jobs) |
+
+### Using Skills
+
+**Method 1 — Auto-trigger:** Use any of the trigger phrases above naturally in your message
+```
+"analyze code health in the frontend components"  → Triggers fallow skill
+"design a new dashboard for users"                → Triggers frontend-design skill  
+"add documentation for the API endpoints"         → Triggers docs-router skill
+```
+
+**Method 2 — Manual invocation:** Use slash commands
+```
+/verify         # Test the app and report what you see
+/code-review    # Get an independent audit of pending changes
+/simplify       # Refactor for cleaner code
+/security-review # Security audit of current branch
+/run            # Start the development server
+```
+
+**Creating new skills** — See [`Cursor.md`](./Cursor.md#creating-a-new-skill) for step-by-step instructions.
 
 ---
 
 ## 📚 Documentation
 
+- **`Cursor.md`** - Cursor IDE setup, skills, MCP, and agent workflows
 - **`SETUP.md`** - Complete setup guide for new users
 - **`QUICK_REFERENCE.md`** - Quick command reference with examples
 - **`OUTPUT_PATHS.md`** - Output file locations reference

@@ -2,8 +2,18 @@
   "customRules": [
     {
       "name": "docs-router",
-      "path": "../skills/docs-router.md",
-      "description": "Route documentation to README.md (inline) or separate files (linked from README.md)"
+      "path": "../.agents/skills/docs-router/SKILL.md",
+      "description": "Route documentation to README.md (inline) or separate files linked from README.md. Use when asked to create, write, or generate documentation, READMEs, guides, API references, setup instructions, changelogs, architecture docs, tutorials, or any project Markdown content."
+    },
+    {
+      "name": "fallow",
+      "path": "../.agents/skills/fallow/SKILL.md",
+      "description": "Codebase intelligence for JavaScript and TypeScript. Reports quality, changed-code risk, cleanup opportunities (unused files, exports, types, dependencies), code duplication, circular dependencies, complexity hotspots, architecture boundary violations, feature flag patterns, and security candidates. Use when asked to analyze code health, audit PR risk, find unused code, detect duplicates, check circular dependencies, audit complexity, clean up the codebase, auto-fix issues, or run fallow."
+    },
+    {
+      "name": "frontend-design",
+      "path": "../.agents/skills/frontend-design/SKILL.md",
+      "description": "Create distinctive, production-grade frontend interfaces with high design quality. Use when asked to build web components, pages, landing pages, dashboards, React components, HTML/CSS layouts, or when styling or beautifying any web UI. Generates creative, polished code that avoids generic AI aesthetics."
     }
   ]
 }

@@ -5,7 +5,7 @@
   "customSkills": [
     {
       "name": "docs-router",
-      "path": "../skills/docs-router.md",
+      "path": "../.agents/skills/docs-router/SKILL.md",
       "description": "Route documentation to README.md (inline) or separate files (linked from README.md)",
       "triggers": [
         "create documentation",
@@ -17,6 +17,38 @@
         "add API docs",
         "create guide",
         "write guide"
+      ]
+    },
+    {
+      "name": "fallow",
+      "path": "../.agents/skills/fallow/SKILL.md",
+      "description": "Codebase intelligence for JavaScript/TypeScript — quality audits, unused code, circular deps, complexity hotspots, and cleanup opportunities",
+      "triggers": [
+        "analyze code health",
+        "audit PR risk",
+        "find cleanup opportunities",
+        "unused code",
+        "detect duplicates",
+        "circular dependencies",
+        "audit complexity",
+        "run fallow",
+        "fallow health",
+        "clean up codebase"
+      ]
+    },
+    {
+      "name": "frontend-design",
+      "path": "../.agents/skills/frontend-design/SKILL.md",
+      "description": "Create distinctive, production-grade frontend interfaces with high design quality",
+      "triggers": [
+        "build web component",
+        "design UI",
+        "landing page",
+        "dashboard",
+        "style UI",
+        "beautify UI",
+        "frontend design",
+        "build page"
       ]
     }
   ]

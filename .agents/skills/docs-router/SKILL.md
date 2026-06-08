@@ -22,6 +22,44 @@ Trigger this skill whenever asked to:
 
 ---
 
+## Documentation Philosophy
+
+This project follows a **simple, flat documentation hierarchy** to keep navigation intuitive and discovery easy:
+
+### Core Principles
+
+1. **README.md as Single Root** — All documentation either lives in `README.md` (inline) or is one link away from it (separate file linked from README.md). No multi-level chains or deep hierarchies.
+
+2. **Suggest First, Don't Auto-Create** — Before creating any new documentation file, suggest it to the user with clear reasoning:
+   - **Why it helps users:** Explain how this doc improves navigation, clarity, or discoverability
+   - **Navigation ease:** Only suggest if users can easily find it from README.md (one click)
+   - **Simplicity:** If explanation feels complex, reconsider — keep it simple
+
+3. **User Approval Required** — Wait for explicit user approval before creating a new `.md` file. Suggest but don't auto-create. Explain the benefit and how simple it is to use.
+
+4. **Link Only to Existing Docs** — When creating new documentation, only link to existing `.md` files. Do not propose creating chains of new files (A → B → C). Keep it flat: README.md → destination file.
+
+5. **One Level, Rare Exceptions** — The ideal is README.md linking directly to content files. Only in rare cases where a referenced document already exists and needs cross-reference is linking between documentation files acceptable.
+
+**Example ✅ Good:**
+```
+README.md
+  → api-reference.md
+  → setup.md
+  → troubleshooting.md
+```
+
+**Example ❌ Avoid:**
+```
+README.md
+  → guides/
+      → api/api-reference.md
+      → setup/installation.md
+      → setup/troubleshooting.md
+```
+
+---
+
 ## Step 0 — Ask Before Writing
 
 **Before producing any documentation content**, ask exactly one question:
@@ -175,8 +213,8 @@ Update: README.md - if "## Api Reference" exists, add link; if not, create headi
 
 ## Integration with Project
 
-This skill is defined once in `/skills/docs-router.md` and referenced from both:
+This skill lives at `.agents/skills/docs-router/SKILL.md` and is referenced from both:
 - `.claude/settings.json` (Claude Code CLI)
-- `.cursor/skills/` (Cursor IDE)
+- `.cursor/settings.json` (Cursor IDE)
 
-Single source of truth ensures both tools stay in sync.
+Single source of truth ensures both tools stay in sync. To add more skills, see [`Cursor.md`](../../../Cursor.md#creating-a-new-skill).
