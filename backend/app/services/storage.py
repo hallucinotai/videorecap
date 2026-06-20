@@ -1,7 +1,10 @@
+import logging
 import boto3
 from botocore.exceptions import ClientError
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class StorageService:
@@ -16,7 +19,12 @@ class StorageService:
         self.bucket = settings.S3_BUCKET
 
     def upload_file(self, key: str, file_obj) -> None:
-        self.client.upload_fileobj(file_obj, self.bucket, key)
+        try:
+            self.client.upload_fileobj(file_obj, self.bucket, key)
+            logger.info(f"✅ Uploaded S3: {key}")
+        except Exception as e:
+            logger.error(f"❌ Failed to upload S3 {key}: {str(e)}", exc_info=True)
+            raise
 
     def upload_bytes(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> None:
         self.client.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=content_type)

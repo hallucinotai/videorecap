@@ -384,6 +384,7 @@ These skills are configured in `.claude/settings.json` with auto-trigger phrases
 
 ## 📚 Documentation
 
+- **`TECH_STACK.md`** - Tech stack, where each tool helps, and chained workflow diagrams
 - **`Cursor.md`** - Cursor IDE setup, skills, MCP, and agent workflows
 - **`SETUP.md`** - Complete setup guide for new users
 - **`QUICK_REFERENCE.md`** - Quick command reference with examples

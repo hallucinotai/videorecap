@@ -31,10 +31,13 @@ def _update_job_sync(job_id: str, **kwargs):
             select(RecapJob).where(RecapJob.id == job_id)
         ).scalar_one_or_none()
         if not job:
+            logger.warning(f"Job {job_id} not found for update with kwargs: {list(kwargs.keys())}")
             return
         for key, value in kwargs.items():
             setattr(job, key, value)
         session.commit()
+        session.refresh(job)
+        logger.debug(f"Updated job {job_id}: {list(kwargs.keys())} → {[getattr(job, k, None) for k in kwargs.keys()]}")
 
 
 def _publish_progress(job_id: str, **kwargs):
@@ -141,6 +144,10 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
             resume_from_step=resume_from_step,
             existing_intermediate_keys=existing_intermediate_keys if resume_from_step > 0 else None,
         )
+
+        # Explicitly ensure output_video_key is persisted
+        _update_job_sync(job_id, output_video_key=result["output_key"])
+
         payload = {
             "type": "completed",
             "step": 7,
@@ -153,7 +160,7 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
             f"job:{job_id}:progress",
             json.dumps(payload),
         )
-        logger.info(f"Pipeline completed for job {job_id}")
+        logger.info(f"Pipeline completed for job {job_id} with output_video_key: {result['output_key']}")
     except Exception as e:
         logger.exception(f"Pipeline failed for job {job_id}: {e}")
         # Check if the job was intentionally stopped before publishing failure

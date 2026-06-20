@@ -49,6 +49,7 @@ class JobResponse(BaseModel):
     completed_at: datetime | None
     expires_at: datetime | None
     has_original_in_storage: bool
+    output_video_key: str | None = None  # S3 key for final output (if completed)
     intermediate_keys: dict | None = None  # Raw S3 keys dict
     intermediate_keys_detailed: dict[str, IntermediateFile] | None = None  # With metadata and download URLs
 
@@ -84,9 +85,9 @@ def job_to_response(job: RecapJob) -> JobResponse:
                 size_mb = None
 
             # Generate download URL for this intermediate
-            download_url = f"/api/v1/jobs/{job.id}/debug/{key_name if key_name != 'tts_audio' else 'tts-audio'}"
+            download_url = f"/jobs/{job.id}/debug/{key_name if key_name != 'tts_audio' else 'tts-audio'}"
             if key_name == "recap_video":
-                download_url = f"/api/v1/jobs/{job.id}/debug/recap-video"
+                download_url = f"/jobs/{job.id}/debug/recap-video"
 
             intermediate_keys_detailed[key_name] = IntermediateFile(
                 key=s3_path,
@@ -111,6 +112,7 @@ def job_to_response(job: RecapJob) -> JobResponse:
         completed_at=job.completed_at,
         expires_at=job.expires_at,
         has_original_in_storage=job.input_video_key is not None,
+        output_video_key=job.output_video_key,
         intermediate_keys=job.intermediate_keys,
         intermediate_keys_detailed=intermediate_keys_detailed,
     )

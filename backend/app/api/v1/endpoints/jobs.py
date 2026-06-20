@@ -90,24 +90,37 @@ async def download_job(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_or_api_key),
 ):
+    import logging
+    logger = logging.getLogger(__name__)
+
     job = await job_service.get_job(db, job_id, current_user.id)
     if not job:
+        logger.warning(f"Download attempt: job {job_id} not found for user {current_user.id}")
         raise HTTPException(status_code=404, detail="Job not found")
-    if job.status != "completed" or not job.output_video_key:
-        raise HTTPException(status_code=400, detail="Job not ready for download")
+
+    logger.info(f"Download attempt for job {job_id}: status={job.status}, output_video_key={job.output_video_key}")
+
+    if job.status != "completed":
+        raise HTTPException(status_code=400, detail=f"Job not completed (status: {job.status})")
+    if not job.output_video_key:
+        raise HTTPException(status_code=400, detail="Job completed but output video key not set. Please try again.")
 
     filename = job.original_filename.rsplit(".", 1)[0] + "_recap.mp4"
 
-    def stream():
-        body = storage.client.get_object(Bucket=storage.bucket, Key=job.output_video_key)["Body"]
-        for chunk in body.iter_chunks(chunk_size=1024 * 1024):
-            yield chunk
+    try:
+        def stream():
+            body = storage.client.get_object(Bucket=storage.bucket, Key=job.output_video_key)["Body"]
+            for chunk in body.iter_chunks(chunk_size=1024 * 1024):
+                yield chunk
 
-    return StreamingResponse(
-        stream(),
-        media_type="video/mp4",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+        return StreamingResponse(
+            stream(),
+            media_type="video/mp4",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except Exception as e:
+        logger.error(f"Download failed for job {job_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 
 @router.post("/{job_id}/stop", response_model=JobResponse)

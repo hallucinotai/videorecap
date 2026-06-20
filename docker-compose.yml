@@ -151,12 +151,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-}
       # Proxy browser /api/v1/* to backend when NEXT_PUBLIC_API_URL is empty
       - BACKEND_INTERNAL_URL=http://backend:8000

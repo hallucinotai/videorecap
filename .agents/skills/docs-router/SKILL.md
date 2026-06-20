@@ -208,13 +208,3 @@ User: "Separate file"
 Create: api-reference.md
 Update: README.md - if "## Api Reference" exists, add link; if not, create heading and add link
 ```
-
----
-
-## Integration with Project
-
-This skill lives at `.agents/skills/docs-router/SKILL.md` and is referenced from both:
-- `.claude/settings.json` (Claude Code CLI)
-- `.cursor/settings.json` (Cursor IDE)
-
-Single source of truth ensures both tools stay in sync. To add more skills, see [`Cursor.md`](../../../Cursor.md#creating-a-new-skill).

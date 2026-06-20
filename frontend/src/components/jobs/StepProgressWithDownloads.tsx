@@ -50,9 +50,10 @@ export function StepProgressWithDownloads({
 
     try {
       await onDownload(intermediate.download_url, `${job.id}_${intermediateKey}`);
-      toast.success(`Downloaded ${intermediateKey}`);
-    } catch {
-      toast.error(`Failed to download ${intermediateKey}`);
+      // Success toast is handled by JobDetailContent handleFileDownload
+    } catch (error) {
+      // Error toast is handled by JobDetailContent handleFileDownload
+      throw error;
     }
   };
 

@@ -59,6 +59,7 @@ export interface Job {
   completed_at: string | null;
   expires_at: string | null;
   has_original_in_storage: boolean;
+  output_video_key?: string | null;
   intermediate_keys?: Record<string, string> | null;
   intermediate_keys_detailed?: Record<string, IntermediateFile> | null;
 }

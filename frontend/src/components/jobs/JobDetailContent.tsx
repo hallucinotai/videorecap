@@ -109,6 +109,8 @@ export function JobDetailContent({
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      // Success! File downloaded
+      toast.success(`Downloaded ${filename.split("_")[1] || baseFilename}`);
     } catch {
       toast.error("Download not available");
     }
