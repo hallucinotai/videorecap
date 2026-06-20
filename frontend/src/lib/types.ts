@@ -5,12 +5,15 @@ export interface User {
   auth_provider: string;
   is_active: boolean;
   tier: string;
+  is_admin: boolean;
   has_openai_key: boolean;
+  has_assemblyai_key: boolean;
   created_at: string;
 }
 
 export interface FeatureFlags {
-  requires_api_key: boolean;
+  requires_openai_api_key: boolean;
+  requires_assemblyai_key: boolean;
 }
 
 export interface TokenResponse {

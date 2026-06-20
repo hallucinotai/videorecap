@@ -49,11 +49,12 @@ class Settings(BaseSettings):
     # Feature Flags
     ENABLE_USER_API_KEYS: bool = False
     API_KEY_ALLOWED_EMAILS: List[str] = []
-    ENABLE_API_KEYS_MENU: bool = True
+    ENABLE_API_KEYS_MENU: bool = False
     ENABLE_BILLING: bool = False
     BILLING_DISABLED_MESSAGE: str = "Billing is not available yet. All features are currently free."
     ENABLE_TRANSLATION: bool = False
     ENABLE_ASSEMBLYAI_DIARIZATION: bool = False
+    REQUIRE_ASSEMBLYAI_KEY: bool = True  # Require AssemblyAI key in Settings for speaker diarization
 
     # Email (Resend)
     RESEND_API_KEY: str = ""

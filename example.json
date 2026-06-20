@@ -1,0 +1,445 @@
+{
+  "pipeline_meta": {
+    "schema_version": "2.0",
+    "job_id": "rj_8f3a2c91",
+    "video_filename": "the_decision.mp4",
+    "total_duration_sec": 180.4,
+    "processed_at": "2026-06-04T16:45:12Z",
+    "models": {
+      "transcription": "whisper-medium",
+      "diarization": "assemblyai-v3",
+      "audio_events": "yamnet-v1",
+      "scene_detection": "pyscenedetect-content-detector",
+      "emotion": "google-cloud-speech-v2",
+      "scene_llm": "gpt-4o",
+      "global_llm": "gpt-4o"
+    },
+    "layer_status": {
+      "L0": "ok",
+      "L1": "ok",
+      "L2": "ok",
+      "L3": "ok",
+      "L4": "ok",
+      "L5": "ok"
+    }
+  },
+
+  "L0_raw_inputs": {
+    "audio_wav": "jobs/rj_8f3a2c91/audio.wav",
+    "frame_index": "jobs/rj_8f3a2c91/frames/",
+    "audio_sample_rate": 16000,
+    "video_fps": 24
+  },
+
+  "L1_primitives": {
+
+    "L1A_transcript": [
+      { "id": "u1",  "start": 4.2,   "end": 7.1,   "text": "Hey, you made it. I was starting to think you'd bailed.",         "speaker": "A", "confidence": 0.94 },
+      { "id": "u2",  "start": 7.4,   "end": 10.8,  "text": "I'm Sarah, sorry — traffic was a nightmare on Fifth.",            "speaker": "B", "confidence": 0.92 },
+      { "id": "u3",  "start": 12.1,  "end": 15.6,  "text": "I'm James, by the way. We've never actually met in person.",      "speaker": "A", "confidence": 0.95 },
+      { "id": "u4",  "start": 34.0,  "end": 39.2,  "text": "So… the offer. They want an answer by Monday.",                   "speaker": "B", "confidence": 0.93 },
+      { "id": "u5",  "start": 40.0,  "end": 45.8,  "text": "Sarah, this is huge. Director of Engineering at twenty-nine?",    "speaker": "A", "confidence": 0.94 },
+      { "id": "u6",  "start": 46.5,  "end": 52.1,  "text": "I know, I know. But it means moving to Singapore. Alone.",        "speaker": "B", "confidence": 0.91 },
+      { "id": "u7",  "start": 80.3,  "end": 82.0,  "text": "Hold on, my phone…",                                              "speaker": "B", "confidence": 0.89 },
+      { "id": "u8",  "start": 83.5,  "end": 90.4,  "text": "What?! When? Is she okay? I'll be there in twenty minutes.",      "speaker": "B", "confidence": 0.88 },
+      { "id": "u9",  "start": 96.0,  "end": 101.3, "text": "It's my mom. She fell. I have to go — but I can't just leave this.","speaker": "B", "confidence": 0.92 },
+      { "id": "u10", "start": 102.0, "end": 108.7, "text": "Sarah, go. The job will still be a decision tomorrow.",           "speaker": "A", "confidence": 0.94 },
+      { "id": "u11", "start": 110.0, "end": 117.5, "text": "But if I take Singapore, I won't be here next time she falls.",   "speaker": "B", "confidence": 0.90 },
+      { "id": "u12", "start": 150.0, "end": 158.2, "text": "Then maybe… that's already your answer.",                         "speaker": "A", "confidence": 0.95 },
+      { "id": "u13", "start": 162.0, "end": 168.4, "text": "Yeah. Yeah, it is. Thank you, James.",                            "speaker": "B", "confidence": 0.93 }
+    ],
+
+    "L1B_diarization_summary": {
+      "A": { "total_speech_sec": 28.4, "utterance_count": 4, "avg_confidence": 0.945 },
+      "B": { "total_speech_sec": 49.7, "utterance_count": 9, "avg_confidence": 0.908 }
+    },
+
+    "L1C_scene_boundaries": [
+      { "scene_id": 1, "start": 0.0,   "end": 32.0,  "duration_sec": 32.0, "cut_confidence": 1.00 },
+      { "scene_id": 2, "start": 32.0,  "end": 78.0,  "duration_sec": 46.0, "cut_confidence": 0.87 },
+      { "scene_id": 3, "start": 78.0,  "end": 95.0,  "duration_sec": 17.0, "cut_confidence": 0.94 },
+      { "scene_id": 4, "start": 95.0,  "end": 148.0, "duration_sec": 53.0, "cut_confidence": 0.81 },
+      { "scene_id": 5, "start": 148.0, "end": 180.4, "duration_sec": 32.4, "cut_confidence": 0.92 }
+    ],
+
+    "L1D_audio_events": [
+      { "start": 0.0,   "end": 4.0,   "class": "music",   "confidence": 0.96 },
+      { "start": 4.0,   "end": 32.0,  "class": "speech",  "confidence": 0.91 },
+      { "start": 32.0,  "end": 33.8,  "class": "silence", "confidence": 0.88 },
+      { "start": 33.8,  "end": 78.0,  "class": "speech",  "confidence": 0.93 },
+      { "start": 78.0,  "end": 80.0,  "class": "music",   "confidence": 0.82 },
+      { "start": 80.0,  "end": 95.0,  "class": "speech",  "confidence": 0.86 },
+      { "start": 95.0,  "end": 95.8,  "class": "silence", "confidence": 0.90 },
+      { "start": 95.8,  "end": 148.0, "class": "speech",  "confidence": 0.92 },
+      { "start": 148.0, "end": 150.0, "class": "silence", "confidence": 0.94 },
+      { "start": 150.0, "end": 168.4, "class": "speech",  "confidence": 0.91 },
+      { "start": 168.4, "end": 180.4, "class": "music",   "confidence": 0.97 }
+    ]
+  },
+
+  "L2_segment_enrichment": {
+
+    "L2A_speakers": {
+      "A": {
+        "speaker_id": "A",
+        "name": "James",
+        "name_source": "self_introduction",
+        "name_confidence": 0.97,
+        "gender": "male",
+        "gender_confidence": 0.93,
+        "gender_evidence": ["voice_classifier", "pronoun_he"],
+        "total_speech_sec": 28.4,
+        "utterance_count": 4
+      },
+      "B": {
+        "speaker_id": "B",
+        "name": "Sarah",
+        "name_source": "self_introduction",
+        "name_confidence": 0.96,
+        "gender": "female",
+        "gender_confidence": 0.95,
+        "gender_evidence": ["voice_classifier", "pronoun_she"],
+        "total_speech_sec": 49.7,
+        "utterance_count": 9
+      }
+    },
+
+    "L2B_emotion_per_utterance": [
+      { "utterance_id": "u1",  "dominant_emotion": "warm",       "intensity": 0.42 },
+      { "utterance_id": "u2",  "dominant_emotion": "apologetic", "intensity": 0.51 },
+      { "utterance_id": "u3",  "dominant_emotion": "friendly",   "intensity": 0.38 },
+      { "utterance_id": "u4",  "dominant_emotion": "anxious",    "intensity": 0.64 },
+      { "utterance_id": "u5",  "dominant_emotion": "excited",    "intensity": 0.71 },
+      { "utterance_id": "u6",  "dominant_emotion": "conflicted", "intensity": 0.78 },
+      { "utterance_id": "u7",  "dominant_emotion": "neutral",    "intensity": 0.22 },
+      { "utterance_id": "u8",  "dominant_emotion": "alarmed",    "intensity": 0.92 },
+      { "utterance_id": "u9",  "dominant_emotion": "distressed", "intensity": 0.88 },
+      { "utterance_id": "u10", "dominant_emotion": "supportive", "intensity": 0.66 },
+      { "utterance_id": "u11", "dominant_emotion": "tearful",    "intensity": 0.84 },
+      { "utterance_id": "u12", "dominant_emotion": "gentle",     "intensity": 0.57 },
+      { "utterance_id": "u13", "dominant_emotion": "grateful",   "intensity": 0.69 }
+    ],
+
+    "L2C_music_silence_classified": {
+      "music": [
+        { "start": 0.0,   "end": 4.0,   "type": "background", "mood": "calm",         "diegetic": false },
+        { "start": 78.0,  "end": 80.0,  "type": "foreground", "mood": "tense",        "diegetic": false, "note": "phone ringtone interrupt" },
+        { "start": 168.4, "end": 180.4, "type": "background", "mood": "bittersweet",  "diegetic": false }
+      ],
+      "silence": [
+        { "start": 32.0,  "end": 33.8, "duration": 1.8, "type": "pause",    "context": "transition" },
+        { "start": 95.0,  "end": 95.8, "duration": 0.8, "type": "dramatic", "context": "post_shock" },
+        { "start": 148.0, "end": 150.0, "duration": 2.0, "type": "dramatic", "context": "weight_of_decision" }
+      ]
+    }
+  },
+
+  "L3_scenes": [
+    {
+      "scene_id": 1,
+      "start": 0.0,
+      "end": 32.0,
+      "duration_sec": 32.0,
+      "relative_position": { "start_pct": 0.000, "end_pct": 0.177 },
+
+      "transcript_utterance_ids": ["u1", "u2", "u3"],
+      "speakers_present": ["A", "B"],
+      "character_names": ["James", "Sarah"],
+
+      "music_within_scene": [
+        {
+          "abs_start": 0.0, "abs_end": 4.0,
+          "rel_start_in_scene": 0.000, "rel_end_in_scene": 0.125,
+          "type": "background", "mood": "calm"
+        }
+      ],
+      "silence_within_scene": [],
+
+      "audio_emotion_summary": { "dominant": "warm", "avg_intensity": 0.44 },
+
+      "llm_enrichment": {
+        "tone": "casual, welcoming",
+        "theme": "first encounter",
+        "thematic_emotion": "anticipation",
+        "situation": "Two online acquaintances meet in person for the first time at a coffee shop",
+        "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.71 },
+        "scene_genre": "drama",
+        "genre_confidence": 0.78,
+        "genre_secondary": "slice-of-life"
+      }
+    },
+
+    {
+      "scene_id": 2,
+      "start": 32.0,
+      "end": 78.0,
+      "duration_sec": 46.0,
+      "relative_position": { "start_pct": 0.177, "end_pct": 0.432 },
+
+      "transcript_utterance_ids": ["u4", "u5", "u6"],
+      "speakers_present": ["A", "B"],
+      "character_names": ["James", "Sarah"],
+
+      "music_within_scene": [],
+      "silence_within_scene": [
+        {
+          "abs_start": 32.0, "abs_end": 33.8, "duration": 1.8,
+          "rel_start_in_scene": 0.000, "rel_end_in_scene": 0.039,
+          "type": "pause"
+        }
+      ],
+
+      "audio_emotion_summary": { "dominant": "conflicted", "avg_intensity": 0.71 },
+
+      "llm_enrichment": {
+        "tone": "weighty, intimate",
+        "theme": "career vs. personal life",
+        "thematic_emotion": "tension",
+        "situation": "Sarah reveals she has a major job offer in Singapore that requires relocation",
+        "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.69 },
+        "scene_genre": "drama",
+        "genre_confidence": 0.86,
+        "genre_secondary": null
+      }
+    },
+
+    {
+      "scene_id": 3,
+      "start": 78.0,
+      "end": 95.0,
+      "duration_sec": 17.0,
+      "relative_position": { "start_pct": 0.432, "end_pct": 0.527 },
+
+      "transcript_utterance_ids": ["u7", "u8"],
+      "speakers_present": ["B"],
+      "character_names": ["Sarah"],
+
+      "music_within_scene": [
+        {
+          "abs_start": 78.0, "abs_end": 80.0,
+          "rel_start_in_scene": 0.000, "rel_end_in_scene": 0.118,
+          "type": "foreground", "mood": "tense", "note": "phone ringtone"
+        }
+      ],
+      "silence_within_scene": [],
+
+      "audio_emotion_summary": { "dominant": "alarmed", "avg_intensity": 0.92 },
+
+      "llm_enrichment": {
+        "tone": "urgent, panicked",
+        "theme": "emergency intrudes",
+        "thematic_emotion": "shock",
+        "situation": "Sarah receives a phone call that her mother has fallen and been injured",
+        "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.65 },
+        "scene_genre": "thriller",
+        "genre_confidence": 0.81,
+        "genre_secondary": "drama"
+      }
+    },
+
+    {
+      "scene_id": 4,
+      "start": 95.0,
+      "end": 148.0,
+      "duration_sec": 53.0,
+      "relative_position": { "start_pct": 0.527, "end_pct": 0.820 },
+
+      "transcript_utterance_ids": ["u9", "u10", "u11"],
+      "speakers_present": ["A", "B"],
+      "character_names": ["James", "Sarah"],
+
+      "music_within_scene": [],
+      "silence_within_scene": [
+        {
+          "abs_start": 95.0, "abs_end": 95.8, "duration": 0.8,
+          "rel_start_in_scene": 0.000, "rel_end_in_scene": 0.015,
+          "type": "dramatic", "context": "post_shock"
+        }
+      ],
+
+      "audio_emotion_summary": { "dominant": "distressed", "avg_intensity": 0.79 },
+
+      "llm_enrichment": {
+        "tone": "raw, heated",
+        "theme": "competing obligations",
+        "thematic_emotion": "anguish",
+        "situation": "Sarah must choose between leaving for the career opportunity or staying for her mother",
+        "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.62 },
+        "scene_genre": "drama",
+        "genre_confidence": 0.90,
+        "genre_secondary": null
+      }
+    },
+
+    {
+      "scene_id": 5,
+      "start": 148.0,
+      "end": 180.4,
+      "duration_sec": 32.4,
+      "relative_position": { "start_pct": 0.820, "end_pct": 1.000 },
+
+      "transcript_utterance_ids": ["u12", "u13"],
+      "speakers_present": ["A", "B"],
+      "character_names": ["James", "Sarah"],
+
+      "music_within_scene": [
+        {
+          "abs_start": 168.4, "abs_end": 180.4,
+          "rel_start_in_scene": 0.630, "rel_end_in_scene": 1.000,
+          "type": "background", "mood": "bittersweet"
+        }
+      ],
+      "silence_within_scene": [
+        {
+          "abs_start": 148.0, "abs_end": 150.0, "duration": 2.0,
+          "rel_start_in_scene": 0.000, "rel_end_in_scene": 0.062,
+          "type": "dramatic", "context": "weight_of_decision"
+        }
+      ],
+
+      "audio_emotion_summary": { "dominant": "grateful", "avg_intensity": 0.63 },
+
+      "llm_enrichment": {
+        "tone": "resolved, tender",
+        "theme": "clarity through crisis",
+        "thematic_emotion": "catharsis",
+        "situation": "James helps Sarah see that her instinct already revealed her choice; she decides not to take the job",
+        "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.68 },
+        "scene_genre": "drama",
+        "genre_confidence": 0.88,
+        "genre_secondary": "romance"
+      }
+    }
+  ],
+
+  "L4_global": {
+
+    "L4G_genre": {
+      "dominant_genre": "drama",
+      "is_multigenre": true,
+      "genre_mix": {
+        "drama":    { "scene_count": 4, "share": 0.80, "duration_pct": 0.906 },
+        "thriller": { "scene_count": 1, "share": 0.20, "duration_pct": 0.094 }
+      },
+      "secondary_tags": ["slice-of-life", "romance"],
+      "derivation_method": "aggregate_from_scene_genres"
+    },
+
+    "L4S_subject": {
+      "primary_subject": {
+        "name": "Sarah",
+        "speaker_id": "B",
+        "subject_type": "person",
+        "confidence": 0.94,
+        "reasoning": "Decision pivots on her; she has the most dialogue, the inciting event, and the resolution."
+      },
+      "secondary_subjects": [
+        { "name": "James", "speaker_id": "A", "role": "confidant" }
+      ],
+      "central_topic": "Sarah's choice between a career-defining job in Singapore and being present for her mother"
+    },
+
+    "L4R_relationships": [
+      {
+        "from": "Sarah",
+        "to": "James",
+        "relationship": "close friend / confidant",
+        "evidence": ["self-introductions in scene 1", "emotional disclosure", "trust-based advice exchange"],
+        "confidence": 0.86
+      },
+      {
+        "from": "Sarah",
+        "to": "Mother (off-screen)",
+        "relationship": "daughter",
+        "evidence": ["phone call about mother's fall", "obligation expressed in scenes 3–4"],
+        "confidence": 0.91,
+        "on_screen": false
+      },
+      {
+        "from": "Sarah",
+        "to": "Employer (Singapore role)",
+        "relationship": "prospective employee",
+        "evidence": ["job offer with Monday deadline mentioned scene 2"],
+        "confidence": 0.83,
+        "on_screen": false
+      }
+    ]
+  },
+
+  "L5_metadata": {
+
+    "counts": {
+      "characters_on_screen": 2,
+      "characters_total_mentioned": 4,
+      "scenes": 5,
+      "places": 1,
+      "situations": 5,
+      "utterances": 13,
+      "music_segments": 3,
+      "silence_segments": 3,
+      "genre_distribution": { "drama": 4, "thriller": 1 }
+    },
+
+    "durations_sec": {
+      "total_video": 180.4,
+      "total_speech": 140.0,
+      "total_music": 18.0,
+      "total_silence": 4.6,
+      "total_other": 17.8,
+      "longest_scene":  { "scene_id": 4, "duration_sec": 53.0 },
+      "shortest_scene": { "scene_id": 3, "duration_sec": 17.0 }
+    },
+
+    "lists": {
+      "characters": [
+        { "name": "James",                "speaker_id": "A", "gender": "male",    "on_screen": true,  "scene_ids": [1, 2, 4, 5] },
+        { "name": "Sarah",                "speaker_id": "B", "gender": "female",  "on_screen": true,  "scene_ids": [1, 2, 3, 4, 5] },
+        { "name": "Mother",                                  "gender": "female",  "on_screen": false, "scene_ids": [3, 4] },
+        { "name": "Employer (Singapore)",                    "gender": "unknown", "on_screen": false, "scene_ids": [2] }
+      ],
+      "places": [
+        { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "scene_ids": [1, 2, 3, 4, 5] }
+      ],
+      "situations": [
+        { "id": "sit_1", "scene_id": 1, "label": "first in-person meeting" },
+        { "id": "sit_2", "scene_id": 2, "label": "job offer revelation" },
+        { "id": "sit_3", "scene_id": 3, "label": "emergency phone call" },
+        { "id": "sit_4", "scene_id": 4, "label": "moral dilemma argument" },
+        { "id": "sit_5", "scene_id": 5, "label": "resolution and decision" }
+      ]
+    },
+
+    "indexes": {
+      "scenes_by_genre": {
+        "drama":    [1, 2, 4, 5],
+        "thriller": [3]
+      },
+      "scenes_by_dominant_emotion": {
+        "warm":       [1],
+        "conflicted": [2],
+        "alarmed":    [3],
+        "distressed": [4],
+        "grateful":   [5]
+      },
+      "scenes_by_speaker": {
+        "A": [1, 2, 4, 5],
+        "B": [1, 2, 3, 4, 5]
+      },
+      "scenes_by_place": {
+        "Coffee Shop — Fifth Ave": [1, 2, 3, 4, 5]
+      },
+      "scenes_with_music":   [1, 3, 5],
+      "scenes_with_silence": [2, 4, 5],
+      "high_intensity_scenes": [3, 4]
+    },
+
+    "flags": {
+      "has_emotional_peak": true,
+      "emotional_peak_scene_id": 3,
+      "has_multigenre": true,
+      "single_location": true,
+      "low_visual_variety": true,
+      "dialogue_heavy": true
+    }
+  }
+}

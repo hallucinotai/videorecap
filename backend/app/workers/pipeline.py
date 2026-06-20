@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 
+from app.core.step_storage import StepStorage
 from app.processing.audio_processing import generate_tts_service, merge_audio_video_service
 from app.processing.progress import ProgressReporter
 from app.processing.transcription import transcribe_video_service, translate_transcription_service
@@ -26,6 +27,7 @@ class RecapPipeline:
         self.input_video_key = input_video_key
         self.update_job_fn = update_job_fn
         self.working_dir = None
+        self.step_storage = StepStorage(job_id, storage)
 
         reporter_callback = publish_progress_fn or (lambda **kw: None)
         self.progress = ProgressReporter(reporter_callback)
@@ -170,6 +172,17 @@ class RecapPipeline:
                 transcription_file = result["transcription_file"]
                 emotions_file = result.get("emotions_file")  # None for BASIC tier, path for PREMIUM
                 active_transcription = transcription_file
+
+                # Upload step outputs
+                files_to_upload = {"transcript": transcription_file}
+                if emotions_file:
+                    files_to_upload["emotions"] = emotions_file
+                step_keys = self.step_storage.upload_step_output(
+                    step_num=1,
+                    files_dict=files_to_upload,
+                    metadata={"model": model_size, "language": language, "include_emotions": include_emotions}
+                )
+                intermediate_keys.update(step_keys)
                 self._upload_intermediate(intermediate_keys, "transcription", transcription_file)
 
                 # Track emotion analysis status
@@ -205,6 +218,14 @@ class RecapPipeline:
                         progress_callback=self._progress_callback,
                     )
                     active_transcription = result["translated_file"]
+
+                    # Upload step outputs
+                    step_keys = self.step_storage.upload_step_output(
+                        step_num=3,
+                        files_dict={"transcript_translated": active_transcription},
+                        metadata={"source_language": source_lang, "target_language": translate_to}
+                    )
+                    intermediate_keys.update(step_keys)
                     self._upload_intermediate(intermediate_keys, "translation", active_transcription)
                     self.progress.report(2, "Translation complete", 1.0)
                 else:
@@ -225,6 +246,18 @@ class RecapPipeline:
                     progress_callback=self._progress_callback,
                 )
                 recap_data_file = result["recap_data_file"]
+
+                # Upload step outputs
+                step_keys = self.step_storage.upload_step_output(
+                    step_num=4,
+                    files_dict={"recap_data": recap_data_file},
+                    metadata={
+                        "target_duration": target_duration,
+                        "narration_language": narration_lang,
+                        "emotions_included": emotions_file is not None
+                    }
+                )
+                intermediate_keys.update(step_keys)
                 self._upload_intermediate(intermediate_keys, "recap_data", recap_data_file)
 
                 # Log emotion analysis metrics
@@ -275,6 +308,19 @@ class RecapPipeline:
                 )
                 tts_audio_file = result["tts_audio_file"]
                 actual_audio_duration = result["actual_audio_duration"]
+
+                # Upload step outputs
+                step_keys = self.step_storage.upload_step_output(
+                    step_num=5,
+                    files_dict={"narration_audio": tts_audio_file},
+                    metadata={
+                        "tts_model": tts_model,
+                        "voice": tts_voice,
+                        "duration": actual_audio_duration,
+                        "target_duration": target_duration
+                    }
+                )
+                intermediate_keys.update(step_keys)
                 self._upload_intermediate(intermediate_keys, "tts_audio", tts_audio_file)
                 if actual_audio_duration < target_duration * 0.6:
                     logger.warning(
@@ -306,6 +352,14 @@ class RecapPipeline:
                     progress_callback=self._progress_callback,
                 )
                 recap_video_file = result["recap_video_file"]
+
+                # Upload step outputs
+                step_keys = self.step_storage.upload_step_output(
+                    step_num=6,
+                    files_dict={"video_with_clips": recap_video_file},
+                    metadata={"target_duration": clip_trim_target}
+                )
+                intermediate_keys.update(step_keys)
                 self._upload_intermediate(intermediate_keys, "recap_video", recap_video_file)
                 self.progress.report(5, "Clips extracted", 1.0)
             else:
@@ -320,6 +374,9 @@ class RecapPipeline:
                     progress_callback=self._progress_callback,
                 )
                 no_audio_video = result["no_audio_video_file"]
+
+                # Note: This step doesn't upload as it's an intermediate transformation
+                # The final step (7) uploads the complete result
                 self.progress.report(6, "Audio removed", 1.0)
             else:
                 self.progress.report(6, "Audio removal (cached)", 1.0)
@@ -366,6 +423,18 @@ class RecapPipeline:
                 max_duration_seconds=user_trim_cap,
             )
             final_video = result["final_video_file"]
+
+            # Upload step outputs
+            step_keys = self.step_storage.upload_step_output(
+                step_num=7,
+                files_dict={"final_video": final_video},
+                metadata={
+                    "max_duration": user_trim_cap,
+                    "original_audio_level": self.config.get("original_audio_level", 25),
+                    "narration_audio_level": self.config.get("narration_audio_level", 100)
+                }
+            )
+            intermediate_keys.update(step_keys)
             self.progress.report(7, "Final video ready", 1.0)
 
             # Upload final output to S3

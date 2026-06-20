@@ -71,6 +71,37 @@ def _resolve_openai_key(user_id: str) -> str | None:
     return None
 
 
+def _resolve_assemblyai_key(user_id: str) -> tuple[str | None, str]:
+    """
+    Resolve AssemblyAI API key based on configuration.
+
+    Returns: (key: str|None, source: str)
+      - If REQUIRE_ASSEMBLYAI_KEY=True: return (decrypted_user_key, "user")
+      - If REQUIRE_ASSEMBLYAI_KEY=False: return (system_key_from_env, "system")
+
+    Raises ValueError if key is required but not available.
+    """
+    from app.config import settings
+
+    if settings.REQUIRE_ASSEMBLYAI_KEY:
+        # User key is required - get from database
+        with SyncSession() as session:
+            user = session.execute(
+                select(User).where(User.id == user_id)
+            ).scalar_one_or_none()
+            if not user:
+                return None, "user"
+            if user.encrypted_assemblyai_key:
+                key = decrypt_api_key(user.encrypted_assemblyai_key)
+                return key, "user"
+        # User key required but not found - will be caught in validation
+        return None, "user"
+    else:
+        # User key not required - use system key from .env
+        key = settings.ASSEMBLYAI_API_KEY or None
+        return key, "system"
+
+
 @celery_app.task(bind=True, name="app.workers.tasks.process_recap_job")
 def process_recap_job(self, job_id: str, resume_from_step: int = 0):
     """Main task: runs the 7-step recap pipeline. Supports resumption from a given step."""
@@ -78,8 +109,10 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
 
     import json
 
-    # Load job config, intermediate keys, and resolve user's OpenAI key
+    # Load job config, intermediate keys, and resolve user's API keys
     user_openai_key = None
+    user_assemblyai_key = None
+    assemblyai_key_source = None
     existing_intermediate_keys = None
     with SyncSession() as session:
         job = session.execute(
@@ -92,6 +125,7 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
         input_video_key = job.input_video_key
         existing_intermediate_keys = job.intermediate_keys or {}
         user_openai_key = _resolve_openai_key(job.user_id)
+        user_assemblyai_key, assemblyai_key_source = _resolve_assemblyai_key(job.user_id)
 
     if not input_video_key:
         msg = (
@@ -112,11 +146,36 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
     # Store celery task ID
     _update_job_sync(job_id, celery_task_id=self.request.id)
 
+    # Validate API key availability
+    from app.config import settings
+
+    # Check if AssemblyAI key is available (from either user or system)
+    if not user_assemblyai_key:
+        if settings.REQUIRE_ASSEMBLYAI_KEY:
+            msg = (
+                "AssemblyAI API key is required but not set. "
+                "Please add your AssemblyAI API key in Settings."
+            )
+        else:
+            msg = (
+                "AssemblyAI API key not configured. "
+                "Add ASSEMBLYAI_API_KEY to your .env file."
+            )
+        logger.error(f"Job {job_id}: {msg}")
+        _update_job_sync(job_id, status="failed", error_message=msg)
+        return
+
     # Inject user's OpenAI API key if present (concurrency=1, no race)
-    original_key = os.environ.get("OPENAI_API_KEY")
+    original_openai_key = os.environ.get("OPENAI_API_KEY")
     if user_openai_key:
         os.environ["OPENAI_API_KEY"] = user_openai_key
         logger.info(f"Using user-provided OpenAI key for job {job_id}")
+
+    # Inject AssemblyAI API key (from user or system)
+    original_assemblyai_key = os.environ.get("ASSEMBLYAI_API_KEY")
+    if user_assemblyai_key:
+        os.environ["ASSEMBLYAI_API_KEY"] = user_assemblyai_key
+        logger.info(f"Using {assemblyai_key_source}-provided AssemblyAI key for job {job_id}")
 
     from app.workers.pipeline import RecapPipeline
 
@@ -168,11 +227,19 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
                 json.dumps({"type": "failed", "error": str(e)}),
             )
     finally:
+        # Restore original OpenAI key
         if user_openai_key:
-            if original_key is not None:
-                os.environ["OPENAI_API_KEY"] = original_key
+            if original_openai_key is not None:
+                os.environ["OPENAI_API_KEY"] = original_openai_key
             else:
                 os.environ.pop("OPENAI_API_KEY", None)
+
+        # Restore original AssemblyAI key
+        if user_assemblyai_key:
+            if original_assemblyai_key is not None:
+                os.environ["ASSEMBLYAI_API_KEY"] = original_assemblyai_key
+            else:
+                os.environ.pop("ASSEMBLYAI_API_KEY", None)
 
 
 @celery_app.task(name="app.workers.tasks.cleanup_expired_files")

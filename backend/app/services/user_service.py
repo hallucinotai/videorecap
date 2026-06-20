@@ -142,3 +142,19 @@ async def clear_openai_key(db: AsyncSession, user_id: str) -> None:
         raise ValueError("User not found")
     user.encrypted_openai_key = None
     await db.commit()
+
+
+async def update_assemblyai_key(db: AsyncSession, user_id: str, plain_key: str) -> None:
+    user = await get_by_id(db, user_id)
+    if not user:
+        raise ValueError("User not found")
+    user.encrypted_assemblyai_key = encrypt_api_key(plain_key)
+    await db.commit()
+
+
+async def clear_assemblyai_key(db: AsyncSession, user_id: str) -> None:
+    user = await get_by_id(db, user_id)
+    if not user:
+        raise ValueError("User not found")
+    user.encrypted_assemblyai_key = None
+    await db.commit()

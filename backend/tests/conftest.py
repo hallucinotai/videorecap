@@ -67,6 +67,28 @@ async def authenticated_client(client, db_session):
     return client
 
 
+@pytest_asyncio.fixture
+async def admin_client(client, db_session):
+    """Client with a pre-created admin user and auth token."""
+    # Create admin user
+    response = await client.post(
+        "/api/v1/auth/signup",
+        json={"email": "admin@test.com", "password": "Test123!", "full_name": "Admin User"},
+    )
+    token = response.json()["access_token"]
+
+    # Promote user to admin directly in database
+    from app.models.user import User
+    from sqlalchemy import select
+    result = await db_session.execute(select(User).where(User.email == "admin@test.com"))
+    admin_user = result.scalar_one()
+    admin_user.is_admin = True
+    await db_session.commit()
+
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client
+
+
 @pytest.fixture
 def mock_storage():
     with patch("app.services.storage.storage") as mock:

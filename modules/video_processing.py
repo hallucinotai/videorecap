@@ -9,7 +9,12 @@ Contains functions for:
 
 import os
 import json
+import sys
 from moviepy.editor import VideoFileClip, concatenate_videoclips
+
+# Add backend app to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'backend'))
+from app.prompts.narration_prompts import get_narration_system_prompt
 
 # Get the directory where this file is located
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -321,20 +326,8 @@ Return JSON only — no explanation, no markdown fences:
                 "pt": "Portuguese", "it": "Italian", "ja": "Japanese", "ko": "Korean",
                 "zh": "Chinese", "hi": "Hindi", "ta": "Tamil", "ar": "Arabic", "ru": "Russian"}
     lang_label = LANG_MAP.get(narration_language, narration_language) if narration_language else "English"
-    narr_system = (
-        "You are a friend casually telling someone about a video you just watched. "
-        "You speak naturally and conversationally — like you're excited to share what happened. "
-        "Use character or speaker names when the transcript reveals them. "
-        "Hit the key highlights and interesting moments, don't retell every detail. "
-        "Your tone is engaging, warm, and personal — not formal or documentary-like. "
-        "Never say 'the video shows' or 'in this clip' — just tell the story directly. "
-        "Always respond with valid JSON only."
-    )
-    if emotions_file:
-        narr_system += (
-            " Match your energy to the emotional moments — get excited during high points, "
-            "slow down during emotional or tense scenes, and let your personality shine through."
-        )
+    # Load narration system prompt from versioned prompts
+    narr_system = get_narration_system_prompt(with_emotion=bool(emotions_file))
 
     emotion_guidance = ""
     if emotions_file:

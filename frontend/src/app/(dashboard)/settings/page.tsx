@@ -1,13 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import type { FeatureFlags } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
-function OpenAIKeySection({ hasKey }: { hasKey: boolean }) {
+function APIKeySection({
+  title,
+  description,
+  hasKey,
+  endpoint,
+  placeholder,
+  successMessage,
+  helpLink,
+  helpText,
+}: {
+  title: string;
+  description: string;
+  hasKey: boolean;
+  endpoint: string;
+  placeholder: string;
+  successMessage: string;
+  helpLink?: string;
+  helpText?: string;
+}) {
   const [key, setKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -20,12 +38,13 @@ function OpenAIKeySection({ hasKey }: { hasKey: boolean }) {
     }
     setSaving(true);
     try {
-      await api.put("/auth/me/openai-key", { openai_api_key: key.trim() });
-      toast.success("OpenAI API key saved");
+      const bodyKey = endpoint.includes("openai") ? "openai_api_key" : "assemblyai_api_key";
+      await api.put(endpoint, { [bodyKey]: key.trim() });
+      toast.success(successMessage);
       setSaved(true);
       setKey("");
     } catch {
-      toast.error("Failed to save API key");
+      toast.error(`Failed to save API key`);
     } finally {
       setSaving(false);
     }
@@ -34,8 +53,8 @@ function OpenAIKeySection({ hasKey }: { hasKey: boolean }) {
   const handleRemove = async () => {
     setRemoving(true);
     try {
-      await api.delete("/auth/me/openai-key");
-      toast.success("OpenAI API key removed");
+      await api.delete(endpoint);
+      toast.success("API key removed");
       setSaved(false);
     } catch {
       toast.error("Failed to remove API key");
@@ -46,11 +65,21 @@ function OpenAIKeySection({ hasKey }: { hasKey: boolean }) {
 
   return (
     <div className="rounded-lg border p-6">
-      <h3 className="mb-1 font-semibold">OpenAI API Key</h3>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Your key is encrypted at rest and used for transcription, recap
-        generation, and narration.
-      </p>
+      <h3 className="mb-1 font-semibold">{title}</h3>
+      <p className="mb-4 text-sm text-muted-foreground">{description}</p>
+
+      {helpLink && helpText && (
+        <p className="mb-4 text-sm">
+          <a
+            href={helpLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            {helpText} ↗
+          </a>
+        </p>
+      )}
 
       <div className="mb-3 flex items-center gap-2 text-sm">
         <span
@@ -66,7 +95,7 @@ function OpenAIKeySection({ hasKey }: { hasKey: boolean }) {
           type="password"
           value={key}
           onChange={(e) => setKey(e.target.value)}
-          placeholder={saved ? "Enter new key to replace" : "sk-..."}
+          placeholder={saved ? "Enter new key to replace" : placeholder}
           className="flex-1 rounded-md border px-3 py-2 text-sm"
         />
         <button
@@ -99,7 +128,7 @@ export default function SettingsPage() {
     api
       .get<FeatureFlags>("/auth/feature-flags")
       .then((res) => setFlags(res.data))
-      .catch(() => setFlags({ requires_api_key: false }));
+      .catch(() => setFlags({ requires_openai_api_key: false, requires_assemblyai_key: true }));
   }, []);
 
   if (!user) return null;
@@ -134,8 +163,28 @@ export default function SettingsPage() {
         </dl>
       </div>
 
-      {flags?.requires_api_key && (
-        <OpenAIKeySection hasKey={user.has_openai_key} />
+      {flags?.requires_openai_api_key && (
+        <APIKeySection
+          title="OpenAI API Key"
+          description="Your key is encrypted at rest and used for transcription, recap generation, and narration."
+          hasKey={user.has_openai_key}
+          endpoint="/auth/me/openai-key"
+          placeholder="sk-..."
+          successMessage="OpenAI API key saved"
+        />
+      )}
+
+      {flags?.requires_assemblyai_key && (
+        <APIKeySection
+          title="AssemblyAI API Key"
+          description="Used for advanced speaker diarization in video transcription. Get free credits with a new account."
+          hasKey={user.has_assemblyai_key}
+          endpoint="/auth/me/assemblyai-key"
+          placeholder="aai_..."
+          successMessage="AssemblyAI API key saved"
+          helpLink="https://www.assemblyai.com/dashboard/activation"
+          helpText="Get free API key with credits"
+        />
       )}
 
       <div className="rounded-lg border p-6">

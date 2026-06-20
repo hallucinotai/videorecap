@@ -36,7 +36,9 @@ class UserResponse(BaseModel):
     auth_provider: str
     is_active: bool
     tier: str
+    is_admin: bool
     has_openai_key: bool = False
+    has_assemblyai_key: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -50,17 +52,24 @@ class UserResponse(BaseModel):
             auth_provider=user.auth_provider,
             is_active=user.is_active,
             tier=user.tier,
+            is_admin=user.is_admin,
             has_openai_key=user.encrypted_openai_key is not None,
+            has_assemblyai_key=user.encrypted_assemblyai_key is not None,
             created_at=user.created_at,
         )
 
 
 class FeatureFlagsResponse(BaseModel):
-    requires_api_key: bool
+    requires_openai_api_key: bool
+    requires_assemblyai_key: bool = True  # AssemblyAI is required by default for speaker diarization
 
 
 class OpenAIKeyRequest(BaseModel):
     openai_api_key: str
+
+
+class AssemblyAIKeyRequest(BaseModel):
+    assemblyai_api_key: str
 
 
 class OTPVerifyRequest(BaseModel):

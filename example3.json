@@ -1,0 +1,507 @@
+{
+  "pipeline_meta": {
+    "schema_version": "4.0",
+    "job_id": "rj_8f3a2c91",
+    "video_filename": "the_decision.mp4",
+    "processed_at": "2026-06-04T16:45:12Z",
+    "models": {
+      "transcription": "whisper-medium",
+      "diarization": "assemblyai-v3",
+      "audio_events": "yamnet-v1",
+      "scene_detection": "pyscenedetect-content-detector",
+      "emotion": "google-cloud-speech-v2",
+      "scene_llm": "gpt-4o",
+      "global_llm": "gpt-4o"
+    },
+    "layer_status": {
+      "L0": "ok",
+      "L1": "ok",
+      "L2": "ok",
+      "L3": "ok",
+      "L4": "ok",
+      "L5": "ok"
+    },
+    "conventions": {
+      "dominant_speaker_rule": "longest total speech-seconds in scene; tie-break: alphabetical by name",
+      "rel_pct_basis": "relative to enclosing scene duration",
+      "clip_hint_score_range": "0.0 (skip) → 1.0 (must-include)",
+      "duplication_policy": "utterances live only inside scenes; no global flat list"
+    }
+  },
+
+  "total_duration_sec": 180.4,
+
+  "video_summary": {
+    "summary": "Sarah and James meet in person for the first time at a coffee shop on Fifth Avenue. Sarah reveals she has received a life-changing job offer — Director of Engineering in Singapore — but must decide by Monday. As they weigh the opportunity against the cost of relocation and solitude, Sarah receives a phone call: her mother has fallen. The emergency forces Sarah to confront what truly matters to her. James gently reflects her own instinct back at her, and Sarah realises she has already made her choice: she will not take the job.",
+    "narrative_arc": "setup → dilemma → crisis → resolution",
+    "emotional_journey": ["anticipation", "tension", "shock", "anguish", "catharsis"],
+    "logline": "On the day a friend offers her a dream job abroad, a family emergency forces Sarah to discover the choice she had already made."
+  },
+
+  "subject": {
+    "primary": {
+      "name": "Sarah",
+      "speaker_id": "B",
+      "type": "person",
+      "confidence": 0.94,
+      "reasoning": "Decision pivots on her; she has the most dialogue, the inciting event, and the resolution."
+    },
+    "secondary": [
+      { "name": "James", "speaker_id": "A", "role": "confidant" }
+    ],
+    "central_topic": "Sarah's choice between a career-defining job in Singapore and being present for her mother"
+  },
+
+  "characters": [
+    {
+      "name": "James",
+      "speaker_id": "A",
+      "gender": "male",
+      "gender_confidence": 0.93,
+      "on_screen": true,
+      "role_in_video": "confidant",
+      "relationship_to_subject": "close friend",
+      "total_speech_sec": 28.4,
+      "utterance_count": 4,
+      "scene_ids": [1, 2, 4, 5],
+      "emotional_arc": ["friendly", "excited", "supportive", "gentle"]
+    },
+    {
+      "name": "Sarah",
+      "speaker_id": "B",
+      "gender": "female",
+      "gender_confidence": 0.95,
+      "on_screen": true,
+      "role_in_video": "protagonist",
+      "relationship_to_subject": "subject",
+      "total_speech_sec": 49.7,
+      "utterance_count": 9,
+      "scene_ids": [1, 2, 3, 4, 5],
+      "emotional_arc": ["apologetic", "anxious", "alarmed", "distressed", "tearful", "grateful"]
+    },
+    {
+      "name": "Mother",
+      "speaker_id": null,
+      "gender": "female",
+      "gender_confidence": null,
+      "gender_evidence": ["pronoun_she", "kinship_term_mom"],
+      "on_screen": false,
+      "role_in_video": "off-screen catalyst",
+      "relationship_to_subject": "mother",
+      "total_speech_sec": 0,
+      "utterance_count": 0,
+      "scene_ids": [3, 4],
+      "emotional_arc": []
+    },
+    {
+      "name": "Employer (Singapore)",
+      "speaker_id": null,
+      "gender": "unknown",
+      "gender_confidence": null,
+      "on_screen": false,
+      "role_in_video": "off-screen pressure",
+      "relationship_to_subject": "prospective employer",
+      "total_speech_sec": 0,
+      "utterance_count": 0,
+      "scene_ids": [2],
+      "emotional_arc": []
+    }
+  ],
+
+  "relationships": [
+    {
+      "from": "Sarah",
+      "to": "James",
+      "type": "close friend / confidant",
+      "direction": "mutual",
+      "evidence": ["self-introductions in scene 1", "emotional disclosure", "trust-based advice exchange"],
+      "confidence": 0.86
+    },
+    {
+      "from": "Sarah",
+      "to": "Mother",
+      "type": "daughter",
+      "direction": "mutual",
+      "evidence": ["phone call about mother's fall", "obligation expressed in scenes 3–4"],
+      "confidence": 0.91,
+      "on_screen": false
+    },
+    {
+      "from": "Sarah",
+      "to": "Employer (Singapore)",
+      "type": "prospective employee",
+      "direction": "one-way",
+      "evidence": ["job offer with Monday deadline mentioned in scene 2"],
+      "confidence": 0.83,
+      "on_screen": false
+    }
+  ],
+
+  "genre": {
+    "dominant": "drama",
+    "is_multigenre": true,
+    "mix": {
+      "drama":    { "scene_count": 4, "share": 0.80, "duration_pct": 0.906 },
+      "thriller": { "scene_count": 1, "share": 0.20, "duration_pct": 0.094 }
+    },
+    "secondary_tags": ["slice-of-life", "romance"]
+  },
+
+  "metadata": {
+    "counts": {
+      "scenes": 5,
+      "characters_on_screen": 2,
+      "characters_total_mentioned": 4,
+      "places": 1,
+      "situations": 5,
+      "utterances": 13,
+      "music_segments": 3,
+      "silence_segments": 3
+    },
+    "durations_sec": {
+      "total_video": 180.4,
+      "total_speech": 140.0,
+      "total_music": 18.0,
+      "total_silence": 4.6,
+      "total_unclassified": 17.8,
+      "speech_pct": 0.776,
+      "music_pct": 0.100,
+      "silence_pct": 0.026
+    },
+    "places": [
+      { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "scene_ids": [1, 2, 3, 4, 5] }
+    ],
+    "flags": {
+      "dialogue_heavy": true,
+      "single_location": true,
+      "low_visual_variety": true,
+      "has_emotional_peak": true,
+      "emotional_peak_scene_id": 3,
+      "has_multigenre": true,
+      "has_off_screen_characters": true
+    },
+    "indexes": {
+      "scenes_by_genre": {
+        "drama":    [1, 2, 4, 5],
+        "thriller": [3]
+      },
+      "scenes_by_dominant_emotion": {
+        "warm":       [1],
+        "conflicted": [2],
+        "alarmed":    [3],
+        "distressed": [4],
+        "grateful":   [5]
+      },
+      "scenes_by_character": {
+        "James": [1, 2, 4, 5],
+        "Sarah": [1, 2, 3, 4, 5]
+      },
+      "scenes_by_place": {
+        "Coffee Shop — Fifth Ave": [1, 2, 3, 4, 5]
+      },
+      "scenes_with_music":     [1, 3, 5],
+      "scenes_with_silence":   [2, 4, 5],
+      "high_intensity_scenes": [3, 4]
+    },
+    "clip_ranking_by_score": [
+      { "scene_id": 3, "score": 0.95 },
+      { "scene_id": 4, "score": 0.90 },
+      { "scene_id": 5, "score": 0.80 },
+      { "scene_id": 2, "score": 0.75 },
+      { "scene_id": 1, "score": 0.20 }
+    ]
+  },
+
+  "scenes": [
+    {
+      "scene_id": 1,
+      "start": 0.0,
+      "end": 32.0,
+      "duration_sec": 32.0,
+      "position": { "start_pct": 0.000, "end_pct": 0.177, "narrative_position": "opening" },
+
+      "transcript": {
+        "utterances": [
+          { "id": "u1", "start": 4.2,  "end": 7.1,  "speaker": "James", "text": "Hey, you made it. I was starting to think you'd bailed.",        "emotion": "warm",       "emotion_intensity": 0.42 },
+          { "id": "u2", "start": 7.4,  "end": 10.8, "speaker": "Sarah", "text": "I'm Sarah, sorry — traffic was a nightmare on Fifth.",           "emotion": "apologetic", "emotion_intensity": 0.51 },
+          { "id": "u3", "start": 12.1, "end": 15.6, "speaker": "James", "text": "I'm James, by the way. We've never actually met in person.",     "emotion": "friendly",   "emotion_intensity": 0.38 }
+        ],
+        "dominant_speaker": "James",
+        "dominant_speaker_speech_sec": 6.4,
+        "audio_emotion": { "dominant": "warm", "avg_intensity": 0.44 }
+      },
+
+      "enhanced_transcript": {
+        "description": "James and Sarah meet in person for the first time. There is warmth and mild nervous energy as they exchange names and greetings. The tone is light, comfortable, and anticipatory — two people who know each other online finally sharing the same physical space.",
+        "key_moment": "James introduces himself by name, confirming this is their first in-person meeting."
+      },
+
+      "characters_present": [
+        { "name": "James", "emotional_state": "warm, welcoming" },
+        { "name": "Sarah", "emotional_state": "apologetic, slightly flustered" }
+      ],
+
+      "situation": "Two online acquaintances meet in person for the first time at a coffee shop",
+      "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.71 },
+
+      "tone": "casual, welcoming",
+      "theme": "first encounter",
+      "thematic_emotion": "anticipation",
+
+      "genre": { "primary": "drama", "confidence": 0.78, "secondary": "slice-of-life" },
+
+      "music": [
+        {
+          "abs_start": 0.0, "abs_end": 4.0,
+          "rel_start_pct": 0.000, "rel_end_pct": 0.125,
+          "duration_sec": 4.0,
+          "type": "background",
+          "mood": "calm",
+          "diegetic": false,
+          "note": "Plays before first utterance; establishes mood."
+        }
+      ],
+      "silence": [],
+
+      "clip_hints": {
+        "recommended": false,
+        "score": 0.20,
+        "reason": "Establishes characters but low narrative tension. Useful only if an establishing shot is needed.",
+        "best_window": { "start": 12.1, "end": 15.6 }
+      }
+    },
+
+    {
+      "scene_id": 2,
+      "start": 32.0,
+      "end": 78.0,
+      "duration_sec": 46.0,
+      "position": { "start_pct": 0.177, "end_pct": 0.432, "narrative_position": "inciting_incident" },
+
+      "transcript": {
+        "utterances": [
+          { "id": "u4", "start": 34.0, "end": 39.2, "speaker": "Sarah", "text": "So… the offer. They want an answer by Monday.",                    "emotion": "anxious",    "emotion_intensity": 0.64 },
+          { "id": "u5", "start": 40.0, "end": 45.8, "speaker": "James", "text": "Sarah, this is huge. Director of Engineering at twenty-nine?",     "emotion": "excited",    "emotion_intensity": 0.71 },
+          { "id": "u6", "start": 46.5, "end": 52.1, "speaker": "Sarah", "text": "I know, I know. But it means moving to Singapore. Alone.",         "emotion": "conflicted", "emotion_intensity": 0.78 }
+        ],
+        "dominant_speaker": "Sarah",
+        "dominant_speaker_speech_sec": 10.8,
+        "audio_emotion": { "dominant": "conflicted", "avg_intensity": 0.71 }
+      },
+
+      "enhanced_transcript": {
+        "description": "Sarah reveals the central dilemma: a major job offer — Director of Engineering — that requires relocating to Singapore alone by Monday. James's excitement contrasts with Sarah's conflict, exposing the gap between the opportunity's prestige and its personal cost.",
+        "key_moment": "Sarah says 'it means moving to Singapore. Alone.' — the word 'alone' carries the emotional weight of the entire scene."
+      },
+
+      "characters_present": [
+        { "name": "James", "emotional_state": "excited, supportive" },
+        { "name": "Sarah", "emotional_state": "anxious, conflicted" }
+      ],
+
+      "situation": "Sarah reveals she has a major job offer in Singapore that requires relocation by Monday",
+      "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.69 },
+
+      "tone": "weighty, intimate",
+      "theme": "career vs. personal life",
+      "thematic_emotion": "tension",
+
+      "genre": { "primary": "drama", "confidence": 0.86, "secondary": null },
+
+      "music": [],
+      "silence": [
+        {
+          "abs_start": 32.0, "abs_end": 33.8,
+          "rel_start_pct": 0.000, "rel_end_pct": 0.039,
+          "duration_sec": 1.8,
+          "type": "pause",
+          "context": "scene transition — beat before Sarah brings up the offer"
+        }
+      ],
+
+      "clip_hints": {
+        "recommended": true,
+        "score": 0.75,
+        "reason": "Core dilemma established here. High narrative value.",
+        "best_window": { "start": 46.5, "end": 52.1 }
+      }
+    },
+
+    {
+      "scene_id": 3,
+      "start": 78.0,
+      "end": 95.0,
+      "duration_sec": 17.0,
+      "position": { "start_pct": 0.432, "end_pct": 0.527, "narrative_position": "crisis" },
+
+      "transcript": {
+        "utterances": [
+          { "id": "u7", "start": 80.3, "end": 82.0, "speaker": "Sarah", "text": "Hold on, my phone…",                                         "emotion": "neutral", "emotion_intensity": 0.22 },
+          { "id": "u8", "start": 83.5, "end": 90.4, "speaker": "Sarah", "text": "What?! When? Is she okay? I'll be there in twenty minutes.", "emotion": "alarmed", "emotion_intensity": 0.92 }
+        ],
+        "dominant_speaker": "Sarah",
+        "dominant_speaker_speech_sec": 8.6,
+        "audio_emotion": { "dominant": "alarmed", "avg_intensity": 0.92 }
+      },
+
+      "enhanced_transcript": {
+        "description": "A phone call shatters the conversation. Sarah's mother has fallen. Sarah's reaction is immediate, visceral panic — the highest emotional intensity in the video. James is effectively absent; the scene is entirely Sarah's.",
+        "key_moment": "Sarah's voice breaks as she asks 'Is she okay?' — the emotional peak of the entire video."
+      },
+
+      "characters_present": [
+        { "name": "Sarah", "emotional_state": "alarmed, panicked" }
+      ],
+
+      "situation": "Sarah receives a phone call that her mother has fallen and been injured",
+      "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.65 },
+
+      "tone": "urgent, panicked",
+      "theme": "emergency intrudes",
+      "thematic_emotion": "shock",
+
+      "genre": { "primary": "thriller", "confidence": 0.81, "secondary": "drama" },
+
+      "music": [
+        {
+          "abs_start": 78.0, "abs_end": 80.0,
+          "rel_start_pct": 0.000, "rel_end_pct": 0.118,
+          "duration_sec": 2.0,
+          "type": "foreground",
+          "mood": "tense",
+          "diegetic": true,
+          "note": "Phone ringtone — diegetic. Functions as the scene's inciting sound."
+        }
+      ],
+      "silence": [],
+
+      "clip_hints": {
+        "recommended": true,
+        "score": 0.95,
+        "reason": "Emotional peak of the video. Highest intensity moment. Must-include for recap highlight.",
+        "best_window": { "start": 83.5, "end": 90.4 }
+      }
+    },
+
+    {
+      "scene_id": 4,
+      "start": 95.0,
+      "end": 148.0,
+      "duration_sec": 53.0,
+      "position": { "start_pct": 0.527, "end_pct": 0.820, "narrative_position": "confrontation" },
+
+      "transcript": {
+        "utterances": [
+          { "id": "u9",  "start": 96.0,  "end": 101.3, "speaker": "Sarah", "text": "It's my mom. She fell. I have to go — but I can't just leave this.", "emotion": "distressed", "emotion_intensity": 0.88 },
+          { "id": "u10", "start": 102.0, "end": 108.7, "speaker": "James", "text": "Sarah, go. The job will still be a decision tomorrow.",             "emotion": "supportive", "emotion_intensity": 0.66 },
+          { "id": "u11", "start": 110.0, "end": 117.5, "speaker": "Sarah", "text": "But if I take Singapore, I won't be here next time she falls.",     "emotion": "tearful",    "emotion_intensity": 0.84 }
+        ],
+        "dominant_speaker": "Sarah",
+        "dominant_speaker_speech_sec": 12.8,
+        "audio_emotion": { "dominant": "distressed", "avg_intensity": 0.79 }
+      },
+
+      "enhanced_transcript": {
+        "description": "The crisis makes the dilemma concrete and physical. Sarah is caught between leaving for her mother and abandoning the career conversation. Her line about not being there 'next time she falls' reveals that she has already, at some level, decided. James offers calm support rather than pressure.",
+        "key_moment": "Sarah says 'if I take Singapore, I won't be here next time she falls' — the moment the decision crystallises beneath the surface."
+      },
+
+      "characters_present": [
+        { "name": "Sarah", "emotional_state": "distressed, tearful" },
+        { "name": "James", "emotional_state": "calm, supportive" }
+      ],
+
+      "situation": "Sarah must choose between leaving for the career opportunity or staying for her mother",
+      "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.62 },
+
+      "tone": "raw, heated",
+      "theme": "competing obligations",
+      "thematic_emotion": "anguish",
+
+      "genre": { "primary": "drama", "confidence": 0.90, "secondary": null },
+
+      "music": [],
+      "silence": [
+        {
+          "abs_start": 95.0, "abs_end": 95.8,
+          "rel_start_pct": 0.000, "rel_end_pct": 0.015,
+          "duration_sec": 0.8,
+          "type": "dramatic",
+          "context": "post-shock beat — the moment after the phone call ends before Sarah speaks"
+        }
+      ],
+
+      "clip_hints": {
+        "recommended": true,
+        "score": 0.90,
+        "reason": "Sarah's line in u11 is the most narratively loaded utterance in the video. High recall value.",
+        "best_window": { "start": 110.0, "end": 117.5 }
+      }
+    },
+
+    {
+      "scene_id": 5,
+      "start": 148.0,
+      "end": 180.4,
+      "duration_sec": 32.4,
+      "position": { "start_pct": 0.820, "end_pct": 1.000, "narrative_position": "resolution" },
+
+      "transcript": {
+        "utterances": [
+          { "id": "u12", "start": 150.0, "end": 158.2, "speaker": "James", "text": "Then maybe… that's already your answer.",  "emotion": "gentle",   "emotion_intensity": 0.57 },
+          { "id": "u13", "start": 162.0, "end": 168.4, "speaker": "Sarah", "text": "Yeah. Yeah, it is. Thank you, James.",    "emotion": "grateful", "emotion_intensity": 0.69 }
+        ],
+        "dominant_speaker": "James",
+        "dominant_speaker_speech_sec": 8.2,
+        "audio_emotion": { "dominant": "grateful", "avg_intensity": 0.63 }
+      },
+
+      "enhanced_transcript": {
+        "description": "James offers a quiet, single sentence that reframes Sarah's panic as clarity. Sarah accepts it. The scene is sparse and still — only two utterances in 32 seconds. The bittersweet background music carries the emotional resolution where words cannot.",
+        "key_moment": "James says 'that's already your answer' — the pivot from anguish to acceptance."
+      },
+
+      "characters_present": [
+        { "name": "James", "emotional_state": "gentle, resolved" },
+        { "name": "Sarah", "emotional_state": "relieved, grateful" }
+      ],
+
+      "situation": "James helps Sarah see that her instinct already revealed her choice; she decides not to take the job",
+      "location": { "name": "Coffee Shop — Fifth Ave", "type": "interior_cafe", "confidence": 0.68 },
+
+      "tone": "resolved, tender",
+      "theme": "clarity through crisis",
+      "thematic_emotion": "catharsis",
+
+      "genre": { "primary": "drama", "confidence": 0.88, "secondary": "romance" },
+
+      "music": [
+        {
+          "abs_start": 168.4, "abs_end": 180.4,
+          "rel_start_pct": 0.630, "rel_end_pct": 1.000,
+          "duration_sec": 12.0,
+          "type": "background",
+          "mood": "bittersweet",
+          "diegetic": false,
+          "note": "Plays after Sarah's final utterance. Carries the emotional close."
+        }
+      ],
+      "silence": [
+        {
+          "abs_start": 148.0, "abs_end": 150.0,
+          "rel_start_pct": 0.000, "rel_end_pct": 0.062,
+          "duration_sec": 2.0,
+          "type": "dramatic",
+          "context": "weight of decision — long pause before James speaks; lets the prior scene settle"
+        }
+      ],
+
+      "clip_hints": {
+        "recommended": true,
+        "score": 0.80,
+        "reason": "Resolution scene. James's line is a strong closing beat for any recap. Pair with bittersweet music window.",
+        "best_window": { "start": 150.0, "end": 168.4 }
+      }
+    }
+  ]
+}

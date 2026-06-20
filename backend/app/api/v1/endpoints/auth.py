@@ -6,6 +6,7 @@ from app.core.oauth import GoogleOAuthError, verify_google_token
 from app.core.security import create_access_token, create_refresh_token, decode_token
 from app.models.user import User
 from app.schemas.auth import (
+    AssemblyAIKeyRequest,
     FeatureFlagsResponse,
     GoogleAuthRequest,
     LoginRequest,
@@ -118,8 +119,13 @@ async def me(current_user: User = Depends(get_current_user)):
 
 @router.get("/feature-flags", response_model=FeatureFlagsResponse)
 async def feature_flags(current_user: User = Depends(get_current_user)):
-    requires = user_service.user_requires_api_key(current_user.email)
-    return FeatureFlagsResponse(requires_api_key=requires)
+    from app.config import settings
+    requires_openai = user_service.user_requires_api_key(current_user.email)
+    requires_assemblyai = settings.REQUIRE_ASSEMBLYAI_KEY
+    return FeatureFlagsResponse(
+        requires_openai_api_key=requires_openai,
+        requires_assemblyai_key=requires_assemblyai
+    )
 
 
 @router.put("/me/openai-key", status_code=status.HTTP_200_OK)
@@ -141,3 +147,24 @@ async def remove_openai_key(
 ):
     await user_service.clear_openai_key(db, current_user.id)
     return {"detail": "OpenAI API key removed"}
+
+
+@router.put("/me/assemblyai-key", status_code=status.HTTP_200_OK)
+async def set_assemblyai_key(
+    body: AssemblyAIKeyRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not body.assemblyai_api_key or not body.assemblyai_api_key.strip():
+        raise HTTPException(status_code=400, detail="API key cannot be empty")
+    await user_service.update_assemblyai_key(db, current_user.id, body.assemblyai_api_key.strip())
+    return {"detail": "AssemblyAI API key saved"}
+
+
+@router.delete("/me/assemblyai-key", status_code=status.HTTP_200_OK)
+async def remove_assemblyai_key(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    await user_service.clear_assemblyai_key(db, current_user.id)
+    return {"detail": "AssemblyAI API key removed"}

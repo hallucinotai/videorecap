@@ -10,8 +10,10 @@ import {
   Key,
   CreditCard,
   Settings,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -20,10 +22,12 @@ const navItems = [
   { href: "/api-keys", label: "API Keys", icon: Key, metaFlag: "enable_api_keys_menu" as const },
   { href: "/billing", label: "Billing", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/feature-flags", label: "Feature Flags", icon: Zap, adminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [version, setVersion] = useState<string>("");
   const [meta, setMeta] = useState<typeof window.__meta__>(undefined);
 
@@ -42,6 +46,7 @@ export function Sidebar() {
       <ul className="flex-1 space-y-1">
         {navItems
           .filter((item) => {
+            if (item.adminOnly) return user?.is_admin ?? false;
             if (!item.metaFlag) return true;
             return meta?.[item.metaFlag] !== false;
           })
