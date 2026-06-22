@@ -517,10 +517,15 @@ def translate_transcription(input_file, source_lang, target_lang, output_dir="ou
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), max_retries=5)
     model_name = os.getenv("OPENAI_MODEL", "gpt-4o")
 
-    # Read segments — support both JSON and legacy .txt
+    # Read segments — support JSON (list, enhanced dict, enriched layers) and legacy .txt
+    wrapper_doc = None
     if input_file.endswith(".json"):
         with open(input_file, "r") as f:
-            segments = json.load(f)
+            raw_data = json.load(f)
+        from modules.enrichment.document import extract_segments_list, is_wrapped_transcript, apply_translated_segments_to_document
+
+        wrapper_doc = raw_data if is_wrapped_transcript(raw_data) else None
+        segments = extract_segments_list(raw_data)
     else:
         segments = []
         with open(input_file, "r") as f:
@@ -590,8 +595,12 @@ def translate_transcription(input_file, source_lang, target_lang, output_dir="ou
     os.makedirs(output_path, exist_ok=True)
 
     output_file = os.path.join(output_path, f"{target_lang.lower()}_transcription.json")
+    if wrapper_doc is not None:
+        output_data = apply_translated_segments_to_document(wrapper_doc, segments)
+    else:
+        output_data = segments
     with open(output_file, "w") as f:
-        json.dump(segments, f, indent=2)
+        json.dump(output_data, f, indent=2)
 
     print(f"✅ Translation complete!")
     print(f"   Segments translated: {len(segments)}")

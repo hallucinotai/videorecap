@@ -181,6 +181,21 @@ async def resume_job(
     return job_to_response(job)
 
 
+async def _stream_intermediate_file(job, s3_key: str, download_filename: str, media_type: str) -> StreamingResponse:
+    filename = job.original_filename.rsplit(".", 1)[0] + "_" + download_filename
+
+    def stream():
+        body = storage.client.get_object(Bucket=storage.bucket, Key=s3_key)["Body"]
+        for chunk in body.iter_chunks(chunk_size=1024 * 1024):
+            yield chunk
+
+    return StreamingResponse(
+        stream(),
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 async def _download_intermediate_debug(
     job_id: str,
     intermediate_key: str,
@@ -201,7 +216,6 @@ async def _download_intermediate_debug(
     if not s3_key:
         raise HTTPException(status_code=404, detail=f"Intermediate '{intermediate_key}' not available for this job")
 
-    # Determine filename and media type
     filename_map = {
         "transcription": ("transcription.json", "application/json"),
         "translation": ("translated.json", "application/json"),
@@ -210,19 +224,41 @@ async def _download_intermediate_debug(
         "recap_video": ("recap_video.mp4", "video/mp4"),
         "emotions": ("emotions.json", "application/json"),
     }
-    default_name, default_media = filename_map.get(intermediate_key, (f"{intermediate_key}.bin", "application/octet-stream"))
-    filename = job.original_filename.rsplit(".", 1)[0] + "_" + default_name
-
-    def stream():
-        body = storage.client.get_object(Bucket=storage.bucket, Key=s3_key)["Body"]
-        for chunk in body.iter_chunks(chunk_size=1024 * 1024):
-            yield chunk
-
-    return StreamingResponse(
-        stream(),
-        media_type=default_media,
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    default_name, default_media = filename_map.get(
+        intermediate_key, (f"{intermediate_key}.bin", "application/octet-stream")
     )
+    return await _stream_intermediate_file(job, s3_key, default_name, default_media)
+
+
+@router.get("/{job_id}/debug/layers/{layer_id}")
+async def download_enrichment_layer(
+    job_id: str,
+    layer_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Download an enrichment layer artifact (L0, L1, L2, …). Only available when DEBUG=true."""
+    from app.config import settings as app_settings
+    from app.enrichment.registry import get_layer
+    from app.enrichment.storage import LayerStorage
+
+    if not app_settings.DEBUG:
+        raise HTTPException(status_code=404, detail="Debug endpoints are disabled")
+
+    job = await job_service.get_job(db, job_id, current_user.id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    try:
+        layer = get_layer(layer_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Unknown layer '{layer_id}'")
+
+    s3_key = LayerStorage.resolve_s3_key(job.intermediate_keys or {}, layer_id)
+    if not s3_key:
+        raise HTTPException(status_code=404, detail=f"Layer '{layer_id}' not available for this job")
+
+    return await _stream_intermediate_file(job, s3_key, layer.filename, layer.media_type)
 
 
 @router.get("/{job_id}/debug/transcription")

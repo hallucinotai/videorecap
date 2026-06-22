@@ -26,6 +26,17 @@ class IntermediateFile(BaseModel):
     download_url: str | None = None  # Only if DEBUG=true
 
 
+class EnrichmentLayerFile(BaseModel):
+    """Download metadata for a single enrichment layer artifact."""
+    layer_id: str
+    label: str
+    description: str
+    filename: str
+    size_mb: float | None = None
+    download_url: str | None = None
+    available: bool = False
+
+
 class CreateJobRequest(BaseModel):
     upload_id: str
     s3_key: str
@@ -56,6 +67,7 @@ class JobResponse(BaseModel):
     output_video_key: str | None = None  # S3 key for final output (if completed)
     intermediate_keys: dict | None = None  # Raw S3 keys dict
     intermediate_keys_detailed: dict[str, IntermediateFile] | None = None  # With metadata and download URLs
+    enrichment_layers: list[EnrichmentLayerFile] | None = None  # DEBUG only
 
     model_config = {"from_attributes": True}
 
@@ -72,10 +84,50 @@ class DownloadResponse(BaseModel):
     expires_in: int = 3600
 
 
-def job_to_response(job: RecapJob) -> JobResponse:
-    from app.config import settings
+def _head_object_size_mb(s3_path: str) -> float | None:
     from app.services.storage import storage
 
+    try:
+        obj = storage.client.head_object(Bucket=storage.bucket, Key=s3_path)
+        return round(obj["ContentLength"] / (1024 * 1024), 2)
+    except Exception:
+        return None
+
+
+def _build_enrichment_layers(job: RecapJob) -> list[EnrichmentLayerFile] | None:
+    from app.config import settings
+    from app.enrichment.registry import get_enrichment_layers
+    from app.enrichment.storage import LayerStorage
+
+    if not settings.DEBUG:
+        return None
+
+    layers: list[EnrichmentLayerFile] = []
+    intermediate_keys = job.intermediate_keys or {}
+
+    for layer_def in get_enrichment_layers():
+        s3_key = LayerStorage.resolve_s3_key(intermediate_keys, layer_def.layer_id)
+        available = s3_key is not None
+        size_mb = _head_object_size_mb(s3_key) if s3_key else None
+        download_url = (
+            LayerStorage.download_url(job.id, layer_def.layer_id) if available else None
+        )
+        layers.append(
+            EnrichmentLayerFile(
+                layer_id=layer_def.layer_id,
+                label=layer_def.label,
+                description=layer_def.description,
+                filename=layer_def.filename,
+                size_mb=size_mb,
+                download_url=download_url,
+                available=available,
+            )
+        )
+    return layers
+
+
+def job_to_response(job: RecapJob) -> JobResponse:
+    from app.config import settings
     # Build intermediate_keys_detailed if DEBUG is enabled
     intermediate_keys_detailed = None
     if settings.DEBUG and job.intermediate_keys:
@@ -87,6 +139,7 @@ def job_to_response(job: RecapJob) -> JobResponse:
             "step_01.transcript": "transcription",
             "translation": "translation",
             "step_02.translation": "translation",
+            "step_03.transcript_translated": "translation",
             "recap_data": "recap_data",
             "step_04.recap_data": "recap_data",
             "tts_audio": "tts_audio",
@@ -112,18 +165,15 @@ def job_to_response(job: RecapJob) -> JobResponse:
             # Map to canonical name if it's a new-style key
             canonical_name = key_mapping.get(key_name, key_name)
 
-            # Skip metadata files, anything we don't have a public route for, and duplicates
+            # Skip metadata files, layer artifacts, anything we don't have a public route for, and duplicates
             if ".metadata" in key_name or canonical_name in intermediate_keys_detailed:
+                continue
+            if key_name.startswith("layer.") or key_name.startswith("step_01.layer_"):
                 continue
             if canonical_name not in url_slug:
                 continue
 
-            try:
-                # Get file size from S3
-                obj = storage.client.head_object(Bucket=storage.bucket, Key=s3_path)
-                size_mb = round(obj["ContentLength"] / (1024 * 1024), 2)
-            except Exception:
-                size_mb = None
+            size_mb = _head_object_size_mb(s3_path)
 
             download_url = f"/jobs/{job.id}/debug/{url_slug[canonical_name]}"
 
@@ -133,6 +183,8 @@ def job_to_response(job: RecapJob) -> JobResponse:
                 size_mb=size_mb,
                 download_url=download_url,
             )
+
+    enrichment_layers = _build_enrichment_layers(job)
 
     return JobResponse(
         id=job.id,
@@ -156,4 +208,5 @@ def job_to_response(job: RecapJob) -> JobResponse:
         output_video_key=job.output_video_key,
         intermediate_keys=job.intermediate_keys,
         intermediate_keys_detailed=intermediate_keys_detailed,
+        enrichment_layers=enrichment_layers,
     )

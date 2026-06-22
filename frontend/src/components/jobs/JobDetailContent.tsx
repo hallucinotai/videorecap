@@ -428,8 +428,9 @@ export function JobDetailContent({
       </div>
 
       {isDebug &&
-        job.intermediate_keys_detailed &&
-        Object.keys(job.intermediate_keys_detailed).length > 0 && (
+        ((job.enrichment_layers && job.enrichment_layers.length > 0) ||
+          (job.intermediate_keys_detailed &&
+            Object.keys(job.intermediate_keys_detailed).length > 0)) && (
           <div className="mb-6">
             <StepOutputsPanel job={job} onDownload={handleFileDownload} />
           </div>

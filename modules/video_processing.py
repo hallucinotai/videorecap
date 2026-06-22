@@ -37,38 +37,21 @@ def _parse_llm_json(raw: str) -> dict:
 def _read_transcript_segments(path: str) -> list[dict]:
     """Load transcript segments from JSON or legacy .txt.
 
-    Handles enhanced transcript format (with speaker diarization) and legacy format.
-    For enhanced format, extracts segments and includes speaker/speaker_name info.
+    Handles enhanced/enriched formats (including utterance-ref segments) and legacy arrays.
     """
     if path.endswith(".json"):
         with open(path, "r") as f:
             data = json.load(f)
 
-        # Check if this is enhanced format with metadata and segments
-        if isinstance(data, dict) and "segments" in data and "metadata" in data:
-            # Enhanced transcript format from AssemblyAI with speaker diarization
-            segments_dict = data.get("segments", {})
-            segments = []
-            for seg_id, segment in segments_dict.items():
-                seg = {
-                    "start": segment.get("start", 0),
-                    "end": segment.get("end", 0),
-                    "text": segment.get("text", ""),
-                }
-                # Include speaker info if available
-                if "speaker" in segment:
-                    seg["speaker"] = segment["speaker"]
-                if "speaker_name" in segment:
-                    seg["speaker_name"] = segment["speaker_name"]
-                if "speaker_confidence" in segment:
-                    seg["speaker_confidence"] = segment["speaker_confidence"]
-                segments.append(seg)
-            return segments
+        if isinstance(data, dict):
+            from modules.enrichment.document import extract_segments_list
+
+            segments = extract_segments_list(data)
+            if segments:
+                return segments
         elif isinstance(data, list):
-            # Legacy or simple array format
             return data
-        else:
-            return []
+        return []
 
     # Legacy .txt format
     segments = []
@@ -213,6 +196,18 @@ def generate_recap_suggestions(transcription_file, target_duration=30, output_di
     segments = _read_transcript_segments(transcription_file)
     if not segments:
         raise ValueError("Transcription file is empty or has no segments")
+
+    cast_guidance = ""
+    if transcription_file.endswith(".json"):
+        try:
+            with open(transcription_file, "r") as f:
+                transcript_doc = json.load(f)
+            if isinstance(transcript_doc, dict):
+                cast_summary = (transcript_doc.get("narration_context") or {}).get("cast_summary")
+                if cast_summary:
+                    cast_guidance = f"\n\nCast (use these names in narration): {cast_summary}"
+        except (OSError, json.JSONDecodeError):
+            pass
 
     # Merge emotions if provided
     if emotions_file:
@@ -401,7 +396,7 @@ Return JSON only — no explanation, no markdown fences:
 {clip_summary}
 
 The original transcript:
-{transcript_json}{emotion_guidance}
+{transcript_json}{emotion_guidance}{cast_guidance}
 
 Tell this story like you're excitedly sharing it with a friend. Hit the highlights, use character names if you can spot them, and make it flow naturally.
 

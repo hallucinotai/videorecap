@@ -47,6 +47,16 @@ export interface IntermediateFile {
   download_url: string | null;
 }
 
+export interface EnrichmentLayerFile {
+  layer_id: string;
+  label: string;
+  description: string;
+  filename: string;
+  size_mb: number | null;
+  download_url: string | null;
+  available: boolean;
+}
+
 export interface Job {
   id: string;
   user_id: string;
@@ -69,6 +79,7 @@ export interface Job {
   output_video_key?: string | null;
   intermediate_keys?: Record<string, string> | null;
   intermediate_keys_detailed?: Record<string, IntermediateFile> | null;
+  enrichment_layers?: EnrichmentLayerFile[] | null;
 }
 
 export interface JobListResponse {

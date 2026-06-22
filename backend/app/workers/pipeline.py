@@ -7,7 +7,10 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
 from app.core.step_storage import StepStorage
+from app.enrichment.registry import intermediate_key_for
+from app.enrichment.storage import LayerStorage
 from app.processing.audio_processing import generate_tts_service, merge_audio_video_service
+from app.processing.enrichment import run_enrichment_pipeline_service
 from app.processing.progress import ProgressReporter
 from app.processing.transcription import transcribe_video_service, translate_transcription_service
 from app.processing.video_processing import extract_clips_service, generate_recap_service, remove_audio_service
@@ -142,6 +145,16 @@ class RecapPipeline:
                     active_transcription = self._download_intermediate(
                         intermediate_keys, "translation",
                         os.path.join(working_dir, "output/transcriptions/translated.json"))
+                if not active_transcription:
+                    latest_layer_id, _ = LayerStorage.resolve_latest_layer_path(intermediate_keys)
+                    if latest_layer_id and latest_layer_id != "L0":
+                        layer_key = intermediate_key_for(latest_layer_id)
+                        from app.enrichment.registry import get_layer
+                        layer_filename = get_layer(latest_layer_id).filename
+                        active_transcription = self._download_intermediate(
+                            intermediate_keys, layer_key,
+                            os.path.join(working_dir, "output/transcriptions/layers", layer_filename),
+                        )
                 if not active_transcription and "transcription" in intermediate_keys:
                     active_transcription = self._download_intermediate(
                         intermediate_keys, "transcription",
@@ -232,6 +245,36 @@ class RecapPipeline:
                     emotion_analysis_status=emotion_analysis_status,
                     emotion_analysis_error=emotion_analysis_error
                 )
+
+                # Enrichment layers (L1, L2) for AssemblyAI jobs
+                enrichment_result = run_enrichment_pipeline_service(
+                    transcription_file,
+                    working_dir,
+                    self.job_id,
+                    progress_callback=self._progress_callback,
+                )
+                if not enrichment_result.skipped and enrichment_result.layer_paths:
+                    layer_storage = LayerStorage(self.job_id, storage)
+                    layer_files = {}
+                    for layer_id, local_path in enrichment_result.layer_paths.items():
+                        s3_key = layer_storage.upload_layer(layer_id, local_path)
+                        intermediate_keys[intermediate_key_for(layer_id)] = s3_key
+                        layer_files[f"layer_{layer_id}"] = local_path
+                    if layer_files:
+                        step_keys = self.step_storage.upload_step_output(
+                            step_num=1,
+                            files_dict=layer_files,
+                            metadata={"enrichment_layers": list(enrichment_result.layer_paths.keys())},
+                        )
+                        intermediate_keys.update(step_keys)
+                        self._update_job(intermediate_keys=dict(intermediate_keys))
+                    if enrichment_result.latest_layer_path:
+                        active_transcription = enrichment_result.latest_layer_path
+                        logger.info(
+                            "Enrichment complete: latest layer %s → %s",
+                            enrichment_result.latest_layer_id,
+                            enrichment_result.latest_layer_path,
+                        )
 
                 # Log metrics
                 metrics = self._get_file_metrics(transcription_file)
