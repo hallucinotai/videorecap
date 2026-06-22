@@ -57,6 +57,24 @@ export interface EnrichmentLayerFile {
   available: boolean;
 }
 
+export interface ReviewPresentation {
+  display_label: string;
+  sample_quote?: string | null;
+  utterance_id?: string | null;
+  timestamp_sec?: number | null;
+  thumbnail_s3_key?: string | null;
+  thumbnail_url?: string | null;
+}
+
+export interface GenderReviewItem {
+  speaker_id: string;
+  field: string;
+  proposed: string;
+  confidence: number;
+  evidence: string[];
+  presentation?: ReviewPresentation | null;
+}
+
 export interface Job {
   id: string;
   user_id: string;
@@ -127,7 +145,7 @@ export interface TierInfo {
 }
 
 export interface ProgressEvent {
-  type: "progress" | "completed" | "failed" | "stopped";
+  type: "progress" | "completed" | "failed" | "stopped" | "awaiting_enrichment_review";
   step?: number;
   step_name?: string;
   progress_pct?: number;

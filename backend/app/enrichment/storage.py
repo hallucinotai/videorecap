@@ -44,6 +44,8 @@ class LayerStorage:
             "L0": ["step_01.transcript", "transcription"],
             "L1": ["step_01.layer_L1", "layer.L1"],
             "L2": ["step_01.layer_L2", "layer.L2"],
+            "L3": ["step_01.layer_L3", "layer.L3"],
+            "L4": ["step_01.layer_L4", "layer.L4"],
         }
         for key in fallbacks.get(layer_id, []):
             if key in intermediate_keys:
@@ -57,7 +59,7 @@ class LayerStorage:
     @staticmethod
     def resolve_latest_layer_path(intermediate_keys: dict) -> tuple[str | None, str | None]:
         """Return (layer_id, s3_key) for the highest available enrichment layer."""
-        for layer_id in ("L2", "L1", "L0"):
+        for layer_id in ("L4", "L3", "L2", "L1", "L0"):
             s3_key = LayerStorage.resolve_s3_key(intermediate_keys, layer_id)
             if s3_key:
                 return layer_id, s3_key

@@ -33,6 +33,7 @@ export function statusColor(status: string): string {
   const map: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
     processing: "bg-blue-100 text-blue-800",
+    awaiting_enrichment_review: "bg-amber-100 text-amber-900",
     completed: "bg-green-100 text-green-800",
     failed: "bg-red-100 text-red-800",
     stopped: "bg-orange-100 text-orange-800",

@@ -19,6 +19,7 @@ class LayerDefinition:
     media_type: str = "application/json"
     depends_on: str | None = None
     is_raw: bool = False
+    is_terminal: bool = False
     enricher_module: str | None = None
     enricher_class_name: str | None = None
 
@@ -57,6 +58,25 @@ LAYER_REGISTRY: tuple[LayerDefinition, ...] = (
         enricher_module="modules.enrichment.l2_speakers",
         enricher_class_name="L2SpeakerEnricher",
     ),
+    LayerDefinition(
+        layer_id="L3",
+        label="Gender (text)",
+        description="Text-based gender proposals with evidence (JSON)",
+        filename="enrichment_L3.json",
+        depends_on="L2",
+        enricher_module="modules.enrichment.l3_gender",
+        enricher_class_name="L3GenderEnricher",
+    ),
+    LayerDefinition(
+        layer_id="L4",
+        label="Finalize review",
+        description="Merge enrichment proposals and build human review queue (JSON)",
+        filename="enrichment_L4.json",
+        depends_on="L3",
+        enricher_module="modules.enrichment.l4_finalize",
+        enricher_class_name="L4FinalizeEnricher",
+        is_terminal=True,
+    ),
 )
 
 _LAYER_BY_ID: dict[str, LayerDefinition] = {layer.layer_id: layer for layer in LAYER_REGISTRY}
@@ -88,3 +108,11 @@ def intermediate_key_for(layer_id: str) -> str:
 def latest_enrichment_layer_id() -> str | None:
     processable = get_processable_layers()
     return processable[-1].layer_id if processable else None
+
+
+def terminal_layer_id() -> str | None:
+    """Layer that owns user review (defaults to last processable layer)."""
+    terminal = [layer for layer in get_processable_layers() if layer.is_terminal]
+    if terminal:
+        return terminal[-1].layer_id
+    return latest_enrichment_layer_id()

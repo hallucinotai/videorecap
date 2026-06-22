@@ -19,6 +19,9 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --no-build-isolation openai-whisper==20240930
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY backend/requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
 # Copy application code
 COPY backend/ .
 

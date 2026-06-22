@@ -8,12 +8,34 @@ from datetime import datetime, timezone
 from typing import Any
 
 
-SCHEMA_VERSION = "1.1"
+SCHEMA_VERSION = "1.2"
 LOW_CONFIDENCE_THRESHOLD = 0.85
+GENDER_NARRATION_MIN = 0.75
+GENDER_REVIEW_MAX = 0.75
+GENDER_NAME_HINT_CONFIDENCE = 0.40
 
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def format_timestamp_sec(seconds: float) -> str:
+    total = max(0, int(seconds))
+    mins, secs = divmod(total, 60)
+    return f"{mins}:{secs:02d}"
+
+
+def truncate_quote(text: str, max_len: int = 80) -> str:
+    text = (text or "").strip()
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 3] + "..."
+
+
+def get_review_queue(doc: dict[str, Any]) -> list[dict[str, Any]]:
+    """User-facing review queue — only populated by the terminal enrichment layer."""
+    narration = doc.get("narration_context") or {}
+    return narration.get("review_queue") or narration.get("gender_review_queue") or []
 
 
 def load_layer_document(path: str) -> dict[str, Any]:

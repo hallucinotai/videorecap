@@ -9,7 +9,8 @@ from dataclasses import dataclass, field
 
 from app.enrichment.base import EnrichmentContext
 from app.enrichment.registry import get_processable_layers, latest_enrichment_layer_id
-from modules.enrichment.document import is_assemblyai_enhanced, load_layer_document
+from app.enrichment.review import review_required
+from modules.enrichment.document import get_review_queue, is_assemblyai_enhanced, load_layer_document
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,8 @@ class EnrichmentResult:
     latest_layer_path: str | None = None
     skipped: bool = False
     skip_reason: str | None = None
+    review_required: bool = False
+    review_queue: list = field(default_factory=list)
 
 
 class EnrichmentPipeline:
@@ -71,11 +74,26 @@ class EnrichmentPipeline:
         latest_id = latest_enrichment_layer_id()
         latest_path = layer_paths.get(latest_id) if latest_id else None
 
+        needs_review = False
+        queue: list = []
+        if latest_path:
+            latest_doc = load_layer_document(latest_path)
+            needs_review = review_required(latest_doc)
+            queue = get_review_queue(latest_doc)
+
         if progress_callback and latest_id:
-            progress_callback(step=1, message=f"Enrichment complete ({latest_id})")
+            if needs_review:
+                progress_callback(
+                    step=1,
+                    message="Enrichment review required — confirm gender suggestions",
+                )
+            else:
+                progress_callback(step=1, message=f"Enrichment complete ({latest_id})")
 
         return EnrichmentResult(
             layer_paths=layer_paths,
             latest_layer_id=latest_id,
             latest_layer_path=latest_path,
+            review_required=needs_review,
+            review_queue=queue,
         )

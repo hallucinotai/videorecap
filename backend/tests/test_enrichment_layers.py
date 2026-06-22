@@ -23,12 +23,12 @@ def ctx():
     return EnrichmentContext(job_id="job_test_1", working_dir="/tmp")
 
 
-def test_registry_has_l0_l1_l2():
+def test_registry_has_l0_through_l4():
     layers = [layer.layer_id for layer in get_processable_layers()]
-    assert layers == ["L1", "L2"]
+    assert layers == ["L1", "L2", "L3", "L4"]
     assert get_layer("L0").is_raw is True
-    assert intermediate_key_for("L0") == "transcription"
-    assert intermediate_key_for("L2") == "layer.L2"
+    assert get_layer("L4").is_terminal is True
+    assert intermediate_key_for("L4") == "layer.L4"
 
 
 def test_is_assemblyai_enhanced():
@@ -88,14 +88,16 @@ def test_enrichment_pipeline_writes_layer_files(tmp_path):
     result = pipeline.run(str(raw_path), ctx)
 
     assert result.skipped is False
-    assert result.latest_layer_id == "L2"
-    assert (out_dir / "enrichment_L1.json").exists()
-    assert (out_dir / "enrichment_L2.json").exists()
+    assert result.latest_layer_id == "L4"
+    assert (out_dir / "enrichment_L4.json").exists()
+    assert result.review_required is True
+    assert len(result.review_queue) >= 1
 
-    l2 = json.loads((out_dir / "enrichment_L2.json").read_text())
-    segments = extract_segments_list(l2)
+    l4 = json.loads((out_dir / "enrichment_L4.json").read_text())
+    segments = extract_segments_list(l4)
     assert len(segments) == 4
-    assert l2["metadata"]["latest_layer"] == "L2"
+    assert l4["metadata"]["latest_layer"] == "L4"
+    assert l4.get("speaker_profiles")
 
 
 def test_layer_storage_resolve_keys():
@@ -103,11 +105,11 @@ def test_layer_storage_resolve_keys():
         "transcription": "jobs/x/layers/L0/transcription.json",
         "layer.L1": "jobs/x/layers/L1/enrichment_L1.json",
         "step_01.layer_L2": "jobs/x/layers/L2/enrichment_L2.json",
+        "step_01.layer_L3": "jobs/x/layers/L3/enrichment_L3.json",
+        "step_01.layer_L4": "jobs/x/layers/L4/enrichment_L4.json",
     }
-    assert LayerStorage.resolve_s3_key(keys, "L0") == keys["transcription"]
-    assert LayerStorage.resolve_s3_key(keys, "L1") == keys["layer.L1"]
-    assert LayerStorage.resolve_s3_key(keys, "L2") == keys["step_01.layer_L2"]
+    assert LayerStorage.resolve_s3_key(keys, "L4") == keys["step_01.layer_L4"]
 
     latest_id, latest_key = LayerStorage.resolve_latest_layer_path(keys)
-    assert latest_id == "L2"
-    assert latest_key == keys["step_01.layer_L2"]
+    assert latest_id == "L4"
+    assert latest_key == keys["step_01.layer_L4"]

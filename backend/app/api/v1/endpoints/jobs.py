@@ -6,7 +6,16 @@ from pydantic import BaseModel
 
 from app.api.v1.deps import get_current_user_or_api_key, get_db
 from app.models.user import User
-from app.schemas.job import CreateJobRequest, DownloadResponse, JobListResponse, JobResponse, job_to_response
+from app.schemas.job import (
+    CreateJobRequest,
+    DownloadResponse,
+    EnrichmentReviewResponse,
+    EnrichmentReviewSubmit,
+    GenderReviewItem,
+    JobListResponse,
+    JobResponse,
+    job_to_response,
+)
 from app.services import job_service
 from app.services.storage import storage
 
@@ -121,7 +130,7 @@ async def stop_job(
     job = await job_service.get_job(db, job_id, current_user.id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    if job.status not in ("pending", "processing"):
+    if job.status not in ("pending", "processing", "awaiting_enrichment_review"):
         raise HTTPException(status_code=400, detail="Job is not running")
 
     if job.celery_task_id:
@@ -156,6 +165,11 @@ async def resume_job(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     if job.status not in ("failed", "stopped"):
+        if job.status == "awaiting_enrichment_review":
+            raise HTTPException(
+                status_code=400,
+                detail="Complete enrichment review before resuming this job",
+            )
         raise HTTPException(status_code=400, detail="Only failed or stopped jobs can be resumed")
 
     if not job.input_video_key:
@@ -259,6 +273,90 @@ async def download_enrichment_layer(
         raise HTTPException(status_code=404, detail=f"Layer '{layer_id}' not available for this job")
 
     return await _stream_intermediate_file(job, s3_key, layer.filename, layer.media_type)
+
+
+@router.get("/{job_id}/enrichment/review", response_model=EnrichmentReviewResponse)
+async def get_enrichment_review(
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Return enrichment review queue for jobs awaiting human confirmation."""
+    from app.enrichment.load import load_layer_json_from_storage
+    from app.enrichment.registry import terminal_layer_id
+
+    job = await job_service.get_job(db, job_id, current_user.id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    layer_id = terminal_layer_id() or "L4"
+    doc = load_layer_json_from_storage(job.intermediate_keys or {}, layer_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Enrichment review layer not available for this job")
+
+    queue_raw = (doc.get("narration_context") or {}).get("review_queue") or (
+        doc.get("narration_context") or {}
+    ).get("gender_review_queue") or []
+    review_queue = [GenderReviewItem(**item) for item in queue_raw]
+    return EnrichmentReviewResponse(
+        review_queue=review_queue,
+        speaker_profiles=doc.get("speaker_profiles") or {},
+        l3_gender=doc.get("L3_gender") or {},
+    )
+
+
+@router.post("/{job_id}/enrichment/review", response_model=JobResponse)
+async def submit_enrichment_review(
+    job_id: str,
+    body: EnrichmentReviewSubmit,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Apply gender review decisions and resume pipeline from translation step."""
+    from app.enrichment.load import load_layer_json_from_storage, save_layer_json_to_storage
+    from app.enrichment.registry import terminal_layer_id
+    from app.enrichment.review import apply_gender_review_decisions, review_required
+
+    job = await job_service.get_job(db, job_id, current_user.id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.status != "awaiting_enrichment_review":
+        raise HTTPException(status_code=400, detail="Job is not awaiting enrichment review")
+    if not job.input_video_key:
+        raise HTTPException(status_code=400, detail="Original upload no longer available")
+
+    layer_id = terminal_layer_id() or "L4"
+    intermediate_keys = dict(job.intermediate_keys or {})
+    doc = load_layer_json_from_storage(intermediate_keys, layer_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Enrichment review layer not available")
+
+    decisions = [d.model_dump() for d in body.decisions]
+    updated = apply_gender_review_decisions(doc, decisions)
+    save_layer_json_to_storage(job_id, layer_id, updated, intermediate_keys)
+
+    if review_required(updated):
+        job.intermediate_keys = intermediate_keys
+        await db.commit()
+        await db.refresh(job)
+        raise HTTPException(
+            status_code=400,
+            detail="Review queue still has pending items — confirm or override all proposals",
+        )
+
+    job.status = "processing"
+    job.error_message = None
+    job.current_step = 1
+    job.current_step_name = "Resuming after enrichment review"
+    job.progress_pct = 15.0
+    job.intermediate_keys = intermediate_keys
+    await db.commit()
+    await db.refresh(job)
+
+    from app.workers.tasks import process_recap_job
+    process_recap_job.delay(job.id, resume_from_step=2)
+
+    return job_to_response(job)
 
 
 @router.get("/{job_id}/debug/transcription")

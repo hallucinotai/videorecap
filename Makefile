@@ -65,10 +65,10 @@ migration:
 
 # --- Testing ---
 test:
-	docker compose exec backend pytest tests/ -v
+	docker compose exec backend bash -c "PYTHONPATH=/app python -m pytest tests/ -v"
 
 test-cov:
-	docker compose exec backend pytest tests/ -v --cov=app --cov-report=term-missing
+	docker compose exec backend bash -c "PYTHONPATH=/app python -m pytest tests/ -v --cov=app --cov-report=term-missing"
 
 # --- Shell ---
 shell:

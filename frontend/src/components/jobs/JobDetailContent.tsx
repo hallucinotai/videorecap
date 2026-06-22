@@ -11,6 +11,7 @@ import type { Job } from "@/lib/types";
 import api from "@/lib/api";
 import { StepProgressWithDownloads } from "./StepProgressWithDownloads";
 import { StepOutputsPanel } from "./StepOutputsPanel";
+import { EnrichmentReviewPanel } from "./EnrichmentReviewPanel";
 
 const STEP_NAMES = [
   "",
@@ -83,7 +84,12 @@ export function JobDetailContent({
   }, [fetchJob]);
 
   useEffect(() => {
-    if (progress?.type === "completed" || progress?.type === "failed" || progress?.type === "stopped") {
+    if (
+      progress?.type === "completed" ||
+      progress?.type === "failed" ||
+      progress?.type === "stopped" ||
+      progress?.type === "awaiting_enrichment_review"
+    ) {
       fetchJob();
     }
     if (progress?.message) {
@@ -293,7 +299,7 @@ export function JobDetailContent({
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <h2 className="break-words text-xl font-bold sm:text-2xl">{job.original_filename}</h2>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-          {(job.status === "processing" || job.status === "pending") && (
+          {(job.status === "processing" || job.status === "pending" || job.status === "awaiting_enrichment_review") && (
             <button
               type="button"
               onClick={handleStop}
@@ -367,6 +373,12 @@ export function JobDetailContent({
             {formatFileSize(job.file_size_bytes)}
           </span>
         </div>
+
+        {job.status === "awaiting_enrichment_review" && (
+          <div className="mb-4">
+            <EnrichmentReviewPanel jobId={job.id} onSubmitted={fetchJob} />
+          </div>
+        )}
 
         {(job.status === "processing" || job.status === "pending") && (
           <div>

@@ -204,6 +204,21 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
             existing_intermediate_keys=existing_intermediate_keys if resume_from_step > 0 else None,
         )
 
+        if result.get("awaiting_enrichment_review"):
+            import json
+            _redis_client.publish(
+                f"job:{job_id}:progress",
+                json.dumps({
+                    "type": "awaiting_enrichment_review",
+                    "step": 1,
+                    "step_name": "Enrichment review required",
+                    "progress_pct": 15.0,
+                    "message": "Confirm gender suggestions to continue processing",
+                }),
+            )
+            logger.info(f"Job {job_id} awaiting enrichment review")
+            return
+
         # Explicitly ensure output_video_key is persisted
         _update_job_sync(job_id, output_video_key=result["output_key"])
 

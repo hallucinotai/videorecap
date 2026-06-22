@@ -276,6 +276,30 @@ class RecapPipeline:
                             enrichment_result.latest_layer_path,
                         )
 
+                    if enrichment_result.review_required:
+                        self._update_job(
+                            status="awaiting_enrichment_review",
+                            current_step=1,
+                            current_step_name="Enrichment review required",
+                            progress_pct=15.0,
+                            intermediate_keys=dict(intermediate_keys),
+                        )
+                        self.progress.report(
+                            1,
+                            "Enrichment review required — confirm gender suggestions",
+                            1.0,
+                        )
+                        logger.info(
+                            "Job %s paused for enrichment review (%d items)",
+                            self.job_id,
+                            len(enrichment_result.review_queue),
+                        )
+                        return {
+                            "awaiting_enrichment_review": True,
+                            "intermediate_keys": intermediate_keys,
+                            "output_key": None,
+                        }
+
                 # Log metrics
                 metrics = self._get_file_metrics(transcription_file)
                 log_msg = f"Step 1 complete: Transcription | Size: {metrics.get('size_mb', 'N/A')}MB"

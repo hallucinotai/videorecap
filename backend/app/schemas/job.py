@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -82,6 +83,40 @@ class JobListResponse(BaseModel):
 class DownloadResponse(BaseModel):
     download_url: str
     expires_in: int = 3600
+
+
+class ReviewPresentation(BaseModel):
+    display_label: str
+    sample_quote: str | None = None
+    utterance_id: str | None = None
+    timestamp_sec: float | None = None
+    thumbnail_s3_key: str | None = None
+    thumbnail_url: str | None = None
+
+
+class GenderReviewItem(BaseModel):
+    speaker_id: str
+    field: str = "gender"
+    proposed: str
+    confidence: float
+    evidence: list[str] = Field(default_factory=list)
+    presentation: ReviewPresentation | None = None
+
+
+class EnrichmentReviewResponse(BaseModel):
+    review_queue: list[GenderReviewItem]
+    speaker_profiles: dict[str, Any] = Field(default_factory=dict)
+    l3_gender: dict[str, Any] = Field(default_factory=dict)
+
+
+class EnrichmentReviewDecision(BaseModel):
+    speaker_id: str
+    action: str  # confirm | override | reject
+    gender: str | None = None
+
+
+class EnrichmentReviewSubmit(BaseModel):
+    decisions: list[EnrichmentReviewDecision]
 
 
 def _head_object_size_mb(s3_path: str) -> float | None:

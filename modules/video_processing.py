@@ -198,14 +198,25 @@ def generate_recap_suggestions(transcription_file, target_duration=30, output_di
         raise ValueError("Transcription file is empty or has no segments")
 
     cast_guidance = ""
+    gender_guidance = ""
     if transcription_file.endswith(".json"):
         try:
             with open(transcription_file, "r") as f:
                 transcript_doc = json.load(f)
             if isinstance(transcript_doc, dict):
-                cast_summary = (transcript_doc.get("narration_context") or {}).get("cast_summary")
+                narration_ctx = transcript_doc.get("narration_context") or {}
+                cast_summary = narration_ctx.get("cast_summary")
                 if cast_summary:
                     cast_guidance = f"\n\nCast (use these names in narration): {cast_summary}"
+                pronoun_hints = narration_ctx.get("pronoun_hints") or {}
+                if pronoun_hints:
+                    hints = ", ".join(f"Speaker {sid}: {pron}" for sid, pron in sorted(pronoun_hints.items()))
+                    gender_guidance = f"\n\nPronoun hints (high-confidence only): {hints}"
+                elif transcript_doc.get("L3_gender"):
+                    gender_guidance = (
+                        "\n\nDo not infer character gender from context. "
+                        "Use speaker names when known, otherwise neutral they/them wording."
+                    )
         except (OSError, json.JSONDecodeError):
             pass
 
@@ -396,7 +407,7 @@ Return JSON only — no explanation, no markdown fences:
 {clip_summary}
 
 The original transcript:
-{transcript_json}{emotion_guidance}{cast_guidance}
+{transcript_json}{emotion_guidance}{cast_guidance}{gender_guidance}
 
 Tell this story like you're excitedly sharing it with a friend. Hit the highlights, use character names if you can spot them, and make it flow naturally.
 
