@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
 from app.core.step_storage import StepStorage
-from app.enrichment.registry import intermediate_key_for
+from app.enrichment.registry import intermediate_key_for, sublayer_intermediate_key
 from app.enrichment.storage import LayerStorage
 from app.processing.audio_processing import generate_tts_service, merge_audio_video_service
 from app.processing.enrichment import run_enrichment_pipeline_service
@@ -252,6 +252,7 @@ class RecapPipeline:
                     working_dir,
                     self.job_id,
                     progress_callback=self._progress_callback,
+                    video_path=local_video_path if os.path.isfile(local_video_path) else None,
                 )
                 if not enrichment_result.skipped and enrichment_result.layer_paths:
                     layer_storage = LayerStorage(self.job_id, storage)
@@ -260,6 +261,14 @@ class RecapPipeline:
                         s3_key = layer_storage.upload_layer(layer_id, local_path)
                         intermediate_keys[intermediate_key_for(layer_id)] = s3_key
                         layer_files[f"layer_{layer_id}"] = local_path
+                    for sub_key, local_path in enrichment_result.sublayer_paths.items():
+                        layer_id, sublayer_id = sub_key.split(".", 1)
+                        s3_key = layer_storage.upload_sublayer(layer_id, sublayer_id, local_path)
+                        intermediate_keys[sublayer_intermediate_key(layer_id, sublayer_id)] = s3_key
+                        layer_files[f"layer_{layer_id}_{sublayer_id}"] = local_path
+                    for speaker_id, local_path in enrichment_result.speaker_asset_paths.items():
+                        s3_key = layer_storage.upload_speaker_asset(speaker_id, local_path)
+                        intermediate_keys[f"asset.speaker.{speaker_id}.portrait"] = s3_key
                     if layer_files:
                         step_keys = self.step_storage.upload_step_output(
                             step_num=1,

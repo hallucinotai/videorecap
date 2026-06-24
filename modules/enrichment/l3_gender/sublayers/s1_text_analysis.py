@@ -189,8 +189,8 @@ def _collect_votes(
     return votes
 
 
-class L3GenderEnricher:
-    layer_id = "L3"
+class S1TextAnalysisEnricher:
+    sublayer_id = "S1"
 
     def enrich(self, doc: dict[str, Any], ctx: Any) -> dict[str, Any]:
         l1 = doc.get("L1_transcript") or {}
@@ -228,13 +228,9 @@ class L3GenderEnricher:
                 }
 
         metadata = deep_copy_doc(doc.get("metadata") or {})
-        metadata["latest_layer"] = self.layer_id
         metadata["gender_analysis"] = "text_l3"
 
         output = deep_copy_doc(doc)
-        pipeline_meta = output.get("pipeline_meta") or {}
-        mark_layer_ok(pipeline_meta, self.layer_id)
-        output["pipeline_meta"] = pipeline_meta
         output["L3_gender"] = l3_gender
         output["metadata"] = metadata
         if "segments" not in output:

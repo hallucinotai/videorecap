@@ -36,6 +36,8 @@ moviepy==1.0.3
 pydub==0.25.1
 google-cloud-speech==2.29.0
 assemblyai==0.64.0
+mediapipe==0.10.18
+opencv-python-headless==4.10.0.84
 
 # Encryption
 cryptography>=42.0.0

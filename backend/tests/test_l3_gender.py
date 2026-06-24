@@ -13,11 +13,13 @@ from app.enrichment.pipeline import EnrichmentPipeline
 from app.enrichment.registry import get_processable_layers, terminal_layer_id
 from app.enrichment.review import apply_gender_review_decisions, review_required
 from modules.enrichment.document import get_review_queue
-from modules.enrichment.l1_normalize import L1NormalizeEnricher
-from modules.enrichment.l2_speakers import L2SpeakerEnricher
-from modules.enrichment.l3_gender import L3GenderEnricher
-from modules.enrichment.l4_finalize import L4FinalizeEnricher
+from modules.enrichment.l1_normalize.enricher import L1NormalizeEnricher
+from modules.enrichment.l2_identity.enricher import L2IdentityEnricher
+from modules.enrichment.l3_gender.enricher import L3GenderEnricher
+from modules.enrichment.l4_finalize.enricher import L4FinalizeEnricher
 from tests.fixtures.enrichment_samples import SAMPLE_ASSEMBLYAI
+
+L2SpeakerEnricher = L2IdentityEnricher
 
 
 @pytest.fixture
@@ -26,14 +28,17 @@ def ctx():
 
 
 @pytest.fixture
-def l2_doc(ctx):
+def l2_doc(ctx, tmp_path):
     l1 = L1NormalizeEnricher().enrich(SAMPLE_ASSEMBLYAI, ctx)
     ctx.raw_speakers = SAMPLE_ASSEMBLYAI["speakers"]
     ctx.raw_metadata = SAMPLE_ASSEMBLYAI["metadata"]
+    ctx.layers_output_dir = str(tmp_path / "layers")
+    ctx.assets_dir = str(tmp_path / "assets")
     return L2SpeakerEnricher().enrich(l1, ctx)
 
 
-def test_l3_proposals_only_no_review_queue(l2_doc, ctx):
+def test_l3_proposals_only_no_review_queue(l2_doc, ctx, tmp_path):
+    ctx.layers_output_dir = str(tmp_path / "layers")
     result = L3GenderEnricher().enrich(l2_doc, ctx)
 
     assert result["L3_gender"]["A"]["gender"] == "male"
@@ -41,9 +46,13 @@ def test_l3_proposals_only_no_review_queue(l2_doc, ctx):
     assert result["L3_gender"]["A"]["requires_review"] is True
     assert get_review_queue(result) == []
     assert review_required(result) is False
+    sub_status = result["pipeline_meta"]["sublayer_status"]
+    assert sub_status["L3.S1"] == "ok"
+    assert sub_status["L3.S2"].startswith("skipped:")
 
 
-def test_l4_finalize_builds_presentation_and_queue(l2_doc, ctx):
+def test_l4_finalize_builds_presentation_and_queue(l2_doc, ctx, tmp_path):
+    ctx.layers_output_dir = str(tmp_path / "layers")
     l3 = L3GenderEnricher().enrich(l2_doc, ctx)
     result = L4FinalizeEnricher().enrich(l3, ctx)
 
@@ -58,7 +67,7 @@ def test_l4_finalize_builds_presentation_and_queue(l2_doc, ctx):
     assert "gender_review_queue" not in (result.get("narration_context") or {})
 
 
-def test_l4_auto_accepts_high_confidence_roadside(ctx):
+def test_l4_auto_accepts_high_confidence_roadside(ctx, tmp_path):
     raw = {
         "metadata": {"provider": "assemblyai", "speaker_diarization_enabled": True, "language_code": "en"},
         "speakers": {"A": {"speaker_id": "A"}, "B": {"speaker_id": "B"}, "C": {"speaker_id": "C"}},
@@ -73,6 +82,8 @@ def test_l4_auto_accepts_high_confidence_roadside(ctx):
             },
         },
     }
+    ctx.layers_output_dir = str(tmp_path / "layers")
+    ctx.assets_dir = str(tmp_path / "assets")
     l1 = L1NormalizeEnricher().enrich(raw, ctx)
     ctx.raw_speakers = raw["speakers"]
     l2 = L2SpeakerEnricher().enrich(l1, ctx)
@@ -86,7 +97,7 @@ def test_l4_auto_accepts_high_confidence_roadside(ctx):
     assert "Person at" in l4["speaker_profiles"]["C"]["presentation"]["display_label"]
 
 
-def test_l3_self_identification_high_confidence(ctx):
+def test_l3_self_identification_high_confidence(ctx, tmp_path):
     raw = {
         **SAMPLE_ASSEMBLYAI,
         "segments": {
@@ -100,6 +111,8 @@ def test_l3_self_identification_high_confidence(ctx):
         },
         "speakers": {"B": {"speaker_id": "B", "name": None}},
     }
+    ctx.layers_output_dir = str(tmp_path / "layers")
+    ctx.assets_dir = str(tmp_path / "assets")
     l1 = L1NormalizeEnricher().enrich(raw, ctx)
     ctx.raw_speakers = raw["speakers"]
     l2 = L2SpeakerEnricher().enrich(l1, ctx)
@@ -111,7 +124,8 @@ def test_l3_self_identification_high_confidence(ctx):
     assert review_required(l4) is False
 
 
-def test_apply_gender_review_confirm_clears_queue(l2_doc, ctx):
+def test_apply_gender_review_confirm_clears_queue(l2_doc, ctx, tmp_path):
+    ctx.layers_output_dir = str(tmp_path / "layers")
     l4 = L4FinalizeEnricher().enrich(L3GenderEnricher().enrich(l2_doc, ctx), ctx)
     updated = apply_gender_review_decisions(
         l4,
@@ -149,3 +163,20 @@ def test_enrichment_pipeline_pauses_at_l4(tmp_path):
     l4 = json.loads((out_dir / "enrichment_L4.json").read_text())
     assert l4["metadata"]["latest_layer"] == "L4"
     assert all(item.get("presentation") for item in get_review_queue(l4))
+
+
+def test_l3_visual_merges_when_portraits_present(l2_doc, ctx, tmp_path):
+    ctx.layers_output_dir = str(tmp_path / "layers")
+    l2_doc = dict(l2_doc)
+    l2_doc["L2_identity"] = {
+        "A": {
+            "speaker_id": "A",
+            "face": {
+                "portrait_s3_key": "jobs/x/assets/speakers/A/portrait.jpg",
+                "alignment_confidence": 0.9,
+            },
+        }
+    }
+    l3 = L3GenderEnricher().enrich(l2_doc, ctx)
+    assert l3["pipeline_meta"]["sublayer_status"]["L3.S2"] == "ok"
+    assert "A" in l3.get("L3_visual", {})

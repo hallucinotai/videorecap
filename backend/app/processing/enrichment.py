@@ -22,9 +22,10 @@ def run_enrichment_pipeline_service(
     working_dir: str,
     job_id: str,
     progress_callback: Callable | None = None,
+    video_path: str | None = None,
 ) -> EnrichmentResult:
     """
-    Run L1→L2 enrichment on an AssemblyAI transcript.
+    Run L1→L4 enrichment on an AssemblyAI transcript.
 
     Returns EnrichmentResult with skipped=True when AssemblyAI format is not detected
     or when AssemblyAI diarization is disabled.
@@ -33,7 +34,16 @@ def run_enrichment_pipeline_service(
         return EnrichmentResult(skipped=True, skip_reason="assemblyai_disabled")
 
     output_dir = os.path.join(working_dir, "output", "transcriptions", "layers")
-    ctx = EnrichmentContext(job_id=job_id, working_dir=working_dir)
+    assets_dir = os.path.join(working_dir, "output", "assets")
+    os.makedirs(assets_dir, exist_ok=True)
+
+    ctx = EnrichmentContext(
+        job_id=job_id,
+        working_dir=working_dir,
+        video_path=video_path,
+        layers_output_dir=output_dir,
+        assets_dir=assets_dir,
+    )
 
     pipeline = EnrichmentPipeline(output_dir=output_dir)
     with _patched_working_dir(working_dir):

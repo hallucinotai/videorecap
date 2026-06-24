@@ -275,6 +275,41 @@ async def download_enrichment_layer(
     return await _stream_intermediate_file(job, s3_key, layer.filename, layer.media_type)
 
 
+@router.get("/{job_id}/debug/layers/{layer_id}/sublayers/{sublayer_id}")
+async def download_enrichment_sublayer(
+    job_id: str,
+    layer_id: str,
+    sublayer_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Download an enrichment sublayer artifact (e.g. L2.S1). Only available when DEBUG=true."""
+    from app.config import settings as app_settings
+    from app.enrichment.registry import get_sublayer
+    from app.enrichment.storage import LayerStorage
+
+    if not app_settings.DEBUG:
+        raise HTTPException(status_code=404, detail="Debug endpoints are disabled")
+
+    job = await job_service.get_job(db, job_id, current_user.id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    try:
+        sub = get_sublayer(layer_id, sublayer_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Unknown sublayer '{layer_id}.{sublayer_id}'")
+
+    s3_key = LayerStorage.resolve_sublayer_s3_key(job.intermediate_keys or {}, layer_id, sublayer_id)
+    if not s3_key:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Sublayer '{layer_id}.{sublayer_id}' not available for this job",
+        )
+
+    return await _stream_intermediate_file(job, s3_key, sub.artifact_filename, "application/json")
+
+
 @router.get("/{job_id}/enrichment/review", response_model=EnrichmentReviewResponse)
 async def get_enrichment_review(
     job_id: str,
@@ -284,6 +319,7 @@ async def get_enrichment_review(
     """Return enrichment review queue for jobs awaiting human confirmation."""
     from app.enrichment.load import load_layer_json_from_storage
     from app.enrichment.registry import terminal_layer_id
+    from app.services.storage import storage
 
     job = await job_service.get_job(db, job_id, current_user.id)
     if not job:
@@ -297,7 +333,16 @@ async def get_enrichment_review(
     queue_raw = (doc.get("narration_context") or {}).get("review_queue") or (
         doc.get("narration_context") or {}
     ).get("gender_review_queue") or []
-    review_queue = [GenderReviewItem(**item) for item in queue_raw]
+    review_queue = []
+    for item in queue_raw:
+        item_dict = dict(item)
+        presentation = item_dict.get("presentation") or {}
+        thumb_key = presentation.get("thumbnail_s3_key")
+        if thumb_key and not presentation.get("thumbnail_url"):
+            presentation = dict(presentation)
+            presentation["thumbnail_url"] = storage.generate_presigned_url(thumb_key, expires_in=3600)
+            item_dict["presentation"] = presentation
+        review_queue.append(GenderReviewItem(**item_dict))
     return EnrichmentReviewResponse(
         review_queue=review_queue,
         speaker_profiles=doc.get("speaker_profiles") or {},

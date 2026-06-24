@@ -1,0 +1,11 @@
+# GLM-4.5V video frame descriptions — local test deps (scripts/ is gitignored)
+torch>=2.1
+torchvision>=0.16
+transformers>=4.57.1
+accelerate>=0.28
+Pillow>=10.0
+opencv-python>=4.8
+sentencepiece>=0.2.0
+
+# Optional: bitsandbytes for 4-bit loading on smaller GPUs
+# pip install bitsandbytes

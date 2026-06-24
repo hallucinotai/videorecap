@@ -55,6 +55,9 @@ export interface EnrichmentLayerFile {
   size_mb: number | null;
   download_url: string | null;
   available: boolean;
+  sublayer_id?: string | null;
+  parent_layer_id?: string | null;
+  is_sublayer?: boolean;
 }
 
 export interface ReviewPresentation {

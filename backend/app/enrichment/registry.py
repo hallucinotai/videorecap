@@ -11,6 +11,15 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
+class SubLayerDefinition:
+    sublayer_id: str
+    label: str
+    artifact_filename: str
+    enricher_module: str
+    enricher_class_name: str
+
+
+@dataclass(frozen=True)
 class LayerDefinition:
     layer_id: str
     label: str
@@ -22,6 +31,7 @@ class LayerDefinition:
     is_terminal: bool = False
     enricher_module: str | None = None
     enricher_class_name: str | None = None
+    sublayers: tuple[SubLayerDefinition, ...] = ()
 
     def load_enricher(self) -> BaseEnricher | None:
         if not self.enricher_module or not self.enricher_class_name:
@@ -46,26 +56,58 @@ LAYER_REGISTRY: tuple[LayerDefinition, ...] = (
         description="Normalized utterances with stable IDs (JSON)",
         filename="enrichment_L1.json",
         depends_on="L0",
-        enricher_module="modules.enrichment.l1_normalize",
+        enricher_module="modules.enrichment.l1_normalize.enricher",
         enricher_class_name="L1NormalizeEnricher",
     ),
     LayerDefinition(
         layer_id="L2",
-        label="Speakers",
-        description="Speaker identity enrichment and utterance flags (JSON)",
+        label="Speaker identity",
+        description="Video face clustering + speaker merge, then text names (JSON)",
         filename="enrichment_L2.json",
         depends_on="L1",
-        enricher_module="modules.enrichment.l2_speakers",
-        enricher_class_name="L2SpeakerEnricher",
+        enricher_module="modules.enrichment.l2_identity.enricher",
+        enricher_class_name="L2IdentityEnricher",
+        sublayers=(
+            SubLayerDefinition(
+                sublayer_id="S1",
+                label="Video reconcile",
+                artifact_filename="S1_video.json",
+                enricher_module="modules.enrichment.l2_identity.sublayers.s1_video_reconcile",
+                enricher_class_name="S1VideoReconcileEnricher",
+            ),
+            SubLayerDefinition(
+                sublayer_id="S2",
+                label="Text names",
+                artifact_filename="S2_text.json",
+                enricher_module="modules.enrichment.l2_identity.sublayers.s2_text_names",
+                enricher_class_name="S2TextNamesEnricher",
+            ),
+        ),
     ),
     LayerDefinition(
         layer_id="L3",
-        label="Gender (text)",
-        description="Text-based gender proposals with evidence (JSON)",
+        label="Gender",
+        description="Text and visual gender proposals (JSON)",
         filename="enrichment_L3.json",
         depends_on="L2",
-        enricher_module="modules.enrichment.l3_gender",
+        enricher_module="modules.enrichment.l3_gender.enricher",
         enricher_class_name="L3GenderEnricher",
+        sublayers=(
+            SubLayerDefinition(
+                sublayer_id="S1",
+                label="Text analysis",
+                artifact_filename="S1_text.json",
+                enricher_module="modules.enrichment.l3_gender.sublayers.s1_text_analysis",
+                enricher_class_name="S1TextAnalysisEnricher",
+            ),
+            SubLayerDefinition(
+                sublayer_id="S2",
+                label="Visual hints",
+                artifact_filename="S2_visual.json",
+                enricher_module="modules.enrichment.l3_gender.sublayers.s2_visual_hints",
+                enricher_class_name="S2VisualHintsEnricher",
+            ),
+        ),
     ),
     LayerDefinition(
         layer_id="L4",
@@ -73,7 +115,7 @@ LAYER_REGISTRY: tuple[LayerDefinition, ...] = (
         description="Merge enrichment proposals and build human review queue (JSON)",
         filename="enrichment_L4.json",
         depends_on="L3",
-        enricher_module="modules.enrichment.l4_finalize",
+        enricher_module="modules.enrichment.l4_finalize.enricher",
         enricher_class_name="L4FinalizeEnricher",
         is_terminal=True,
     ),
@@ -87,6 +129,17 @@ def get_layer(layer_id: str) -> LayerDefinition:
     if not layer:
         raise KeyError(f"Unknown enrichment layer: {layer_id}")
     return layer
+
+
+def get_sublayers(layer_id: str) -> tuple[SubLayerDefinition, ...]:
+    return get_layer(layer_id).sublayers
+
+
+def get_sublayer(layer_id: str, sublayer_id: str) -> SubLayerDefinition:
+    for sub in get_sublayers(layer_id):
+        if sub.sublayer_id == sublayer_id:
+            return sub
+    raise KeyError(f"Unknown sublayer {layer_id}.{sublayer_id}")
 
 
 def get_enrichment_layers() -> list[LayerDefinition]:
@@ -105,6 +158,10 @@ def intermediate_key_for(layer_id: str) -> str:
     return f"layer.{layer_id}"
 
 
+def sublayer_intermediate_key(layer_id: str, sublayer_id: str) -> str:
+    return f"layer.{layer_id}.{sublayer_id}"
+
+
 def latest_enrichment_layer_id() -> str | None:
     processable = get_processable_layers()
     return processable[-1].layer_id if processable else None
@@ -116,3 +173,13 @@ def terminal_layer_id() -> str | None:
     if terminal:
         return terminal[-1].layer_id
     return latest_enrichment_layer_id()
+
+
+def iter_downloadable_layers() -> list[tuple[str, str | None, LayerDefinition | SubLayerDefinition]]:
+    """Flatten macro layers and sublayers for debug download UI."""
+    items: list[tuple[str, str | None, LayerDefinition | SubLayerDefinition]] = []
+    for layer in get_enrichment_layers():
+        items.append((layer.layer_id, None, layer))
+        for sub in layer.sublayers:
+            items.append((layer.layer_id, sub.sublayer_id, sub))
+    return items

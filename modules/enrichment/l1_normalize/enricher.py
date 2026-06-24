@@ -34,7 +34,6 @@ class L1NormalizeEnricher:
                 "utterances": utterances,
                 "diarization_summary": build_diarization_summary(utterances),
             },
-            # Preserve raw metadata for traceability
             "L0_metadata": deep_copy_doc(doc.get("metadata") or {}),
         }
         return output

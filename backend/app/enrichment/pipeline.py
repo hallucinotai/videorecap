@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EnrichmentResult:
     layer_paths: dict[str, str] = field(default_factory=dict)
+    sublayer_paths: dict[str, str] = field(default_factory=dict)
+    speaker_asset_paths: dict[str, str] = field(default_factory=dict)
     latest_layer_id: str | None = None
     latest_layer_path: str | None = None
     skipped: bool = False
@@ -48,9 +50,13 @@ class EnrichmentPipeline:
 
         ctx.raw_speakers = raw_doc.get("speakers") or {}
         ctx.raw_metadata = raw_doc.get("metadata") or {}
+        ctx.layers_output_dir = self.output_dir
+        if ctx.assets_dir is None:
+            ctx.assets_dir = os.path.join(ctx.working_dir, "output", "assets")
 
         current_doc: dict = raw_doc
         layer_paths: dict[str, str] = {}
+        all_sublayer_paths: dict[str, str] = {}
 
         for layer_def in get_processable_layers():
             if progress_callback:
@@ -63,6 +69,10 @@ class EnrichmentPipeline:
             if not enricher:
                 continue
             current_doc = enricher.enrich(current_doc, ctx)
+
+            sublayer_paths = current_doc.pop("_sublayer_paths", None) or {}
+            if isinstance(sublayer_paths, dict):
+                all_sublayer_paths.update(sublayer_paths)
 
             output_path = os.path.join(self.output_dir, layer_def.filename)
             with open(output_path, "w", encoding="utf-8") as f:
@@ -92,6 +102,8 @@ class EnrichmentPipeline:
 
         return EnrichmentResult(
             layer_paths=layer_paths,
+            sublayer_paths=all_sublayer_paths,
+            speaker_asset_paths=dict(ctx.speaker_asset_paths or {}),
             latest_layer_id=latest_id,
             latest_layer_path=latest_path,
             review_required=needs_review,

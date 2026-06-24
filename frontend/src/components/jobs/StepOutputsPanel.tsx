@@ -89,6 +89,7 @@ function OutputRow({
   available,
   busy,
   onDownload,
+  className,
 }: {
   icon: typeof FileJson;
   iconWrapClass: string;
@@ -98,10 +99,11 @@ function OutputRow({
   available: boolean;
   busy: boolean;
   onDownload: () => void;
+  className?: string;
 }) {
   const Icon = icon;
   return (
-    <li className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
+    <div className={`flex items-center gap-3 px-3 py-2.5 sm:px-4 ${className ?? ""}`}>
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${iconWrapClass}`}
       >
@@ -126,7 +128,7 @@ function OutputRow({
         <Download className={`h-3.5 w-3.5 ${busy ? "animate-pulse" : ""}`} />
         {busy ? "..." : available ? "Download" : "N/A"}
       </button>
-    </li>
+    </div>
   );
 }
 
@@ -189,21 +191,28 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
           </h4>
           <ul className="divide-y rounded-md border">
             {enrichmentLayers.map((layer) => (
-              <OutputRow
+              <li
                 key={layer.layer_id}
-                icon={layer.layer_id === "L0" ? FileJson : Layers}
-                iconWrapClass={
-                  layer.layer_id === "L0"
-                    ? "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
-                    : "bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300"
-                }
-                label={`${layer.layer_id}: ${layer.label}`}
-                description={layer.description}
-                sizeMb={layer.size_mb}
-                available={layer.available}
-                busy={busyKey === layer.layer_id}
-                onDownload={() => handleLayerDownload(layer)}
-              />
+                className={layer.is_sublayer ? "pl-4 sm:pl-6" : undefined}
+              >
+                <OutputRow
+                  className={layer.is_sublayer ? "border-l-2 border-teal-200/80 dark:border-teal-900" : undefined}
+                  icon={layer.layer_id === "L0" ? FileJson : Layers}
+                  iconWrapClass={
+                    layer.is_sublayer
+                      ? "bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400"
+                      : layer.layer_id === "L0"
+                        ? "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
+                        : "bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300"
+                  }
+                  label={layer.is_sublayer ? layer.label : `${layer.layer_id}: ${layer.label}`}
+                  description={layer.description}
+                  sizeMb={layer.size_mb}
+                  available={layer.available}
+                  busy={busyKey === layer.layer_id}
+                  onDownload={() => handleLayerDownload(layer)}
+                />
+              </li>
             ))}
           </ul>
         </div>
@@ -223,8 +232,8 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
               const busy = busyKey === output.key;
 
               return (
-                <OutputRow
-                  key={output.key}
+                <li key={output.key}>
+                  <OutputRow
                   icon={output.icon}
                   iconWrapClass={output.iconWrapClass}
                   label={
@@ -238,6 +247,7 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
                   busy={busy}
                   onDownload={() => file && handleStepDownload(output, file)}
                 />
+                </li>
               );
             })}
           </ul>
