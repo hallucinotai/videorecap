@@ -1,0 +1,48 @@
+{
+  "L3_gender": {
+    "A": {
+      "speaker_id": "A",
+      "gender": "male",
+      "gender_confidence": 0.88,
+      "gender_evidence": [
+        "self_rhetorical:u5:0.88"
+      ],
+      "requires_review": false,
+      "pronoun_hint": "he",
+      "gender_status": "proposed",
+      "gender_source": "text_analysis"
+    },
+    "B": {
+      "speaker_id": "B",
+      "gender": "unknown",
+      "gender_confidence": 0.0,
+      "gender_evidence": [],
+      "requires_review": false,
+      "pronoun_hint": null,
+      "gender_status": "proposed",
+      "gender_source": "text_analysis"
+    },
+    "C": {
+      "speaker_id": "C",
+      "gender": "female",
+      "gender_confidence": 0.58,
+      "gender_evidence": [
+        "address_female:u5:0.58"
+      ],
+      "requires_review": true,
+      "pronoun_hint": null,
+      "gender_status": "proposed",
+      "gender_source": "text_analysis"
+    },
+    "_reconciliation": {
+      "speaker_id": "_reconciliation",
+      "gender": "unknown",
+      "gender_confidence": 0.0,
+      "gender_evidence": [],
+      "requires_review": false,
+      "pronoun_hint": null,
+      "gender_status": "proposed",
+      "gender_source": "text_analysis"
+    }
+  }
+}

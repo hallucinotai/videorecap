@@ -1,0 +1,1110 @@
+{
+  "pipeline_meta": {
+    "schema_version": "1.3",
+    "job_id": "local-debug",
+    "layer_id": "L1",
+    "layer_status": {
+      "L0": "ok",
+      "L1": "ok"
+    },
+    "source_provider": "assemblyai",
+    "processed_at": "2026-06-24T08:45:08Z"
+  },
+  "L1_transcript": {
+    "utterances": [
+      {
+        "id": "u1",
+        "start": 37.094,
+        "end": 66.412,
+        "text": "Hey, you doing okay there? What happened? You in some kind of trouble? Yeah. Why don't you let me help you out?",
+        "speaker": "A",
+        "confidence": 0.9037371,
+        "words": [
+          {
+            "text": "Hey,",
+            "start": 37.094,
+            "end": 37.466,
+            "confidence": 0.33875236
+          },
+          {
+            "text": "you",
+            "start": 37.601,
+            "end": 37.702,
+            "confidence": 0.9897702
+          },
+          {
+            "text": "doing",
+            "start": 37.702,
+            "end": 37.922,
+            "confidence": 0.8938136
+          },
+          {
+            "text": "okay",
+            "start": 37.955,
+            "end": 38.378,
+            "confidence": 0.98221886
+          },
+          {
+            "text": "there?",
+            "start": 38.378,
+            "end": 38.648,
+            "confidence": 0.9978388
+          },
+          {
+            "text": "What",
+            "start": 40.799,
+            "end": 41.286,
+            "confidence": 0.97296137
+          },
+          {
+            "text": "happened?",
+            "start": 41.432,
+            "end": 41.902,
+            "confidence": 0.34664586
+          },
+          {
+            "text": "You",
+            "start": 46.3,
+            "end": 46.381,
+            "confidence": 0.9292091
+          },
+          {
+            "text": "in",
+            "start": 46.381,
+            "end": 46.413,
+            "confidence": 0.9781616
+          },
+          {
+            "text": "some",
+            "start": 46.413,
+            "end": 46.624,
+            "confidence": 0.9998635
+          },
+          {
+            "text": "kind",
+            "start": 46.64,
+            "end": 46.819,
+            "confidence": 0.98584974
+          },
+          {
+            "text": "of",
+            "start": 46.819,
+            "end": 46.884,
+            "confidence": 0.99984145
+          },
+          {
+            "text": "trouble?",
+            "start": 46.884,
+            "end": 47.338,
+            "confidence": 0.99545026
+          },
+          {
+            "text": "Yeah.",
+            "start": 50.923,
+            "end": 51.092,
+            "confidence": 0.587558
+          },
+          {
+            "text": "Why",
+            "start": 64.988,
+            "end": 65.038,
+            "confidence": 0.90062773
+          },
+          {
+            "text": "don't",
+            "start": 65.038,
+            "end": 65.323,
+            "confidence": 0.9989735
+          },
+          {
+            "text": "you",
+            "start": 65.323,
+            "end": 65.373,
+            "confidence": 0.99971
+          },
+          {
+            "text": "let",
+            "start": 65.424,
+            "end": 65.591,
+            "confidence": 0.9926081
+          },
+          {
+            "text": "me",
+            "start": 65.591,
+            "end": 65.759,
+            "confidence": 0.99985445
+          },
+          {
+            "text": "help",
+            "start": 65.759,
+            "end": 65.993,
+            "confidence": 0.9998047
+          },
+          {
+            "text": "you",
+            "start": 65.993,
+            "end": 66.111,
+            "confidence": 0.9997986
+          },
+          {
+            "text": "out?",
+            "start": 66.178,
+            "end": 66.412,
+            "confidence": 0.99290556
+          }
+        ]
+      },
+      {
+        "id": "u2",
+        "start": 68.24,
+        "end": 70.844,
+        "text": "I, uh, I don't think that's a good idea.",
+        "speaker": "B",
+        "confidence": 0.8755391,
+        "words": [
+          {
+            "text": "I,",
+            "start": 68.24,
+            "end": 68.256,
+            "confidence": 0.5835537
+          },
+          {
+            "text": "uh,",
+            "start": 68.602,
+            "end": 68.784,
+            "confidence": 0.32480925
+          },
+          {
+            "text": "I",
+            "start": 69.855,
+            "end": 69.921,
+            "confidence": 0.98034173
+          },
+          {
+            "text": "don't",
+            "start": 69.921,
+            "end": 70.086,
+            "confidence": 0.99703085
+          },
+          {
+            "text": "think",
+            "start": 70.086,
+            "end": 70.234,
+            "confidence": 0.9998746
+          },
+          {
+            "text": "that's",
+            "start": 70.234,
+            "end": 70.416,
+            "confidence": 0.9970506
+          },
+          {
+            "text": "a",
+            "start": 70.416,
+            "end": 70.432,
+            "confidence": 0.99978024
+          },
+          {
+            "text": "good",
+            "start": 70.481,
+            "end": 70.646,
+            "confidence": 0.9998634
+          },
+          {
+            "text": "idea.",
+            "start": 70.646,
+            "end": 70.844,
+            "confidence": 0.9975477
+          }
+        ]
+      },
+      {
+        "id": "u3",
+        "start": 73.453,
+        "end": 79.885,
+        "text": "Okay. Uh, well, I could call the police, so maybe they could get\u2014 No.",
+        "speaker": "A",
+        "confidence": 0.8156092,
+        "words": [
+          {
+            "text": "Okay.",
+            "start": 73.453,
+            "end": 73.791,
+            "confidence": 0.7292841
+          },
+          {
+            "text": "Uh,",
+            "start": 76.983,
+            "end": 76.999,
+            "confidence": 0.8225931
+          },
+          {
+            "text": "well,",
+            "start": 77.386,
+            "end": 77.66,
+            "confidence": 0.91151327
+          },
+          {
+            "text": "I",
+            "start": 78.031,
+            "end": 78.047,
+            "confidence": 0.9986557
+          },
+          {
+            "text": "could",
+            "start": 78.047,
+            "end": 78.273,
+            "confidence": 0.6748726
+          },
+          {
+            "text": "call",
+            "start": 78.273,
+            "end": 78.45,
+            "confidence": 0.99877316
+          },
+          {
+            "text": "the",
+            "start": 78.45,
+            "end": 78.595,
+            "confidence": 0.99956745
+          },
+          {
+            "text": "police,",
+            "start": 78.595,
+            "end": 78.998,
+            "confidence": 0.40106896
+          },
+          {
+            "text": "so",
+            "start": 79.079,
+            "end": 79.176,
+            "confidence": 0.50640774
+          },
+          {
+            "text": "maybe",
+            "start": 79.192,
+            "end": 79.417,
+            "confidence": 0.9794527
+          },
+          {
+            "text": "they",
+            "start": 79.417,
+            "end": 79.498,
+            "confidence": 0.9902806
+          },
+          {
+            "text": "could",
+            "start": 79.579,
+            "end": 79.675,
+            "confidence": 0.97718006
+          },
+          {
+            "text": "get\u2014",
+            "start": 79.675,
+            "end": 79.772,
+            "confidence": 0.8602336
+          },
+          {
+            "text": "No.",
+            "start": 79.772,
+            "end": 79.885,
+            "confidence": 0.5686458
+          }
+        ]
+      },
+      {
+        "id": "u4",
+        "start": 80.546,
+        "end": 83.691,
+        "text": "No, do not do that, okay? Don't.",
+        "speaker": "C",
+        "confidence": 0.89993966,
+        "words": [
+          {
+            "text": "No,",
+            "start": 80.546,
+            "end": 80.771,
+            "confidence": 0.63489074
+          },
+          {
+            "text": "do",
+            "start": 80.868,
+            "end": 80.965,
+            "confidence": 0.9982961
+          },
+          {
+            "text": "not",
+            "start": 80.965,
+            "end": 81.207,
+            "confidence": 0.9997297
+          },
+          {
+            "text": "do",
+            "start": 81.207,
+            "end": 81.32,
+            "confidence": 0.9997036
+          },
+          {
+            "text": "that,",
+            "start": 81.32,
+            "end": 81.466,
+            "confidence": 0.70201504
+          },
+          {
+            "text": "okay?",
+            "start": 81.774,
+            "end": 82.083,
+            "confidence": 0.97941184
+          },
+          {
+            "text": "Don't.",
+            "start": 83.301,
+            "end": 83.691,
+            "confidence": 0.98553044
+          }
+        ]
+      },
+      {
+        "id": "u5",
+        "start": 86.873,
+        "end": 147.808,
+        "text": "Okay. Well, look, I mean, if you need help, I could be that. Just get in the truck. I mean, who knows? You know, you'd probably even like it in there. It's freezing out here. It's a lot warmer in there. Trust me. Look, what kind of guy would I be to let a pretty girl in need just walk alone down this road? I mean, I should be driving. And I could really use the company too.",
+        "speaker": "A",
+        "confidence": 0.9122294,
+        "words": [
+          {
+            "text": "Okay.",
+            "start": 86.873,
+            "end": 87.406,
+            "confidence": 0.9865302
+          },
+          {
+            "text": "Well,",
+            "start": 89.519,
+            "end": 89.971,
+            "confidence": 0.7417975
+          },
+          {
+            "text": "look,",
+            "start": 91.553,
+            "end": 91.762,
+            "confidence": 0.9460717
+          },
+          {
+            "text": "I",
+            "start": 91.795,
+            "end": 91.811,
+            "confidence": 0.99089056
+          },
+          {
+            "text": "mean,",
+            "start": 91.859,
+            "end": 92.069,
+            "confidence": 0.9524285
+          },
+          {
+            "text": "if",
+            "start": 92.085,
+            "end": 92.198,
+            "confidence": 0.94434744
+          },
+          {
+            "text": "you",
+            "start": 93.069,
+            "end": 93.15,
+            "confidence": 0.97795594
+          },
+          {
+            "text": "need",
+            "start": 93.15,
+            "end": 93.376,
+            "confidence": 0.9969313
+          },
+          {
+            "text": "help,",
+            "start": 93.408,
+            "end": 93.537,
+            "confidence": 0.968252
+          },
+          {
+            "text": "I",
+            "start": 93.554,
+            "end": 93.57,
+            "confidence": 0.9941063
+          },
+          {
+            "text": "could",
+            "start": 93.57,
+            "end": 93.618,
+            "confidence": 0.6652238
+          },
+          {
+            "text": "be",
+            "start": 93.618,
+            "end": 93.65,
+            "confidence": 0.99892956
+          },
+          {
+            "text": "that.",
+            "start": 93.65,
+            "end": 93.715,
+            "confidence": 0.7486793
+          },
+          {
+            "text": "Just",
+            "start": 97.53,
+            "end": 97.708,
+            "confidence": 0.15981774
+          },
+          {
+            "text": "get",
+            "start": 97.708,
+            "end": 97.789,
+            "confidence": 0.98234355
+          },
+          {
+            "text": "in",
+            "start": 97.789,
+            "end": 97.869,
+            "confidence": 0.9982704
+          },
+          {
+            "text": "the",
+            "start": 97.869,
+            "end": 98.015,
+            "confidence": 0.99534816
+          },
+          {
+            "text": "truck.",
+            "start": 98.015,
+            "end": 98.37,
+            "confidence": 0.9541411
+          },
+          {
+            "text": "I",
+            "start": 102.371,
+            "end": 102.388,
+            "confidence": 0.7825893
+          },
+          {
+            "text": "mean,",
+            "start": 102.404,
+            "end": 102.678,
+            "confidence": 0.9821106
+          },
+          {
+            "text": "who",
+            "start": 102.694,
+            "end": 102.791,
+            "confidence": 0.9970855
+          },
+          {
+            "text": "knows?",
+            "start": 102.791,
+            "end": 103.162,
+            "confidence": 0.55463713
+          },
+          {
+            "text": "You",
+            "start": 103.356,
+            "end": 103.42,
+            "confidence": 0.7927015
+          },
+          {
+            "text": "know,",
+            "start": 103.42,
+            "end": 103.566,
+            "confidence": 0.45649216
+          },
+          {
+            "text": "you'd",
+            "start": 103.759,
+            "end": 104.614,
+            "confidence": 0.39140132
+          },
+          {
+            "text": "probably",
+            "start": 104.727,
+            "end": 105.099,
+            "confidence": 0.99737597
+          },
+          {
+            "text": "even",
+            "start": 105.131,
+            "end": 105.437,
+            "confidence": 0.9968094
+          },
+          {
+            "text": "like",
+            "start": 105.437,
+            "end": 105.631,
+            "confidence": 0.99831605
+          },
+          {
+            "text": "it",
+            "start": 105.631,
+            "end": 105.696,
+            "confidence": 0.98845196
+          },
+          {
+            "text": "in",
+            "start": 105.696,
+            "end": 105.744,
+            "confidence": 0.99555826
+          },
+          {
+            "text": "there.",
+            "start": 105.857,
+            "end": 106.083,
+            "confidence": 0.9973649
+          },
+          {
+            "text": "It's",
+            "start": 112.268,
+            "end": 113.792,
+            "confidence": 0.9778713
+          },
+          {
+            "text": "freezing",
+            "start": 113.873,
+            "end": 114.165,
+            "confidence": 0.6838268
+          },
+          {
+            "text": "out",
+            "start": 114.262,
+            "end": 114.311,
+            "confidence": 0.9996593
+          },
+          {
+            "text": "here.",
+            "start": 114.424,
+            "end": 114.635,
+            "confidence": 0.9908925
+          },
+          {
+            "text": "It's",
+            "start": 119.861,
+            "end": 120.218,
+            "confidence": 0.81144464
+          },
+          {
+            "text": "a",
+            "start": 120.267,
+            "end": 120.316,
+            "confidence": 0.9957065
+          },
+          {
+            "text": "lot",
+            "start": 120.316,
+            "end": 120.56,
+            "confidence": 0.9994892
+          },
+          {
+            "text": "warmer",
+            "start": 120.56,
+            "end": 120.82,
+            "confidence": 0.9998466
+          },
+          {
+            "text": "in",
+            "start": 120.82,
+            "end": 120.869,
+            "confidence": 0.9982132
+          },
+          {
+            "text": "there.",
+            "start": 120.901,
+            "end": 121.226,
+            "confidence": 0.7689366
+          },
+          {
+            "text": "Trust",
+            "start": 122.608,
+            "end": 122.901,
+            "confidence": 0.9996636
+          },
+          {
+            "text": "me.",
+            "start": 122.917,
+            "end": 123.031,
+            "confidence": 0.99079615
+          },
+          {
+            "text": "Look,",
+            "start": 127.6,
+            "end": 127.778,
+            "confidence": 0.86866134
+          },
+          {
+            "text": "what",
+            "start": 127.794,
+            "end": 127.957,
+            "confidence": 0.99686974
+          },
+          {
+            "text": "kind",
+            "start": 127.957,
+            "end": 128.119,
+            "confidence": 0.9622677
+          },
+          {
+            "text": "of",
+            "start": 128.119,
+            "end": 128.168,
+            "confidence": 0.9998078
+          },
+          {
+            "text": "guy",
+            "start": 128.201,
+            "end": 128.282,
+            "confidence": 0.9950113
+          },
+          {
+            "text": "would",
+            "start": 128.525,
+            "end": 128.672,
+            "confidence": 0.99968064
+          },
+          {
+            "text": "I",
+            "start": 128.672,
+            "end": 128.85,
+            "confidence": 0.99943274
+          },
+          {
+            "text": "be",
+            "start": 128.85,
+            "end": 129.11,
+            "confidence": 0.99981433
+          },
+          {
+            "text": "to",
+            "start": 129.175,
+            "end": 129.256,
+            "confidence": 0.9563801
+          },
+          {
+            "text": "let",
+            "start": 129.256,
+            "end": 129.403,
+            "confidence": 0.99924266
+          },
+          {
+            "text": "a",
+            "start": 129.403,
+            "end": 129.5,
+            "confidence": 0.99928755
+          },
+          {
+            "text": "pretty",
+            "start": 129.5,
+            "end": 129.711,
+            "confidence": 0.9998838
+          },
+          {
+            "text": "girl",
+            "start": 129.744,
+            "end": 129.939,
+            "confidence": 0.99983203
+          },
+          {
+            "text": "in",
+            "start": 129.987,
+            "end": 130.036,
+            "confidence": 0.9952944
+          },
+          {
+            "text": "need",
+            "start": 130.15,
+            "end": 130.605,
+            "confidence": 0.99987376
+          },
+          {
+            "text": "just",
+            "start": 131.124,
+            "end": 131.417,
+            "confidence": 0.99304515
+          },
+          {
+            "text": "walk",
+            "start": 131.449,
+            "end": 131.774,
+            "confidence": 0.9997477
+          },
+          {
+            "text": "alone",
+            "start": 131.774,
+            "end": 132.213,
+            "confidence": 0.99883586
+          },
+          {
+            "text": "down",
+            "start": 132.343,
+            "end": 132.554,
+            "confidence": 0.99950397
+          },
+          {
+            "text": "this",
+            "start": 132.586,
+            "end": 132.862,
+            "confidence": 0.99921966
+          },
+          {
+            "text": "road?",
+            "start": 132.895,
+            "end": 133.041,
+            "confidence": 0.9944611
+          },
+          {
+            "text": "I",
+            "start": 136.948,
+            "end": 136.965,
+            "confidence": 0.9903922
+          },
+          {
+            "text": "mean,",
+            "start": 136.965,
+            "end": 137.131,
+            "confidence": 0.9543199
+          },
+          {
+            "text": "I",
+            "start": 137.28,
+            "end": 137.363,
+            "confidence": 0.97272146
+          },
+          {
+            "text": "should",
+            "start": 137.363,
+            "end": 137.579,
+            "confidence": 0.99652594
+          },
+          {
+            "text": "be",
+            "start": 137.596,
+            "end": 137.762,
+            "confidence": 0.9994861
+          },
+          {
+            "text": "driving.",
+            "start": 137.762,
+            "end": 138.21,
+            "confidence": 0.45835608
+          },
+          {
+            "text": "And",
+            "start": 145.559,
+            "end": 145.625,
+            "confidence": 0.90276986
+          },
+          {
+            "text": "I",
+            "start": 145.641,
+            "end": 145.739,
+            "confidence": 0.9983096
+          },
+          {
+            "text": "could",
+            "start": 145.739,
+            "end": 146.445,
+            "confidence": 0.96026313
+          },
+          {
+            "text": "really",
+            "start": 146.462,
+            "end": 146.774,
+            "confidence": 0.4281598
+          },
+          {
+            "text": "use",
+            "start": 146.872,
+            "end": 147.118,
+            "confidence": 0.9998642
+          },
+          {
+            "text": "the",
+            "start": 147.118,
+            "end": 147.217,
+            "confidence": 0.9979772
+          },
+          {
+            "text": "company",
+            "start": 147.217,
+            "end": 147.677,
+            "confidence": 0.9999716
+          },
+          {
+            "text": "too.",
+            "start": 147.709,
+            "end": 147.808,
+            "confidence": 0.58931947
+          }
+        ]
+      },
+      {
+        "id": "u6",
+        "start": 151.86,
+        "end": 153.999,
+        "text": "Okay, I think it's best if you just get back in the car, okay?",
+        "speaker": "B",
+        "confidence": 0.94446594,
+        "words": [
+          {
+            "text": "Okay,",
+            "start": 151.86,
+            "end": 152.06,
+            "confidence": 0.39866242
+          },
+          {
+            "text": "I",
+            "start": 152.077,
+            "end": 152.127,
+            "confidence": 0.9702867
+          },
+          {
+            "text": "think",
+            "start": 152.127,
+            "end": 152.311,
+            "confidence": 0.99978894
+          },
+          {
+            "text": "it's",
+            "start": 152.311,
+            "end": 152.478,
+            "confidence": 0.99512994
+          },
+          {
+            "text": "best",
+            "start": 152.478,
+            "end": 152.712,
+            "confidence": 0.99953365
+          },
+          {
+            "text": "if",
+            "start": 152.712,
+            "end": 152.796,
+            "confidence": 0.9951827
+          },
+          {
+            "text": "you",
+            "start": 152.796,
+            "end": 152.846,
+            "confidence": 0.9983808
+          },
+          {
+            "text": "just",
+            "start": 152.896,
+            "end": 153.063,
+            "confidence": 0.99252945
+          },
+          {
+            "text": "get",
+            "start": 153.063,
+            "end": 153.147,
+            "confidence": 0.9989201
+          },
+          {
+            "text": "back",
+            "start": 153.147,
+            "end": 153.397,
+            "confidence": 0.9997603
+          },
+          {
+            "text": "in",
+            "start": 153.397,
+            "end": 153.464,
+            "confidence": 0.9993611
+          },
+          {
+            "text": "the",
+            "start": 153.464,
+            "end": 153.564,
+            "confidence": 0.9998286
+          },
+          {
+            "text": "car,",
+            "start": 153.564,
+            "end": 153.832,
+            "confidence": 0.90368366
+          },
+          {
+            "text": "okay?",
+            "start": 153.899,
+            "end": 153.999,
+            "confidence": 0.97147447
+          }
+        ]
+      },
+      {
+        "id": "u7",
+        "start": 160.754,
+        "end": 180.521,
+        "text": "No, just get in the truck. You need to\u2014 Easy. Relax. Relax, relax. We're going in. It's okay. You're okay. I'm okay. We're okay. Okay.",
+        "speaker": "A",
+        "confidence": 0.8206631,
+        "words": [
+          {
+            "text": "No,",
+            "start": 160.754,
+            "end": 160.867,
+            "confidence": 0.4433284
+          },
+          {
+            "text": "just",
+            "start": 160.916,
+            "end": 161.337,
+            "confidence": 0.9971342
+          },
+          {
+            "text": "get",
+            "start": 161.418,
+            "end": 161.58,
+            "confidence": 0.53213364
+          },
+          {
+            "text": "in",
+            "start": 161.58,
+            "end": 161.613,
+            "confidence": 0.9982994
+          },
+          {
+            "text": "the",
+            "start": 161.613,
+            "end": 161.726,
+            "confidence": 0.99881727
+          },
+          {
+            "text": "truck.",
+            "start": 161.726,
+            "end": 162.067,
+            "confidence": 0.8638257
+          },
+          {
+            "text": "You",
+            "start": 162.293,
+            "end": 162.391,
+            "confidence": 0.4475273
+          },
+          {
+            "text": "need",
+            "start": 162.78,
+            "end": 163.266,
+            "confidence": 0.98305607
+          },
+          {
+            "text": "to\u2014",
+            "start": 163.266,
+            "end": 163.46,
+            "confidence": 0.30359334
+          },
+          {
+            "text": "Easy.",
+            "start": 164.254,
+            "end": 164.546,
+            "confidence": 0.13925278
+          },
+          {
+            "text": "Relax.",
+            "start": 165.0,
+            "end": 165.794,
+            "confidence": 0.94730633
+          },
+          {
+            "text": "Relax,",
+            "start": 166.264,
+            "end": 166.718,
+            "confidence": 0.50092757
+          },
+          {
+            "text": "relax.",
+            "start": 166.831,
+            "end": 167.333,
+            "confidence": 0.96430546
+          },
+          {
+            "text": "We're",
+            "start": 168.76,
+            "end": 168.921,
+            "confidence": 0.68308705
+          },
+          {
+            "text": "going",
+            "start": 168.953,
+            "end": 169.082,
+            "confidence": 0.9992519
+          },
+          {
+            "text": "in.",
+            "start": 169.114,
+            "end": 169.308,
+            "confidence": 0.98605704
+          },
+          {
+            "text": "It's",
+            "start": 170.163,
+            "end": 170.389,
+            "confidence": 0.9980259
+          },
+          {
+            "text": "okay.",
+            "start": 170.389,
+            "end": 170.743,
+            "confidence": 0.8568815
+          },
+          {
+            "text": "You're",
+            "start": 172.082,
+            "end": 172.243,
+            "confidence": 0.9631021
+          },
+          {
+            "text": "okay.",
+            "start": 172.243,
+            "end": 172.614,
+            "confidence": 0.97262734
+          },
+          {
+            "text": "I'm",
+            "start": 173.888,
+            "end": 174.034,
+            "confidence": 0.99527717
+          },
+          {
+            "text": "okay.",
+            "start": 174.034,
+            "end": 174.227,
+            "confidence": 0.9980466
+          },
+          {
+            "text": "We're",
+            "start": 176.26,
+            "end": 176.454,
+            "confidence": 0.99628925
+          },
+          {
+            "text": "okay.",
+            "start": 176.454,
+            "end": 176.794,
+            "confidence": 0.99440044
+          },
+          {
+            "text": "Okay.",
+            "start": 179.776,
+            "end": 180.521,
+            "confidence": 0.95402324
+          }
+        ]
+      }
+    ],
+    "diarization_summary": {
+      "speaker_count": 3,
+      "utterance_count": 7
+    }
+  },
+  "L0_metadata": {
+    "provider": "assemblyai",
+    "speaker_diarization_enabled": true,
+    "language_code": "en"
+  }
+}

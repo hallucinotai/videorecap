@@ -10,8 +10,18 @@ import os
 import threading
 from typing import Any
 
-import whisper
-from moviepy.editor import VideoFileClip
+try:
+    from moviepy.editor import VideoFileClip
+except ImportError:
+    try:
+        from moviepy import VideoFileClip
+    except ImportError:
+        VideoFileClip = None
+
+try:
+    import whisper
+except ImportError:
+    whisper = None
 
 try:
     import assemblyai as aai
@@ -37,6 +47,10 @@ def is_whisper_model_cached(model_size: str) -> bool:
 
 
 def _get_whisper_model(model_size: str):
+    if whisper is None:
+        raise ImportError(
+            "whisper package not installed. Install with: pip install openai-whisper"
+        )
     if model_size not in _WHISPER_MODEL_CACHE:
         with _WHISPER_LOAD_LOCK:
             if model_size not in _WHISPER_MODEL_CACHE:
@@ -84,6 +98,27 @@ def get_output_path(relative_path):
     return os.path.join(SCRIPT_DIR, relative_path)
 
 
+def _extract_audio_to_wav(video_path: str, output_wav: str) -> None:
+    """Extract audio track from a video file to WAV (moviepy 1.x and 2.x)."""
+    if VideoFileClip is None:
+        raise ImportError(
+            "moviepy is required for audio extraction. Install with: pip install moviepy"
+        )
+
+    os.makedirs(os.path.dirname(output_wav), exist_ok=True)
+    video = VideoFileClip(video_path)
+    try:
+        if video.audio is None:
+            raise RuntimeError(f"No audio track found in video: {video_path}")
+        try:
+            video.audio.write_audiofile(output_wav, verbose=False, logger=None)
+        except TypeError:
+            # moviepy 2.x dropped verbose/logger kwargs
+            video.audio.write_audiofile(output_wav)
+    finally:
+        video.close()
+
+
 def transcribe_video(video_path, output_dir="output/transcriptions", model_size="small", language=None):
     """
     Step 1: Transcribe video to text with timestamps
@@ -116,10 +151,8 @@ def transcribe_video(video_path, output_dir="output/transcriptions", model_size=
     
     # Extract audio from video
     print("Extracting audio from video...")
-    video = VideoFileClip(video_path)
     temp_audio = os.path.join(original_dir, "extracted_audio.wav")
-    video.audio.write_audiofile(temp_audio, verbose=False, logger=None)
-    video.close()
+    _extract_audio_to_wav(video_path, temp_audio)
     
     print(f"Audio extracted to: {temp_audio}")
     
@@ -209,11 +242,8 @@ def transcribe_video_with_assemblyai(
 
     # Extract audio from video (AssemblyAI works with audio files)
     print("Extracting audio from video...")
-    video = VideoFileClip(video_path)
     temp_audio = os.path.join(get_output_path("output/original"), "extracted_audio.wav")
-    os.makedirs(os.path.dirname(temp_audio), exist_ok=True)
-    video.audio.write_audiofile(temp_audio, verbose=False, logger=None)
-    video.close()
+    _extract_audio_to_wav(video_path, temp_audio)
     print(f"Audio extracted to: {temp_audio}")
 
     # Transcribe with AssemblyAI
@@ -279,6 +309,17 @@ def transcribe_video_with_assemblyai(
             "speaker": speaker_id,
             "speaker_confidence": float(segment.confidence) if segment.confidence else 0.0,
         }
+        if getattr(segment, "words", None):
+            segment_entry["words"] = [
+                {
+                    "text": (word.text or "").strip(),
+                    "start": float(word.start / 1000),
+                    "end": float(word.end / 1000),
+                    "confidence": float(word.confidence) if getattr(word, "confidence", None) else None,
+                }
+                for word in segment.words
+                if word.text
+            ]
         # Use canonical speaker-level name (not segment-level extraction)
         # This ensures consistency: all segments for Speaker A use the same final name
         if speaker_id in speaker_names:

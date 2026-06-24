@@ -71,6 +71,7 @@ checkpoints/
 *.txt
 !requirements.txt
 !README.txt
+!scripts/*_requirements.txt
 *.mp4
 *.mp3
 *.wav
@@ -92,7 +93,14 @@ logs/
 
 # Autogen
 .cache/
-scripts/
+
+# scripts/ source is tracked; ignore generated output under it
+scripts/__pycache__/
+scripts/character_tracks/
+scripts/word_frame_samples/
+scripts/transcriptions/
+scripts/layer1_person_frames.json
+scripts/layer1_person_frames_meta.json
 
 # macOS
 .DS_Store
@@ -103,6 +111,9 @@ scripts/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Local video description experiments (output from scripts/describe_video*.py)
+video_descriptions/
 
 # Output directories (generated files)
 video_recap_agent/output/

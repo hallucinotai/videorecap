@@ -36,6 +36,9 @@ class EnrichmentLayerFile(BaseModel):
     size_mb: float | None = None
     download_url: str | None = None
     available: bool = False
+    sublayer_id: str | None = None
+    parent_layer_id: str | None = None
+    is_sublayer: bool = False
 
 
 class CreateJobRequest(BaseModel):
@@ -158,6 +161,31 @@ def _build_enrichment_layers(job: RecapJob) -> list[EnrichmentLayerFile] | None:
                 available=available,
             )
         )
+        for sub in layer_def.sublayers:
+            sub_s3 = LayerStorage.resolve_sublayer_s3_key(
+                intermediate_keys, layer_def.layer_id, sub.sublayer_id
+            )
+            sub_available = sub_s3 is not None
+            sub_size = _head_object_size_mb(sub_s3) if sub_s3 else None
+            sub_url = (
+                LayerStorage.download_url(job.id, layer_def.layer_id, sub.sublayer_id)
+                if sub_available
+                else None
+            )
+            layers.append(
+                EnrichmentLayerFile(
+                    layer_id=f"{layer_def.layer_id}.{sub.sublayer_id}",
+                    parent_layer_id=layer_def.layer_id,
+                    sublayer_id=sub.sublayer_id,
+                    is_sublayer=True,
+                    label=f"{layer_def.layer_id} · {sub.sublayer_id} {sub.label}",
+                    description=f"Sublayer artifact: {sub.label}",
+                    filename=sub.artifact_filename,
+                    size_mb=sub_size,
+                    download_url=sub_url,
+                    available=sub_available,
+                )
+            )
     return layers
 
 

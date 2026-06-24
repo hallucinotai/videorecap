@@ -1,0 +1,6 @@
+# BLIP video frame captions — local test deps (scripts/ is gitignored)
+torch>=2.1
+torchvision>=0.16
+transformers>=4.40
+Pillow>=10.0
+opencv-python>=4.8

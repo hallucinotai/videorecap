@@ -130,58 +130,69 @@ export function EnrichmentReviewPanel({ jobId, onSubmitted }: EnrichmentReviewPa
               key={item.speaker_id}
               className="rounded-md border bg-background/80 p-3 text-sm"
             >
-              <div className="font-medium">
-                {itemLabel(item)}: proposed {item.proposed} (
-                {(item.confidence * 100).toFixed(0)}% confidence)
-              </div>
-              {presentation?.sample_quote && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Says: &ldquo;{presentation.sample_quote}&rdquo;
-                  {presentation.timestamp_sec != null &&
-                    ` · at ${formatTimestamp(presentation.timestamp_sec)}`}
-                </p>
-              )}
-              {item.evidence.length > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground/80">
-                  Evidence: {item.evidence.join(", ")}
-                </p>
-              )}
-              <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAction(item.speaker_id, "confirm")}
-                  className={`rounded border px-2 py-1 text-xs ${
-                    d.action === "confirm" ? "border-primary bg-primary/10" : ""
-                  }`}
-                >
-                  Confirm
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAction(item.speaker_id, "reject")}
-                  className={`rounded border px-2 py-1 text-xs ${
-                    d.action === "reject" ? "border-primary bg-primary/10" : ""
-                  }`}
-                >
-                  Reject (unknown)
-                </button>
-                <label className="flex items-center gap-1 text-xs">
-                  Override:
-                  <select
-                    className="rounded border bg-background px-1 py-0.5"
-                    value={d.action === "override" ? d.gender || item.proposed : ""}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setAction(item.speaker_id, "override", e.target.value);
-                      }
-                    }}
-                  >
-                    <option value="">—</option>
-                    <option value="female">female</option>
-                    <option value="male">male</option>
-                    <option value="unknown">unknown</option>
-                  </select>
-                </label>
+              <div className="flex gap-3">
+                {presentation?.thumbnail_url && (
+                  <img
+                    src={presentation.thumbnail_url}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-md border object-cover"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium">
+                    {itemLabel(item)}: proposed {item.proposed} (
+                    {(item.confidence * 100).toFixed(0)}% confidence)
+                  </div>
+                  {presentation?.sample_quote && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Says: &ldquo;{presentation.sample_quote}&rdquo;
+                      {presentation.timestamp_sec != null &&
+                        ` · at ${formatTimestamp(presentation.timestamp_sec)}`}
+                    </p>
+                  )}
+                  {item.evidence.length > 0 && (
+                    <p className="mt-1 text-xs text-muted-foreground/80">
+                      Evidence: {item.evidence.join(", ")}
+                    </p>
+                  )}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAction(item.speaker_id, "confirm")}
+                      className={`rounded border px-2 py-1 text-xs ${
+                        d.action === "confirm" ? "border-primary bg-primary/10" : ""
+                      }`}
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAction(item.speaker_id, "reject")}
+                      className={`rounded border px-2 py-1 text-xs ${
+                        d.action === "reject" ? "border-primary bg-primary/10" : ""
+                      }`}
+                    >
+                      Reject (unknown)
+                    </button>
+                    <label className="flex items-center gap-1 text-xs">
+                      Override:
+                      <select
+                        className="rounded border bg-background px-1 py-0.5"
+                        value={d.action === "override" ? d.gender || item.proposed : ""}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setAction(item.speaker_id, "override", e.target.value);
+                          }
+                        }}
+                      >
+                        <option value="">—</option>
+                        <option value="female">female</option>
+                        <option value="male">male</option>
+                        <option value="unknown">unknown</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
               </div>
             </li>
           );

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 LOW_CONFIDENCE_THRESHOLD = 0.85
 GENDER_NARRATION_MIN = 0.75
 GENDER_REVIEW_MAX = 0.75
@@ -69,6 +69,35 @@ def mark_layer_ok(meta: dict[str, Any], layer_id: str) -> None:
     meta["processed_at"] = utc_now_iso()
 
 
+def mark_sublayer_ok(
+    meta: dict[str, Any],
+    layer_id: str,
+    sublayer_id: str,
+    status: str = "ok",
+) -> None:
+    meta.setdefault("sublayer_status", {})[f"{layer_id}.{sublayer_id}"] = status
+
+
+def l2_speakers_from_identity(l2_identity: dict[str, Any]) -> dict[str, Any]:
+    """Build legacy L2_speakers block from L2_identity."""
+    speakers: dict[str, Any] = {}
+    for speaker_id, profile in l2_identity.items():
+        name_block = profile.get("name") or {}
+        diar = profile.get("diarization") or {}
+        speakers[speaker_id] = {
+            "speaker_id": speaker_id,
+            "name": name_block.get("value"),
+            "name_source": "identity" if name_block.get("value") else None,
+            "name_confidence": name_block.get("confidence", 0.0),
+            "name_evidence": name_block.get("evidence") or [],
+            "corrected_from": name_block.get("corrected_from") or [],
+            "total_speech_sec": diar.get("total_speech_sec", 0.0),
+            "utterance_count": diar.get("utterance_count", 0),
+            "avg_confidence": diar.get("avg_confidence", 0.0),
+        }
+    return speakers
+
+
 def deep_copy_doc(doc: dict[str, Any]) -> dict[str, Any]:
     return copy.deepcopy(doc)
 
@@ -81,20 +110,21 @@ def segments_dict_to_utterances(segments: dict[str, Any]) -> list[dict[str, Any]
     )
     utterances = []
     for index, (_seg_id, segment) in enumerate(ordered, start=1):
-        utterances.append(
-            {
-                "id": f"u{index}",
-                "start": float(segment.get("start", 0)),
-                "end": float(segment.get("end", 0)),
-                "text": (segment.get("text") or "").strip(),
-                "speaker": segment.get("speaker") or "Unknown",
-                "confidence": float(
-                    segment.get("speaker_confidence")
-                    if segment.get("speaker_confidence") is not None
-                    else segment.get("confidence", 0.0)
-                ),
-            }
-        )
+        utterance: dict[str, Any] = {
+            "id": f"u{index}",
+            "start": float(segment.get("start", 0)),
+            "end": float(segment.get("end", 0)),
+            "text": (segment.get("text") or "").strip(),
+            "speaker": segment.get("speaker") or "Unknown",
+            "confidence": float(
+                segment.get("speaker_confidence")
+                if segment.get("speaker_confidence") is not None
+                else segment.get("confidence", 0.0)
+            ),
+        }
+        if segment.get("words"):
+            utterance["words"] = segment["words"]
+        utterances.append(utterance)
     return utterances
 
 

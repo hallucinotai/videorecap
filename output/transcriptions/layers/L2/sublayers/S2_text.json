@@ -1,0 +1,33 @@
+{
+  "L2_speakers": {
+    "A": {
+      "speaker_id": "A",
+      "name": null,
+      "name_source": null,
+      "name_confidence": 0.0,
+      "name_evidence": [],
+      "corrected_from": [],
+      "total_speech_sec": 124.3,
+      "utterance_count": 7,
+      "avg_confidence": 0.882
+    }
+  },
+  "L2_utterance_flags": [
+    {
+      "utterance_id": "u3",
+      "low_confidence": true,
+      "reason": "speaker_confidence < 0.85"
+    },
+    {
+      "utterance_id": "u7",
+      "low_confidence": true,
+      "reason": "speaker_confidence < 0.85"
+    }
+  ],
+  "narration_context": {
+    "cast_summary": "",
+    "speaker_map": {}
+  },
+  "video_reconcile_status": "ok",
+  "note": null
+}

@@ -8,7 +8,6 @@ from modules.enrichment.document import (
     GENDER_NARRATION_MIN,
     deep_copy_doc,
     format_timestamp_sec,
-    get_review_queue,
     mark_layer_ok,
     truncate_quote,
     utterances_to_segment_refs,
@@ -26,14 +25,29 @@ def _best_utterance_for_speaker(
     return max(speaker_utts, key=lambda u: len(u.get("text", "")))
 
 
+def _speaker_display_name(
+    speaker_id: str,
+    l2_info: dict[str, Any] | None,
+    identity: dict[str, Any] | None,
+) -> str | None:
+    if identity:
+        name = (identity.get("name") or {}).get("value")
+        if name:
+            return str(name)
+    if l2_info and l2_info.get("name"):
+        return str(l2_info["name"])
+    return None
+
+
 def _build_display_label(
     speaker_id: str,
     l2_info: dict[str, Any] | None,
+    identity: dict[str, Any] | None,
     utterance: dict[str, Any] | None,
 ) -> str:
-    name = (l2_info or {}).get("name")
+    name = _speaker_display_name(speaker_id, l2_info, identity)
     if name:
-        return str(name)
+        return name
     if utterance:
         quote = truncate_quote(utterance.get("text", ""))
         ts = format_timestamp_sec(float(utterance.get("start", 0)))
@@ -42,22 +56,27 @@ def _build_display_label(
 
 
 def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Merge L3 (and future visual) proposals into per-speaker gender view."""
     l3_gender = doc.get("L3_gender") or {}
-    l4_visual = doc.get("L4_visual") or {}
+    l3_visual = doc.get("L3_visual") or {}
     l2_speakers = doc.get("L2_speakers") or {}
+    l2_identity = doc.get("L2_identity") or {}
     utterances = (doc.get("L1_transcript") or {}).get("utterances") or []
 
     speaker_ids = sorted(
         set(l2_speakers.keys())
         | set(l3_gender.keys())
+        | set(l2_identity.keys())
         | {u["speaker"] for u in utterances if u.get("speaker")}
     )
 
     profiles: dict[str, dict[str, Any]] = {}
     for speaker_id in speaker_ids:
+        if speaker_id.startswith("_"):
+            continue
         l3 = l3_gender.get(speaker_id) or {}
-        visual = l4_visual.get(speaker_id) or {}
+        visual = l3_visual.get(speaker_id) or {}
+        identity = l2_identity.get(speaker_id) or {}
+        face = identity.get("face") or {}
 
         value = l3.get("gender", "unknown")
         confidence = float(l3.get("gender_confidence") or 0.0)
@@ -69,10 +88,14 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
         visual_gender = visual.get("gender")
         visual_conf = float(visual.get("gender_confidence") or 0.0)
-        if visual_gender in ("male", "female") and visual_conf > confidence:
-            value = visual_gender
+        if (
+            visual_gender in ("male", "female")
+            and visual_conf > 0
+            and visual_conf > confidence
+            and value == visual_gender
+        ):
             confidence = visual_conf
-            sources = ["L4:visual"]
+            sources = list(set(sources + ["L3:visual"]))
             evidence = list(visual.get("gender_evidence") or evidence)
 
         if value in ("male", "female") and confidence >= GENDER_NARRATION_MIN:
@@ -86,13 +109,14 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
         best_utt = _best_utterance_for_speaker(utterances, speaker_id)
         l2_info = l2_speakers.get(speaker_id) or {}
+        portrait_key = face.get("portrait_s3_key") or visual.get("portrait_s3_key")
         presentation: dict[str, Any] = {
-            "display_label": _build_display_label(speaker_id, l2_info, best_utt),
+            "display_label": _build_display_label(speaker_id, l2_info, identity, best_utt),
             "sample_quote": truncate_quote(best_utt["text"]) if best_utt else None,
             "utterance_id": best_utt.get("id") if best_utt else None,
             "timestamp_sec": float(best_utt["start"]) if best_utt else None,
-            "thumbnail_s3_key": visual.get("thumbnail_s3_key"),
-            "thumbnail_url": visual.get("thumbnail_url"),
+            "thumbnail_s3_key": portrait_key,
+            "thumbnail_url": None,
         }
 
         profiles[speaker_id] = {
@@ -146,8 +170,6 @@ def _pronoun_hints_from_profiles(profiles: dict[str, dict[str, Any]]) -> dict[st
 
 
 class L4FinalizeEnricher:
-    """Terminal layer: merge all proposals and build the user-facing review queue."""
-
     layer_id = "L4"
 
     def enrich(self, doc: dict[str, Any], ctx: Any) -> dict[str, Any]:
