@@ -1,4 +1,4 @@
-"""L2.S2: Speaker names and utterance flags from transcript text (after video reconcile)."""
+"""L2.S2: Speaker names and utterance flags from transcript text (after character observation)."""
 
 from __future__ import annotations
 
@@ -95,18 +95,11 @@ def _resolve_speaker_names(
     return l2_speakers, speaker_map
 
 
-def _build_utterance_flags(utterances: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    flags = []
+def _apply_low_confidence_flags(utterances: list[dict[str, Any]]) -> None:
     for utterance in utterances:
         if utterance.get("confidence", 1.0) < LOW_CONFIDENCE_THRESHOLD:
-            flags.append(
-                {
-                    "utterance_id": utterance["id"],
-                    "low_confidence": True,
-                    "reason": f"speaker_confidence < {LOW_CONFIDENCE_THRESHOLD}",
-                }
-            )
-    return flags
+            utterance["low_confidence"] = True
+            utterance["low_confidence_reason"] = f"speaker_confidence < {LOW_CONFIDENCE_THRESHOLD}"
 
 
 def _build_cast_summary(speaker_map: dict[str, str]) -> str:
@@ -133,7 +126,7 @@ class S2TextNamesEnricher:
             if speaker_id in speaker_map:
                 utterance["speaker_name"] = speaker_map[speaker_id]
 
-        utterance_flags = _build_utterance_flags(utterances)
+        _apply_low_confidence_flags(utterances)
         cast_summary = _build_cast_summary(speaker_map)
         narration_context = {
             "cast_summary": cast_summary,
@@ -147,6 +140,8 @@ class S2TextNamesEnricher:
 
         speakers_compat = {}
         for speaker_id, info in l2_speakers.items():
+            if speaker_id.startswith("_"):
+                continue
             speakers_compat[speaker_id] = {
                 "speaker_id": speaker_id,
                 "name": info.get("name"),
@@ -162,7 +157,6 @@ class S2TextNamesEnricher:
         output = deep_copy_doc(doc)
         output["L1_transcript"] = {**(output.get("L1_transcript") or {}), "utterances": utterances}
         output["L2_speakers"] = l2_speakers
-        output["L2_utterance_flags"] = utterance_flags
         output["narration_context"] = narration_context
         output["metadata"] = metadata
         output["speakers"] = speakers_compat
@@ -174,8 +168,11 @@ def s2_artifact(doc: dict[str, Any], skip_reason: str | None = None, ctx: Any | 
     sublayer_status = (doc.get("pipeline_meta") or {}).get("sublayer_status") or {}
     s1_status = sublayer_status.get("L2.S1", "")
     return {
-        "L2_speakers": doc.get("L2_speakers") or {},
-        "L2_utterance_flags": doc.get("L2_utterance_flags") or [],
+        "L2_speakers": {
+            speaker_id: profile
+            for speaker_id, profile in (doc.get("L2_speakers") or {}).items()
+            if not str(speaker_id).startswith("_")
+        },
         "narration_context": doc.get("narration_context") or {},
         "video_reconcile_status": s1_status,
         "note": (

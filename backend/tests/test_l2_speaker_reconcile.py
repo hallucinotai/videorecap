@@ -53,6 +53,7 @@ def test_apply_merge_relabels_utterances():
     assert count == 1
     assert updated[1]["speaker"] == "A"
     assert updated[1]["speaker_original"] == "C"
+    assert updated[1]["speaker_correction"]["method"] == "cluster_merge"
 
 
 def test_assign_speakers_to_clusters_majority():

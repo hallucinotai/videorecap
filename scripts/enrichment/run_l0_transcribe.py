@@ -11,19 +11,19 @@ Usage:
 
   python scripts/enrichment/run_l0_transcribe.py \\
     --video assets/input_video.mp4 \\
-    --output-dir output/transcriptions \\
+    --run-name my_custom_run \\
     --language en
 
-Output:
-  <output-dir>/transcription.json   (AssemblyAI enhanced format — L0)
-  <output-dir>/transcription.txt    (human-readable lines)
-  output/original/extracted_audio.wav (preserved audio extract)
+Output (per video run):
+  output/transcriptions/<run-name>/transcription.json   (AssemblyAI enhanced format — L0)
+  output/transcriptions/<run-name>/transcription.txt    (human-readable lines)
+  output/original/extracted_audio.wav (shared audio extract)
 
 Next step (L1 normalize):
-  python scripts/enrichment/run_l1_normalize.py
+  python scripts/enrichment/run_l1_normalize.py --run-name <run-name>
 
 Full enrichment chain (L1→L4):
-  python scripts/enrichment/run_enrichment_chain.py --video assets/input_trimmed.mp4
+  python scripts/enrichment/run_enrichment_chain.py --video assets/input_video.mp4
 
 Dependencies:
   pip install assemblyai moviepy
@@ -43,13 +43,15 @@ _ENRICHMENT_DIR = Path(__file__).resolve().parent
 if str(_ENRICHMENT_DIR) not in sys.path:
     sys.path.insert(0, str(_ENRICHMENT_DIR))
 
-from common import load_env_file, print_chain_hint, setup_import_paths
+from common import add_run_name_arg, load_env_file, print_chain_hint, repo_root, setup_import_paths
+from run_paths import resolve_run_name, transcriptions_dir
 
 
 def main() -> None:
     setup_import_paths()
     load_env_file()
 
+    root = repo_root()
     parser = argparse.ArgumentParser(
         description="L0: Transcribe video with AssemblyAI speaker diarization",
     )
@@ -58,10 +60,19 @@ def main() -> None:
         required=True,
         help="Path to input video file",
     )
+    add_run_name_arg(parser)
     parser.add_argument(
         "--output-dir",
-        default="output/transcriptions",
-        help="Directory for transcription.json and transcription.txt (default: output/transcriptions)",
+        default=None,
+        help=(
+            "Directory for transcription.json and transcription.txt "
+            "(default: output/transcriptions/<run-name>/)"
+        ),
+    )
+    parser.add_argument(
+        "--working-dir",
+        default=str(root),
+        help="Repo/working directory for relative output paths",
     )
     parser.add_argument(
         "--language",
@@ -75,10 +86,30 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    working_dir = Path(args.working_dir).expanduser().resolve()
     video_path = Path(args.video).expanduser().resolve()
     if not video_path.is_file():
         print(f"Error: video not found: {video_path}", file=sys.stderr)
         sys.exit(1)
+
+    try:
+        run_name = resolve_run_name(
+            run_name=args.run_name,
+            video_path=video_path,
+            input_path=None,
+            working_dir=working_dir,
+        )
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.output_dir:
+        output_dir = Path(args.output_dir).expanduser()
+        if not output_dir.is_absolute():
+            output_dir = working_dir / output_dir
+        output_dir = output_dir.resolve()
+    else:
+        output_dir = transcriptions_dir(working_dir, run_name)
 
     api_key = (args.api_key or os.environ.get("ASSEMBLYAI_API_KEY") or "").strip()
     if not api_key:
@@ -92,14 +123,21 @@ def main() -> None:
     from modules.transcription import transcribe_video_with_assemblyai
 
     print("L0 Transcribe (AssemblyAI)")
+    print(f"  Run:    {run_name}")
     print(f"  Video: {video_path}")
-    print(f"  Output dir: {args.output_dir}")
+    print(f"  Output dir: {output_dir}")
     print(f"  Language: {args.language}")
+
+    output_dir_rel = (
+        output_dir.relative_to(working_dir)
+        if output_dir.is_relative_to(working_dir)
+        else Path("output") / "transcriptions" / run_name
+    )
 
     try:
         json_path = transcribe_video_with_assemblyai(
             str(video_path),
-            output_dir=args.output_dir,
+            output_dir=str(output_dir_rel),
             api_key=api_key,
             language_code=args.language,
         )
@@ -123,7 +161,7 @@ def main() -> None:
     print(f"  Text: {json_file.with_name('transcription.txt')}")
     print(f"  Segments: {segment_count}")
     print(f"  Speakers: {speaker_count}")
-    print_chain_hint("L0", json_file)
+    print_chain_hint("L0", json_file, working_dir=working_dir)
 
 
 if __name__ == "__main__":

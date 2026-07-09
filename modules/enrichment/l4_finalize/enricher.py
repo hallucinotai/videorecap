@@ -9,6 +9,7 @@ from modules.enrichment.document import (
     deep_copy_doc,
     format_timestamp_sec,
     mark_layer_ok,
+    prune_l4_document,
     truncate_quote,
     utterances_to_segment_refs,
 )
@@ -58,6 +59,7 @@ def _build_display_label(
 def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
     l3_gender = doc.get("L3_gender") or {}
     l3_visual = doc.get("L3_visual") or {}
+    l3_audio = doc.get("L3_audio") or {}
     l2_speakers = doc.get("L2_speakers") or {}
     l2_identity = doc.get("L2_identity") or {}
     utterances = (doc.get("L1_transcript") or {}).get("utterances") or []
@@ -65,6 +67,7 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
     speaker_ids = sorted(
         set(l2_speakers.keys())
         | set(l3_gender.keys())
+        | set(l3_audio.keys())
         | set(l2_identity.keys())
         | {u["speaker"] for u in utterances if u.get("speaker")}
     )
@@ -75,6 +78,7 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
             continue
         l3 = l3_gender.get(speaker_id) or {}
         visual = l3_visual.get(speaker_id) or {}
+        audio = l3_audio.get(speaker_id) or {}
         identity = l2_identity.get(speaker_id) or {}
         face = identity.get("face") or {}
 
@@ -82,6 +86,8 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
         confidence = float(l3.get("gender_confidence") or 0.0)
         sources: list[str] = []
         evidence: list[str] = list(l3.get("gender_evidence") or [])
+        text_value = value if value in ("male", "female") else None
+        text_conf = confidence if text_value else 0.0
 
         if value not in (None, "unknown"):
             sources.append("L3:text")
@@ -98,6 +104,33 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
             sources = list(set(sources + ["L3:visual"]))
             evidence = list(visual.get("gender_evidence") or evidence)
 
+        audio_gender = audio.get("gender")
+        audio_conf = float(audio.get("gender_confidence") or 0.0)
+        audio_known = audio_gender in ("male", "female") and audio_conf > 0
+        text_known = text_value in ("male", "female") and text_conf > 0
+
+        if audio_known:
+            if not text_known and value in (None, "unknown"):
+                value = audio_gender
+                confidence = audio_conf
+                sources = ["L3:audio"]
+                evidence = list(audio.get("gender_evidence") or [])
+            elif audio_gender == value:
+                confidence = round(min(1.0, max(confidence, audio_conf)), 2)
+                sources = list(set(sources + ["L3:audio"]))
+                evidence = list(dict.fromkeys(evidence + list(audio.get("gender_evidence") or [])))
+            elif text_known and audio_gender != text_value:
+                value = text_value
+                confidence = text_conf
+                if "L3:text" not in sources:
+                    sources.append("L3:text")
+                evidence = list(
+                    dict.fromkeys(
+                        evidence
+                        + [f"text:{text_value}:{text_conf:.2f}", f"audio:{audio_gender}:{audio_conf:.2f}"]
+                    )
+                )
+
         if value in ("male", "female") and confidence >= GENDER_NARRATION_MIN:
             status = "auto_accepted"
         elif value in ("male", "female"):
@@ -106,6 +139,9 @@ def _merge_gender_proposals(doc: dict[str, Any]) -> dict[str, dict[str, Any]]:
             status = "unknown"
             value = "unknown"
             confidence = 0.0
+
+        if text_known and audio_known and audio_gender != text_value:
+            status = "pending_review"
 
         best_utt = _best_utterance_for_speaker(utterances, speaker_id)
         l2_info = l2_speakers.get(speaker_id) or {}
@@ -145,12 +181,43 @@ def _build_review_queue(profiles: dict[str, dict[str, Any]]) -> list[dict[str, A
         presentation = profile.get("presentation") or {}
         queue.append(
             {
+                "type": "gender",
                 "speaker_id": speaker_id,
                 "field": "gender",
                 "proposed": gender["value"],
                 "confidence": gender["confidence"],
                 "evidence": gender.get("evidence") or [],
                 "presentation": presentation,
+            }
+        )
+    return queue
+
+
+def _build_attribution_review_queue(utterances: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    queue: list[dict[str, Any]] = []
+    for utterance in utterances:
+        if utterance.get("attribution_status") != "pending_review":
+            continue
+        speaker = utterance.get("speaker")
+        predicted = utterance.get("speaker_predicted")
+        if not speaker or not predicted or speaker == predicted:
+            continue
+        queue.append(
+            {
+                "type": "attribution",
+                "utterance_id": utterance.get("id"),
+                "speaker_id": speaker,
+                "field": "speaker",
+                "proposed": predicted,
+                "character_predicted": utterance.get("character_predicted"),
+                "confidence": utterance.get("attribution_confidence", 0.0),
+                "evidence": utterance.get("attribution_evidence") or [],
+                "presentation": {
+                    "display_label": f"Utterance {utterance.get('id')}",
+                    "sample_quote": truncate_quote(utterance.get("text", "")),
+                    "utterance_id": utterance.get("id"),
+                    "timestamp_sec": float(utterance.get("start", 0)),
+                },
             }
         )
     return queue
@@ -174,7 +241,9 @@ class L4FinalizeEnricher:
 
     def enrich(self, doc: dict[str, Any], ctx: Any) -> dict[str, Any]:
         speaker_profiles = _merge_gender_proposals(doc)
+        utterances = (doc.get("L1_transcript") or {}).get("utterances") or []
         review_queue = _build_review_queue(speaker_profiles)
+        review_queue.extend(_build_attribution_review_queue(utterances))
         pronoun_hints = _pronoun_hints_from_profiles(speaker_profiles)
 
         narration_context = deep_copy_doc(doc.get("narration_context") or {})
@@ -207,4 +276,4 @@ class L4FinalizeEnricher:
         if "segments" not in output:
             output["segments"] = utterances_to_segment_refs(utterances)
 
-        return output
+        return prune_l4_document(output)

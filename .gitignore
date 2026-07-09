@@ -134,3 +134,5 @@ node_modules/
 out/
 frontend/.next/
 *.tsbuildinfo
+
+output/

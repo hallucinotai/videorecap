@@ -7,6 +7,8 @@ from typing import Any
 
 import numpy as np
 
+from modules.enrichment.document import build_utterance_speaker_correction
+
 # Cosine similarity above this → same visual identity cluster.
 FACE_CLUSTER_SIMILARITY_MIN = 0.82
 # Minimum weighted samples linking a diarization label to a cluster before merge.
@@ -172,6 +174,11 @@ def apply_speaker_merge_to_utterances(
             if canonical != original:
                 u["speaker"] = canonical
                 u["speaker_original"] = original
+                u["speaker_correction"] = build_utterance_speaker_correction(
+                    from_speaker=original,
+                    to_speaker=canonical,
+                    method="cluster_merge",
+                )
                 relabeled += 1
         updated.append(u)
     return updated, relabeled
@@ -285,11 +292,13 @@ def apply_visual_utterance_corrections(
             ):
                 u["speaker"] = canonical
                 u["speaker_original"] = aai_speaker
-                u["visual_correction"] = {
-                    "visual_cluster": visual_cluster,
-                    "lip_motion_score": round(best_lip, 3),
-                    "method": "lip_motion_vote",
-                }
+                u["speaker_correction"] = build_utterance_speaker_correction(
+                    from_speaker=aai_speaker,
+                    to_speaker=canonical,
+                    method="visual_lip_cluster",
+                    visual_cluster=visual_cluster,
+                    lip_motion_score=round(best_lip, 3),
+                )
                 corrections.append(
                     {
                         "utterance_id": uid,

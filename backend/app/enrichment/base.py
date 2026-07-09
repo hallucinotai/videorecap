@@ -11,12 +11,15 @@ from typing import Any
 class EnrichmentContext:
     job_id: str
     working_dir: str
+    run_name: str | None = None
     video_path: str | None = None
+    audio_path: str | None = None
     layers_output_dir: str | None = None
     assets_dir: str | None = None
     raw_speakers: dict[str, Any] | None = None
     raw_metadata: dict[str, Any] | None = None
     speaker_asset_paths: dict[str, str] = field(default_factory=dict)
+    lp_s1_partial: dict[str, Any] | None = None
 
 
 class BaseEnricher(ABC):

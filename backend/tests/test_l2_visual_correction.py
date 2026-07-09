@@ -52,4 +52,5 @@ def test_apply_visual_utterance_corrections_relabels_hallucinated_c():
     assert count == 1
     assert updated[0]["speaker"] == "B"
     assert updated[0]["speaker_original"] == "C"
+    assert updated[0]["speaker_correction"]["method"] == "visual_lip_cluster"
     assert corrections[0]["to_speaker"] == "B"

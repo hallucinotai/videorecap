@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from modules.enrichment.composite import run_sublayers
-from modules.enrichment.document import deep_copy_doc, mark_layer_ok
+from modules.enrichment.document import deep_copy_doc, mark_layer_ok, prune_l2_document
 from modules.enrichment.l2_identity.merge import apply_l2_merge
 from modules.enrichment.l2_identity.sublayers.s1_video_reconcile import (
     S1VideoReconcileEnricher,
@@ -41,4 +41,4 @@ class L2IdentityEnricher:
         output["pipeline_meta"] = pipeline_meta
         output["metadata"] = metadata
         output["_sublayer_paths"] = sublayer_paths
-        return output
+        return prune_l2_document(output)

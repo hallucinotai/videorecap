@@ -3,3 +3,4 @@ openai-whisper
 openai
 moviepy
 assemblyai==0.64.0
+pydub>=0.25.1

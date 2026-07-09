@@ -6,10 +6,10 @@ Input:  L0 transcription.json (metadata + speakers + segments)
 Output: enrichment_L1.json (L1_transcript.utterances with u1, u2, …)
 
 Usage:
-  python scripts/enrichment/run_l1_normalize.py
+  python scripts/enrichment/run_l1_normalize.py --run-name input_video_1
   python scripts/enrichment/run_l1_normalize.py \\
-    --input output/transcriptions/transcription.json \\
-    --output output/transcriptions/layers/enrichment_L1.json
+    --run-name input_video_1 \\
+    --input output/transcriptions/input_video_1/transcription.json
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def main() -> None:
     add_common_args(parser, layer_id="L1")
     args = parser.parse_args()
 
-    working_dir, input_path, output_path, layers_dir = parse_paths(args)
+    working_dir, input_path, output_path, layers_dir, run_name = parse_paths(args, layer_id="L1")
 
     if not input_path.is_file():
         print(f"Error: input not found: {input_path}", file=sys.stderr)
@@ -50,12 +50,14 @@ def main() -> None:
     ctx = build_run_context(
         job_id=args.job_id,
         working_dir=working_dir,
+        run_name=run_name,
         layers_output_dir=layers_dir,
         raw_transcript=None,
         video_path=None,
     )
 
     print(f"L1 Normalize")
+    print(f"  Run:    {run_name}")
     print(f"  Input:  {input_path}")
     print(f"  Output: {output_path}")
 
@@ -73,7 +75,7 @@ def main() -> None:
     utterances = (result.get("L1_transcript") or {}).get("utterances") or []
     summary = (result.get("L1_transcript") or {}).get("diarization_summary") or {}
     print(f"\nDone. utterances={len(utterances)} speakers={summary.get('speaker_count', '?')}")
-    print_chain_hint("L1", output_path)
+    print_chain_hint("L1", output_path, working_dir=working_dir)
 
 
 if __name__ == "__main__":

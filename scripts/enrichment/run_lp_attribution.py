@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-L4: Finalize enrichment — merge gender proposals and build review queue.
+LP: Speaker attribution — text context (S1) + visual fusion (S2) + fuse (S3).
 
-Input:  enrichment_L3.json
-Output: enrichment_L4.json (terminal layer with speaker_profiles + review_queue)
+Input:  enrichment_L2.json
+Output: enrichment_LP.json
 
 Usage:
-  python scripts/enrichment/run_l4_finalize.py --run-name input_video_1
+  python scripts/enrichment/run_lp_attribution.py --run-name one-miniute-time-machine
 """
 
 from __future__ import annotations
 
-import argparse
 import sys
 from pathlib import Path
 
@@ -21,9 +20,12 @@ if str(_ENRICHMENT_DIR) not in sys.path:
 
 from common import (
     add_common_args,
+    add_raw_transcript_arg,
     build_run_context,
     load_env_file,
     parse_paths,
+    print_chain_hint,
+    resolve_raw_transcript_path,
     run_enrichment_layer,
     setup_import_paths,
 )
@@ -33,11 +35,15 @@ def main() -> None:
     setup_import_paths()
     load_env_file()
 
-    parser = argparse.ArgumentParser(description="L4: Finalize enrichment review")
-    add_common_args(parser, layer_id="L4")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="LP: Speaker attribution")
+    add_common_args(parser, layer_id="LP")
+    add_raw_transcript_arg(parser)
     args = parser.parse_args()
 
-    working_dir, input_path, output_path, layers_dir, run_name = parse_paths(args, layer_id="L4")
+    working_dir, input_path, output_path, layers_dir, run_name = parse_paths(args, layer_id="LP")
+    raw_path = resolve_raw_transcript_path(args, working_dir, run_name)
 
     if not input_path.is_file():
         print(f"Error: input not found: {input_path}", file=sys.stderr)
@@ -48,18 +54,19 @@ def main() -> None:
         working_dir=working_dir,
         run_name=run_name,
         layers_output_dir=layers_dir,
-        raw_transcript=None,
+        raw_transcript=raw_path if raw_path.is_file() else None,
         video_path=None,
+        audio_path=None,
     )
 
-    print("L4 Finalize")
+    print("LP Speaker Attribution")
     print(f"  Run:    {run_name}")
     print(f"  Input:  {input_path}")
     print(f"  Output: {output_path}")
 
     try:
         result = run_enrichment_layer(
-            "L4",
+            "LP",
             input_path=input_path,
             output_path=output_path,
             ctx=ctx,
@@ -68,12 +75,13 @@ def main() -> None:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    from modules.enrichment.document import get_review_queue
-
-    profiles = result.get("speaker_profiles") or {}
-    queue = get_review_queue(result)
-    print(f"\nDone. speaker_profiles={len(profiles)} review_items={len(queue)}")
-    print("\nChain complete (terminal layer).")
+    attr = result.get("LP_attribution") or {}
+    sub_status = (result.get("pipeline_meta") or {}).get("sublayer_status") or {}
+    print(
+        f"\nDone. pending_review={attr.get('pending_review_count', 0)} "
+        f"S1={sub_status.get('LP.S1')} S2={sub_status.get('LP.S2')} S3={sub_status.get('LP.S3')}"
+    )
+    print_chain_hint("LP", output_path, working_dir=working_dir)
 
 
 if __name__ == "__main__":

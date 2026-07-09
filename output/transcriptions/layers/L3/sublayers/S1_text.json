@@ -33,16 +33,6 @@
       "pronoun_hint": null,
       "gender_status": "proposed",
       "gender_source": "text_analysis"
-    },
-    "_reconciliation": {
-      "speaker_id": "_reconciliation",
-      "gender": "unknown",
-      "gender_confidence": 0.0,
-      "gender_evidence": [],
-      "requires_review": false,
-      "pronoun_hint": null,
-      "gender_status": "proposed",
-      "gender_source": "text_analysis"
     }
   }
 }

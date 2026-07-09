@@ -7,23 +7,33 @@
       "name_confidence": 0.0,
       "name_evidence": [],
       "corrected_from": [],
-      "total_speech_sec": 124.3,
-      "utterance_count": 7,
-      "avg_confidence": 0.882
+      "total_speech_sec": 116.5,
+      "utterance_count": 4,
+      "avg_confidence": 0.863
+    },
+    "B": {
+      "speaker_id": "B",
+      "name": null,
+      "name_source": null,
+      "name_confidence": 0.0,
+      "name_evidence": [],
+      "corrected_from": [],
+      "total_speech_sec": 4.7,
+      "utterance_count": 2,
+      "avg_confidence": 0.91
+    },
+    "C": {
+      "speaker_id": "C",
+      "name": null,
+      "name_source": null,
+      "name_confidence": 0.0,
+      "name_evidence": [],
+      "corrected_from": [],
+      "total_speech_sec": 3.1,
+      "utterance_count": 1,
+      "avg_confidence": 0.9
     }
   },
-  "L2_utterance_flags": [
-    {
-      "utterance_id": "u3",
-      "low_confidence": true,
-      "reason": "speaker_confidence < 0.85"
-    },
-    {
-      "utterance_id": "u7",
-      "low_confidence": true,
-      "reason": "speaker_confidence < 0.85"
-    }
-  ],
   "narration_context": {
     "cast_summary": "",
     "speaker_map": {}

@@ -10,12 +10,12 @@
       "L3": "ok"
     },
     "source_provider": "assemblyai",
-    "processed_at": "2026-06-24T05:27:44Z",
+    "processed_at": "2026-06-24T10:56:18Z",
     "sublayer_status": {
-      "L2.S1": "skipped:mediapipe_unavailable",
+      "L2.S1": "ok",
       "L2.S2": "ok",
       "L3.S1": "ok",
-      "L3.S2": "skipped:no_portraits"
+      "L3.S2": "ok"
     }
   },
   "L1_transcript": {
@@ -160,7 +160,8 @@
             "end": 66.412,
             "confidence": 0.99290556
           }
-        ]
+        ],
+        "character_id": "char_1"
       },
       {
         "id": "u2",
@@ -224,7 +225,8 @@
             "end": 70.844,
             "confidence": 0.9975477
           }
-        ]
+        ],
+        "character_id": "char_1"
       },
       {
         "id": "u3",
@@ -318,7 +320,10 @@
             "end": 79.885,
             "confidence": 0.5686458
           }
-        ]
+        ],
+        "character_id": "char_1",
+        "low_confidence": true,
+        "low_confidence_reason": "speaker_confidence < 0.85"
       },
       {
         "id": "u4",
@@ -370,7 +375,8 @@
             "end": 83.691,
             "confidence": 0.98553044
           }
-        ]
+        ],
+        "character_id": "char_2"
       },
       {
         "id": "u5",
@@ -848,7 +854,8 @@
             "end": 147.808,
             "confidence": 0.58931947
           }
-        ]
+        ],
+        "character_id": "char_2"
       },
       {
         "id": "u6",
@@ -942,7 +949,8 @@
             "end": 153.999,
             "confidence": 0.97147447
           }
-        ]
+        ],
+        "character_id": "char_1"
       },
       {
         "id": "u7",
@@ -1102,7 +1110,10 @@
             "end": 180.521,
             "confidence": 0.95402324
           }
-        ]
+        ],
+        "character_id": "char_1",
+        "low_confidence": true,
+        "low_confidence_reason": "speaker_confidence < 0.85"
       }
     ],
     "diarization_summary": {
@@ -1116,32 +1127,87 @@
     "language_code": "en"
   },
   "L2_reconciliation": {
-    "method": "audiovisual_lip_cluster_v2",
-    "status": "skipped",
-    "skip_reason": "mediapipe_unavailable",
-    "diagnostics": {
-      "status": "skipped",
-      "skip_reason": "mediapipe_unavailable",
-      "video_path": null,
-      "video_exists": false,
-      "video_size_bytes": null,
-      "utterance_count": 7,
-      "utterances_with_word_timestamps": 7,
-      "word_timestamp_count": 169,
-      "dependencies": {
-        "opencv": true,
-        "mediapipe": false,
-        "errors": {
-          "mediapipe": "No module named 'mediapipe'"
-        }
+    "method": "character_observation_v1",
+    "status": "ok",
+    "diarization_speaker_count": 3,
+    "canonical_speaker_count": 3,
+    "visual_cluster_count": 2,
+    "character_count_visual": 2,
+    "character_count_significant": 2,
+    "count_mismatch": true,
+    "utterances_relabeled": 0,
+    "utterances_visual_corrected": 0,
+    "utterances_merge_corrected": 0,
+    "over_segmentation_corrected": false,
+    "faces_sampled": 62,
+    "sample_points": 59,
+    "embedding_method": "arcface"
+  },
+  "L2_character_observation": {
+    "method": "character_observation_v1",
+    "diarization_speaker_count": 3,
+    "diarization_speaker_ids": [
+      "A",
+      "B",
+      "C"
+    ],
+    "character_count_visual": 2,
+    "character_count_significant": 2,
+    "min_cluster_samples": 3,
+    "count_mismatch": true,
+    "embedding_method": "arcface",
+    "sample_points": 59,
+    "faces_sampled": 62,
+    "characters": {
+      "char_1": {
+        "character_id": "char_1",
+        "sample_count": 38,
+        "first_seen_sec": 37.508,
+        "last_seen_sec": 175.414,
+        "utterances_visible": [
+          "u1",
+          "u2",
+          "u3",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "aai_speaker_cooccurrence": {
+          "A": 30,
+          "B": 8
+        },
+        "appearance": null
       },
-      "hint": "Install mediapipe + opencv-python-headless in the Celery worker image, then restart the worker."
+      "char_2": {
+        "character_id": "char_2",
+        "sample_count": 24,
+        "first_seen_sec": 81.645,
+        "last_seen_sec": 162.877,
+        "utterances_visible": [
+          "u4",
+          "u5",
+          "u7"
+        ],
+        "aai_speaker_cooccurrence": {
+          "C": 2,
+          "A": 22
+        },
+        "appearance": null
+      }
+    },
+    "speaker_character_votes": {
+      "A": {
+        "char_1": 21.315,
+        "char_2": 16.056
+      },
+      "B": {
+        "char_1": 6.726
+      },
+      "C": {
+        "char_2": 1.628
+      }
     }
   },
-  "L2_speaker_merge_map": {},
-  "L2_video_faces": {},
-  "L2_face_clusters": {},
-  "L2_av_samples": [],
   "L2_speakers": {
     "A": {
       "speaker_id": "A",
@@ -1175,31 +1241,8 @@
       "total_speech_sec": 3.1,
       "utterance_count": 1,
       "avg_confidence": 0.9
-    },
-    "_reconciliation": {
-      "speaker_id": "_reconciliation",
-      "name": null,
-      "name_source": null,
-      "name_confidence": 0.0,
-      "name_evidence": [],
-      "corrected_from": [],
-      "total_speech_sec": 0.0,
-      "utterance_count": 0,
-      "avg_confidence": 0.0
     }
   },
-  "L2_utterance_flags": [
-    {
-      "utterance_id": "u3",
-      "low_confidence": true,
-      "reason": "speaker_confidence < 0.85"
-    },
-    {
-      "utterance_id": "u7",
-      "low_confidence": true,
-      "reason": "speaker_confidence < 0.85"
-    }
-  ],
   "narration_context": {
     "cast_summary": "",
     "speaker_map": {}
@@ -1284,7 +1327,14 @@
         "evidence": [],
         "corrected_from": []
       },
-      "face": null,
+      "face": {
+        "cluster_id": "char_1",
+        "visible_ratio": 1.0,
+        "alignment_confidence": 0.887,
+        "portrait_s3_key": "jobs/local-debug/assets/speakers/A/portrait.jpg",
+        "frame_timestamp_sec": 146.428,
+        "visual_cluster_index": 1
+      },
       "diarization": {
         "utterance_count": 4,
         "avg_confidence": 0.863,
@@ -1300,7 +1350,14 @@
         "evidence": [],
         "corrected_from": []
       },
-      "face": null,
+      "face": {
+        "cluster_id": "char_1",
+        "visible_ratio": 1.0,
+        "alignment_confidence": 0.887,
+        "portrait_s3_key": "jobs/local-debug/assets/speakers/B/portrait.jpg",
+        "frame_timestamp_sec": 146.428,
+        "visual_cluster_index": 1
+      },
       "diarization": {
         "utterance_count": 2,
         "avg_confidence": 0.91,
@@ -1316,34 +1373,18 @@
         "evidence": [],
         "corrected_from": []
       },
-      "face": null,
+      "face": {
+        "cluster_id": "char_2",
+        "visible_ratio": 1.0,
+        "alignment_confidence": 0.844,
+        "portrait_s3_key": "jobs/local-debug/assets/speakers/C/portrait.jpg",
+        "frame_timestamp_sec": 93.303,
+        "visual_cluster_index": 2
+      },
       "diarization": {
         "utterance_count": 1,
         "avg_confidence": 0.9,
         "total_speech_sec": 3.1
-      }
-    },
-    "_reconciliation": {
-      "method": "audiovisual_lip_cluster_v2",
-      "status": "skipped",
-      "skip_reason": "mediapipe_unavailable",
-      "diagnostics": {
-        "status": "skipped",
-        "skip_reason": "mediapipe_unavailable",
-        "video_path": null,
-        "video_exists": false,
-        "video_size_bytes": null,
-        "utterance_count": 7,
-        "utterances_with_word_timestamps": 7,
-        "word_timestamp_count": 169,
-        "dependencies": {
-          "opencv": true,
-          "mediapipe": false,
-          "errors": {
-            "mediapipe": "No module named 'mediapipe'"
-          }
-        },
-        "hint": "Install mediapipe + opencv-python-headless in the Celery worker image, then restart the worker."
       }
     }
   },
@@ -1381,16 +1422,41 @@
       "pronoun_hint": null,
       "gender_status": "proposed",
       "gender_source": "text_analysis"
+    }
+  },
+  "L3_visual": {
+    "A": {
+      "speaker_id": "A",
+      "portrait_s3_key": "jobs/local-debug/assets/speakers/A/portrait.jpg",
+      "alignment_confidence": 0.887,
+      "gender": "male",
+      "gender_confidence": 0.5,
+      "gender_evidence": [
+        "portrait_alignment:0.50"
+      ],
+      "gender_source": "visual_v1",
+      "thumbnail_s3_key": "jobs/local-debug/assets/speakers/A/portrait.jpg"
     },
-    "_reconciliation": {
-      "speaker_id": "_reconciliation",
+    "B": {
+      "speaker_id": "B",
+      "portrait_s3_key": "jobs/local-debug/assets/speakers/B/portrait.jpg",
+      "alignment_confidence": 0.887,
       "gender": "unknown",
       "gender_confidence": 0.0,
       "gender_evidence": [],
-      "requires_review": false,
-      "pronoun_hint": null,
-      "gender_status": "proposed",
-      "gender_source": "text_analysis"
+      "gender_source": "visual_v1"
+    },
+    "C": {
+      "speaker_id": "C",
+      "portrait_s3_key": "jobs/local-debug/assets/speakers/C/portrait.jpg",
+      "alignment_confidence": 0.844,
+      "gender": "female",
+      "gender_confidence": 0.5,
+      "gender_evidence": [
+        "portrait_alignment:0.50"
+      ],
+      "gender_source": "visual_v1",
+      "thumbnail_s3_key": "jobs/local-debug/assets/speakers/C/portrait.jpg"
     }
   }
 }

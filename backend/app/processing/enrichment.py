@@ -37,10 +37,15 @@ def run_enrichment_pipeline_service(
     assets_dir = os.path.join(working_dir, "output", "assets")
     os.makedirs(assets_dir, exist_ok=True)
 
+    audio_path = os.path.join(working_dir, "output", "original", "extracted_audio.wav")
+    if not os.path.isfile(audio_path):
+        audio_path = None
+
     ctx = EnrichmentContext(
         job_id=job_id,
         working_dir=working_dir,
         video_path=video_path,
+        audio_path=audio_path,
         layers_output_dir=output_dir,
         assets_dir=assets_dir,
     )

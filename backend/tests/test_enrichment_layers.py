@@ -35,11 +35,14 @@ def ctx():
 
 def test_registry_has_l0_through_l4_with_sublayers():
     layers = [layer.layer_id for layer in get_processable_layers()]
-    assert layers == ["L1", "L2", "L3", "L4"]
+    assert layers == ["L1", "L2", "LP", "L3", "L4"]
     assert get_layer("L0").is_raw is True
     assert get_layer("L4").is_terminal is True
+    assert get_layer("L3").depends_on == "LP"
     assert intermediate_key_for("L4") == "layer.L4"
     assert len(get_sublayers("L2")) == 2
+    assert len(get_sublayers("LP")) == 3
+    assert get_sublayer("LP", "S1").artifact_filename == "S1_text.json"
     assert get_sublayer("L2", "S1").artifact_filename == "S1_video.json"
     assert sublayer_intermediate_key("L3", "S2") == "layer.L3.S2"
 
@@ -71,7 +74,9 @@ def test_l2_speaker_enrichment(ctx, tmp_path):
     assert result["L2_speakers"]["B"]["name"] == "Sarah"
     assert result["L2_identity"]["A"]["name"]["value"] == "James"
     assert "Sarah" in result["narration_context"]["cast_summary"]
-    assert any(f["utterance_id"] == "u4" for f in result["L2_utterance_flags"])
+    utterances = result["L1_transcript"]["utterances"]
+    assert any(u.get("low_confidence") for u in utterances)
+    assert "L2_av_samples" not in result
     assert result["segments"]["0"]["utterance_id"] == "u1"
     assert "text" not in result["segments"]["0"]
     assert result["metadata"]["segments_format"] == "utterance_refs"
@@ -107,6 +112,7 @@ def test_enrichment_pipeline_writes_layer_files(tmp_path):
 
     assert result.skipped is False
     assert result.latest_layer_id == "L4"
+    assert (out_dir / "enrichment_LP.json").exists()
     assert (out_dir / "enrichment_L4.json").exists()
     assert result.review_required is True
     assert len(result.review_queue) >= 1

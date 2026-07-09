@@ -1,3 +1,40 @@
 {
-  "L3_visual": {}
+  "L3_visual": {
+    "A": {
+      "speaker_id": "A",
+      "portrait_s3_key": "jobs/local-debug/assets/speakers/A/portrait.jpg",
+      "portrait_local_path": null,
+      "alignment_confidence": 0.887,
+      "gender": "male",
+      "gender_confidence": 0.5,
+      "gender_evidence": [
+        "portrait_alignment:0.50"
+      ],
+      "gender_source": "visual_v1",
+      "thumbnail_s3_key": "jobs/local-debug/assets/speakers/A/portrait.jpg"
+    },
+    "B": {
+      "speaker_id": "B",
+      "portrait_s3_key": "jobs/local-debug/assets/speakers/B/portrait.jpg",
+      "portrait_local_path": null,
+      "alignment_confidence": 0.887,
+      "gender": "unknown",
+      "gender_confidence": 0.0,
+      "gender_evidence": [],
+      "gender_source": "visual_v1"
+    },
+    "C": {
+      "speaker_id": "C",
+      "portrait_s3_key": "jobs/local-debug/assets/speakers/C/portrait.jpg",
+      "portrait_local_path": null,
+      "alignment_confidence": 0.844,
+      "gender": "female",
+      "gender_confidence": 0.5,
+      "gender_evidence": [
+        "portrait_alignment:0.50"
+      ],
+      "gender_source": "visual_v1",
+      "thumbnail_s3_key": "jobs/local-debug/assets/speakers/C/portrait.jpg"
+    }
+  }
 }

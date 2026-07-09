@@ -7,6 +7,7 @@ from typing import Any
 
 from modules.enrichment.document import get_review_queue
 from modules.enrichment.l4_finalize import (
+    _build_attribution_review_queue,
     _build_review_queue,
     _merge_gender_proposals,
     _pronoun_hints_from_profiles,
@@ -80,6 +81,8 @@ def apply_gender_review_decisions(
                 speakers_compat[speaker_id].pop("gender_confidence", None)
 
     review_queue = _build_review_queue(speaker_profiles)
+    utterances = (doc.get("L1_transcript") or {}).get("utterances") or []
+    review_queue.extend(_build_attribution_review_queue(utterances))
     pronoun_hints = _pronoun_hints_from_profiles(speaker_profiles)
 
     narration_context["pronoun_hints"] = pronoun_hints
@@ -90,6 +93,51 @@ def apply_gender_review_decisions(
     doc["L3_gender"] = l3_gender
     doc["narration_context"] = narration_context
     doc["speakers"] = speakers_compat
+    return doc
+
+
+def apply_attribution_review_decisions(
+    doc: dict[str, Any],
+    decisions: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """
+    Apply user attribution review decisions on utterances.
+
+    Each decision: {
+      utterance_id, action: confirm|reject|override,
+      speaker_confirmed?: str (for override)
+    }
+    """
+    doc = copy.deepcopy(doc)
+    l1 = doc.setdefault("L1_transcript", {})
+    utterances = list(l1.get("utterances") or [])
+    by_id = {u.get("id"): u for u in utterances if u.get("id")}
+
+    for decision in decisions:
+        uid = decision.get("utterance_id")
+        action = decision.get("action")
+        row = by_id.get(uid)
+        if not row:
+            continue
+        if action == "confirm":
+            row["attribution_status"] = "confirmed"
+            row["speaker_confirmed"] = row.get("speaker_predicted")
+        elif action == "reject":
+            row["attribution_status"] = "rejected"
+            row["speaker_confirmed"] = row.get("speaker")
+        elif action == "override":
+            confirmed = decision.get("speaker_confirmed") or row.get("speaker_predicted")
+            row["attribution_status"] = "confirmed"
+            row["speaker_confirmed"] = confirmed
+
+    l1["utterances"] = utterances
+    doc["L1_transcript"] = l1
+
+    narration_context = doc.get("narration_context") or {}
+    review_queue = _build_review_queue(doc.get("speaker_profiles") or _merge_gender_proposals(doc))
+    review_queue.extend(_build_attribution_review_queue(utterances))
+    narration_context["review_queue"] = review_queue
+    doc["narration_context"] = narration_context
     return doc
 
 

@@ -10,9 +10,7 @@ from modules.enrichment.document import deep_copy_doc, l2_speakers_from_identity
 def build_l2_identity(doc: dict[str, Any]) -> dict[str, Any]:
     l2_speakers = doc.get("L2_speakers") or {}
     video_faces = doc.get("L2_video_faces") or {}
-    reconciliation = doc.get("L2_reconciliation") or {}
     merge_map = doc.get("L2_speaker_merge_map") or {}
-    face_clusters = doc.get("L2_face_clusters") or {}
 
     identity: dict[str, Any] = {}
     for speaker_id, sp in l2_speakers.items():
@@ -53,10 +51,6 @@ def build_l2_identity(doc: dict[str, Any]) -> dict[str, Any]:
             "diarization": diarization,
         }
 
-    if reconciliation:
-        identity["_reconciliation"] = reconciliation
-    if face_clusters:
-        identity["_face_clusters"] = face_clusters
     return identity
 
 

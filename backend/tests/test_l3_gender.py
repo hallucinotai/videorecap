@@ -49,6 +49,7 @@ def test_l3_proposals_only_no_review_queue(l2_doc, ctx, tmp_path):
     sub_status = result["pipeline_meta"]["sublayer_status"]
     assert sub_status["L3.S1"] == "ok"
     assert sub_status["L3.S2"].startswith("skipped:")
+    assert sub_status["L3.S3"].startswith("skipped:")
 
 
 def test_l4_finalize_builds_presentation_and_queue(l2_doc, ctx, tmp_path):

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>L2 Identity Layer</title>
+  <style>
+    :root {
+      --bg: #0f1114;
+      --panel: #181b20;
+      --border: #2a2f38;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --accent: #6ba3ff;
+      --ok: #5bb974;
+      --warn: #e3b341;
+      --no: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.5 ui-sans-serif, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0 0 .25rem; font-size: 1.1rem; font-weight: 600; }
+    header p { margin: 0; color: var(--muted); font-size: .85rem; }
+    main { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 72px); }
+    nav {
+      border-right: 1px solid var(--border);
+      padding: .75rem;
+    }
+    nav button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: .55rem .65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+    }
+    nav button.active { background: var(--panel); color: var(--text); }
+    nav button:hover { color: var(--text); }
+    .content { padding: 1rem 1.25rem 2rem; max-width: 820px; }
+    section { display: none; }
+    section.active { display: block; }
+    h2 { font-size: 1rem; margin: 0 0 .75rem; }
+    h3 { font-size: .9rem; margin: 1.25rem 0 .5rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .node {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .5rem .75rem;
+      cursor: pointer;
+      font-size: .82rem;
+      transition: border-color .15s;
+    }
+    .node:hover, .node.selected { border-color: var(--accent); }
+    .arrow { color: var(--muted); user-select: none; }
+    .detail {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      min-height: 120px;
+    }
+    .detail h4 { margin: 0 0 .5rem; font-size: .95rem; }
+    .detail p, .detail li { color: var(--muted); margin: .35rem 0; }
+    .detail ul { margin: .25rem 0 0 1.1rem; padding: 0; }
+    code, pre {
+      font-family: ui-monospace, monospace;
+      font-size: .8rem;
+      background: #0a0c0f;
+      border-radius: 4px;
+    }
+    code { padding: .1rem .35rem; }
+    pre {
+      padding: .75rem;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      margin: .5rem 0;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 500; }
+    .tag {
+      display: inline-block;
+      font-size: .72rem;
+      padding: .15rem .45rem;
+      border-radius: 4px;
+      margin-right: .35rem;
+    }
+    .tag-yes { background: #1a3d2a; color: var(--ok); }
+    .tag-no { background: #3d1a1a; color: var(--no); }
+    .tag-warn { background: #3d321a; color: var(--warn); }
+    .stepper { display: flex; gap: .5rem; margin: 1rem 0; }
+    .stepper button {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: .4rem .75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .stepper span { align-self: center; color: var(--muted); font-size: .85rem; }
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+    @media (max-width: 640px) {
+      main { grid-template-columns: 1fr; }
+      nav { display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      nav button { white-space: nowrap; width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>L2 Identity Layer</h1>
+    <p>Speaker identity enrichment — <code>modules/enrichment/l2_identity/</code> · CLI: <code>scripts/enrichment/run_l2_identity.py</code></p>
+  </header>
+  <main>
+    <nav id="nav">
+      <button class="active" data-tab="overview">Overview</button>
+      <button data-tab="s1">S1 Video</button>
+      <button data-tab="s2">S2 Text</button>
+      <button data-tab="merge">Merge &amp; Output</button>
+      <button data-tab="run">Run</button>
+    </nav>
+    <div class="content">
+      <section id="overview" class="active">
+        <h2>Pipeline</h2>
+        <div class="flow" id="flow">
+          <div class="node selected" data-id="input">L1 input</div>
+          <span class="arrow">→</span>
+          <div class="node" data-id="s1">S1 video</div>
+          <span class="arrow">→</span>
+          <div class="node" data-id="s2">S2 text</div>
+          <span class="arrow">→</span>
+          <div class="node" data-id="merge">L2_identity</div>
+          <span class="arrow">→</span>
+          <div class="node" data-id="out">enrichment_L2.json</div>
+        </div>
+        <div class="detail" id="detail">
+          <h4>L1 input</h4>
+          <p>Required fields on the enrichment document:</p>
+          <ul>
+            <li><code>L1_transcript.utterances[]</code> — id, speaker (A/B/C), text, start/end, words[]</li>
+            <li><code>ctx.raw_speakers</code> — from L0 <code>transcription.json</code></li>
+            <li><code>ctx.video_path</code> — source video (S1 skips without it)</li>
+            <li><code>ctx.assets_dir</code> — <code>output/assets/&lt;run-name&gt;/</code></li>
+          </ul>
+        </div>
+        <h3>Does / does not (current code)</h3>
+        <table>
+          <tr><th>Action</th><th>Status</th></tr>
+          <tr><td>Assign <code>character_id</code> per utterance</td><td><span class="tag tag-yes">yes</span> S1</td></tr>
+          <tr><td>Map speaker → visual character</td><td><span class="tag tag-yes">yes</span> S1</td></tr>
+          <tr><td>Write speaker portraits (JPEG)</td><td><span class="tag tag-yes">yes</span> S1</td></tr>
+          <tr><td>Resolve names from transcript</td><td><span class="tag tag-yes">yes</span> S2</td></tr>
+          <tr><td>Relabel <code>speaker</code> A/B/C</td><td><span class="tag tag-no">no</span> <code>L2_speaker_merge_map</code> always {}</td></tr>
+          <tr><td>Merge over-segmented speakers</td><td><span class="tag tag-no">no</span> <code>utterances_relabeled: 0</code></td></tr>
+        </table>
+      </section>
+
+      <section id="s1">
+        <h2>S1 — Video reconcile (character observation)</h2>
+        <p style="color:var(--muted);margin-top:0">File: <code>sublayers/s1_video_reconcile.py</code> · Core: <code>character_observation.py</code></p>
+
+        <div class="stepper">
+          <button type="button" id="prev">← Prev</button>
+          <button type="button" id="next">Next →</button>
+          <span id="step-label">Step 1 / 6</span>
+        </div>
+
+        <div class="step-panel active" data-step="0">
+          <h3>1. Sample frames</h3>
+          <p><code>sampling.sample_timestamps_for_utterance()</code></p>
+          <ul>
+            <li>Prefer 3-word chunks from AssemblyAI <code>words[]</code> timestamps</li>
+            <li>Fallback: ~1 fps uniform samples inside utterance [start, end]</li>
+          </ul>
+        </div>
+        <div class="step-panel" data-step="1">
+          <h3>2. Detect faces</h3>
+          <p><code>collect_observations()</code> reads video frame at each sample time.</p>
+          <ul>
+            <li>Primary: InsightFace ArcFace (<code>buffalo_l</code>, CPU)</li>
+            <li>Fallback: MediaPipe face + histogram embedding</li>
+            <li>Quality gate: conf ≥ 0.72, bbox ≥ 36px, aspect 0.55–1.6</li>
+          </ul>
+        </div>
+        <div class="step-panel" data-step="2">
+          <h3>3. Cluster → char_1, char_2, …</h3>
+          <p><code>_assign_character_ids()</code></p>
+          <ol style="color:var(--muted);margin:.25rem 0 0 1.1rem;padding:0">
+            <li>Online match by embedding (ArcFace threshold 0.38)</li>
+            <li>Merge tracks that never co-occur in same frame (0.36)</li>
+            <li>Appearance merge: hair+skin HSV histogram (0.86 / 0.92 strong)</li>
+            <li>Consolidate to max on-screen character count</li>
+          </ol>
+        </div>
+        <div class="step-panel" data-step="3">
+          <h3>4. Speaker → character votes</h3>
+          <p><code>_speaker_character_votes()</code> — when speaker X talks, which face is visible?</p>
+          <p><code>dominant_character_per_speaker()</code> picks highest-weight <code>char_*</code> per A/B/C.</p>
+          <p><span class="tag tag-warn">note</span> Two speakers can map to the same character (e.g. A→char_2, C→char_2). Labels are not merged.</p>
+        </div>
+        <div class="step-panel" data-step="4">
+          <h3>5. Annotate utterances</h3>
+          <p><code>annotate_utterances_with_characters()</code></p>
+          <ul>
+            <li>Adds <code>character_id</code> on each utterance</li>
+            <li>Does <strong>not</strong> change <code>speaker</code></li>
+          </ul>
+        </div>
+        <div class="step-panel" data-step="5">
+          <h3>6. Portraits</h3>
+          <p><code>build_video_faces_from_observations()</code></p>
+          <ul>
+            <li>Best upper-body crop per <code>char_*</code></li>
+            <li>Copied once per diarization speaker that maps to that character</li>
+            <li>Path: <code>output/assets/&lt;run&gt;/speakers/{A,B,C}/portrait.jpg</code></li>
+          </ul>
+          <p><span class="tag tag-warn">note</span> Same JPEG duplicated if two speakers share one character.</p>
+        </div>
+
+        <h3>Skip conditions</h3>
+        <table>
+          <tr><th>Reason</th><th>Effect</th></tr>
+          <tr><td><code>no_video</code></td><td>S1 skipped; S2 still runs</td></tr>
+          <tr><td><code>opencv_unavailable</code></td><td>S1 skipped</td></tr>
+          <tr><td><code>no_faces_detected</code></td><td>S1 skipped</td></tr>
+          <tr><td><code>no_assets_dir</code></td><td>S1 skipped</td></tr>
+        </table>
+      </section>
+
+      <section id="s2">
+        <h2>S2 — Text names</h2>
+        <p style="color:var(--muted);margin-top:0">File: <code>sublayers/s2_text_names.py</code></p>
+
+        <h3>Name evidence (vote weights)</h3>
+        <table>
+          <tr><th>Pattern</th><th>Weight</th></tr>
+          <tr><td><code>I'm Name</code> / <code>I am Name</code> on own utterance</td><td>+2</td></tr>
+          <tr><td>Vocative <code>…, Name.</code> at end — attributed to other speakers</td><td>+1 each</td></tr>
+          <tr><td>AssemblyAI raw speaker name</td><td>+3</td></tr>
+        </table>
+
+        <h3>Output per speaker → <code>L2_speakers</code></h3>
+        <ul style="color:var(--muted);padding-left:1.1rem">
+          <li><code>name</code>, <code>name_confidence</code>, <code>name_evidence</code>, <code>name_source</code></li>
+          <li><code>utterance_count</code>, <code>total_speech_sec</code>, <code>avg_confidence</code></li>
+        </ul>
+
+        <h3>Utterance updates</h3>
+        <ul style="color:var(--muted);padding-left:1.1rem">
+          <li><code>speaker_name</code> when name resolved</li>
+          <li><code>low_confidence: true</code> if utterance confidence &lt; threshold</li>
+        </ul>
+
+        <h3>Also writes</h3>
+        <ul style="color:var(--muted);padding-left:1.1rem">
+          <li><code>narration_context.cast_summary</code> — e.g. "Lanes (Speaker A), …"</li>
+          <li><code>speakers</code> compat block, <code>segments</code> utterance refs</li>
+        </ul>
+      </section>
+
+      <section id="merge">
+        <h2>Merge &amp; persisted output</h2>
+
+        <h3><code>apply_l2_merge()</code></h3>
+        <p style="color:var(--muted);margin-top:0">Combines S1 + S2 into <code>L2_identity[speaker_id]</code>:</p>
+        <table>
+          <tr><th>Block</th><th>Source</th></tr>
+          <tr><td><code>name</code></td><td>S2 text</td></tr>
+          <tr><td><code>face</code> (cluster_id, portrait_s3_key, …)</td><td>S1 video</td></tr>
+          <tr><td><code>diarization</code> stats</td><td>S2 + merge_map if present</td></tr>
+        </table>
+
+        <h3>Files written</h3>
+        <pre>output/transcriptions/&lt;run&gt;/layers/enrichment_L2.json
+output/transcriptions/&lt;run&gt;/layers/L2/sublayers/S1_video.json
+output/transcriptions/&lt;run&gt;/layers/L2/sublayers/S2_text.json
+output/assets/&lt;run&gt;/speakers/{A,B,C}/portrait.jpg</pre>
+
+        <h3>Key JSON fields</h3>
+        <table>
+          <tr><th>Field</th><th>Content</th></tr>
+          <tr><td><code>L1_transcript.utterances[].character_id</code></td><td>char_1, char_2, …</td></tr>
+          <tr><td><code>L2_character_observation</code></td><td>counts, speaker_character_votes</td></tr>
+          <tr><td><code>L2_reconciliation</code></td><td>status, count_mismatch, speaker_to_character</td></tr>
+          <tr><td><code>L2_identity</code></td><td>unified speaker profiles</td></tr>
+        </table>
+
+        <h3>vs standalone <code>observe_characters.py</code></h3>
+        <table>
+          <tr><th></th><th>L2.S1</th><th>observe_characters.py</th></tr>
+          <tr><td>Same clustering engine</td><td>yes</td><td>yes</td></tr>
+          <tr><td>Updates enrichment JSON</td><td>yes</td><td>no</td></tr>
+          <tr><td>Portraits</td><td>per speaker</td><td>per char + optional --save-crops</td></tr>
+        </table>
+      </section>
+
+      <section id="run">
+        <h2>Run locally</h2>
+        <pre>python scripts/enrichment/run_l2_identity.py \
+  --run-name one-miniute-time-machine \
+  --video assets/one-miniute-time-machine.mp4</pre>
+        <p style="color:var(--muted)">Input default: <code>output/transcriptions/&lt;run&gt;/layers/enrichment_L1.json</code></p>
+        <p style="color:var(--muted)">Requires: OpenCV, InsightFace+onnxruntime (recommended), L1 + L0 transcript on disk.</p>
+
+        <h3>Then</h3>
+        <pre>python scripts/enrichment/run_l3_gender.py --run-name one-miniute-time-machine
+python scripts/enrichment/run_l4_finalize.py --run-name one-miniute-time-machine</pre>
+      </section>
+    </div>
+  </main>
+  <script>
+    const details = {
+      input: {
+        title: 'L1 input',
+        html: `<p>Required fields on the enrichment document:</p>
+          <ul>
+            <li><code>L1_transcript.utterances[]</code> — id, speaker (A/B/C), text, start/end, words[]</li>
+            <li><code>ctx.raw_speakers</code> — from L0 transcription.json</li>
+            <li><code>ctx.video_path</code> — source video (S1 skips without it)</li>
+            <li><code>ctx.assets_dir</code> — output/assets/&lt;run-name&gt;/</li>
+          </ul>`
+      },
+      s1: {
+        title: 'S1 — Video reconcile',
+        html: `<p>Character observation at utterance sample times.</p>
+          <ul>
+            <li>Cluster faces → char_*</li>
+            <li>Map speakers → characters via co-occurrence votes</li>
+            <li>Add character_id; write portraits under assets/speakers/</li>
+            <li>Does not relabel speaker A/B/C</li>
+          </ul>
+          <p>See <strong>S1 Video</strong> tab for step-by-step logic.</p>`
+      },
+      s2: {
+        title: 'S2 — Text names',
+        html: `<p>Regex name extraction from utterance text.</p>
+          <ul>
+            <li>Builds L2_speakers with name, confidence, evidence</li>
+            <li>Adds speaker_name on utterances</li>
+            <li>Runs even if S1 skipped</li>
+          </ul>`
+      },
+      merge: {
+        title: 'L2_identity merge',
+        html: `<p><code>apply_l2_merge()</code> merges S1 face + S2 name into one profile per speaker.</p>
+          <p>Output pruned by <code>prune_l2_document()</code> — local portrait paths stripped from JSON; files remain on disk.</p>`
+      },
+      out: {
+        title: 'enrichment_L2.json',
+        html: `<p>Terminal artifact for L2 layer. Feeds L3 gender and L4 finalize.</p>
+          <pre>layers/enrichment_L2.json
+layers/L2/sublayers/S1_video.json
+layers/L2/sublayers/S2_text.json</pre>`
+      }
+    };
+
+    document.querySelectorAll('#nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    const detailEl = document.getElementById('detail');
+    document.querySelectorAll('#flow .node').forEach(node => {
+      node.addEventListener('click', () => {
+        document.querySelectorAll('#flow .node').forEach(n => n.classList.remove('selected'));
+        node.classList.add('selected');
+        const d = details[node.dataset.id];
+        detailEl.innerHTML = `<h4>${d.title}</h4>${d.html}`;
+      });
+    });
+
+    let step = 0;
+    const panels = document.querySelectorAll('.step-panel');
+    const label = document.getElementById('step-label');
+    function showStep(n) {
+      step = Math.max(0, Math.min(panels.length - 1, n));
+      panels.forEach((p, i) => p.classList.toggle('active', i === step));
+      label.textContent = `Step ${step + 1} / ${panels.length}`;
+    }
+    document.getElementById('prev').addEventListener('click', () => showStep(step - 1));
+    document.getElementById('next').addEventListener('click', () => showStep(step + 1));
+  </script>
+</body>
+</html>

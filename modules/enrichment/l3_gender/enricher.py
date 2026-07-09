@@ -1,4 +1,4 @@
-"""L3: Gender enrichment — text analysis + visual hints."""
+"""L3: Gender enrichment — text analysis + visual hints + audio voice."""
 
 from __future__ import annotations
 
@@ -12,13 +12,21 @@ from modules.enrichment.l3_gender.sublayers.s2_visual_hints import (
     s1_artifact,
     s2_artifact,
 )
+from modules.enrichment.l3_gender.sublayers.s3_audio_voice import (
+    S3AudioVoiceEnricher,
+    s3_artifact,
+)
 
 
 class L3GenderEnricher:
     layer_id = "L3"
 
     def __init__(self) -> None:
-        self._sublayers = [S1TextAnalysisEnricher(), S2VisualHintsEnricher()]
+        self._sublayers = [
+            S1TextAnalysisEnricher(),
+            S2VisualHintsEnricher(),
+            S3AudioVoiceEnricher(),
+        ]
 
     def enrich(self, doc: dict[str, Any], ctx: Any) -> dict[str, Any]:
         doc, sublayer_paths = run_sublayers(
@@ -26,8 +34,12 @@ class L3GenderEnricher:
             ctx,
             self.layer_id,
             self._sublayers,
-            artifact_builders={"S1": s1_artifact, "S2": s2_artifact},
-            artifact_filenames={"S1": "S1_text.json", "S2": "S2_visual.json"},
+            artifact_builders={"S1": s1_artifact, "S2": s2_artifact, "S3": s3_artifact},
+            artifact_filenames={
+                "S1": "S1_text.json",
+                "S2": "S2_visual.json",
+                "S3": "S3_audio.json",
+            },
         )
 
         metadata = deep_copy_doc(doc.get("metadata") or {})

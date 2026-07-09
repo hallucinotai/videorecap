@@ -11,7 +11,8 @@ from modules.enrichment.document import (
     GENDER_NARRATION_MIN,
     GENDER_REVIEW_MAX,
     deep_copy_doc,
-    mark_layer_ok,
+    language_code_from_doc,
+    real_speaker_ids,
     utterances_to_segment_refs,
 )
 
@@ -200,7 +201,7 @@ class S1TextAnalysisEnricher:
         if not utterances:
             raise ValueError("L3 requires L1_transcript utterances")
 
-        language_code = (doc.get("L0_metadata") or {}).get("language_code") or "en"
+        language_code = language_code_from_doc(doc)
         if not str(language_code).lower().startswith("en"):
             l3_gender = {
                 sid: {
@@ -213,12 +214,15 @@ class S1TextAnalysisEnricher:
                     "requires_review": False,
                     "pronoun_hint": None,
                 }
-                for sid in l2_speakers.keys()
+                for sid in real_speaker_ids(l2_speakers)
             }
         else:
             votes = _collect_votes(utterances, l2_speakers)
             l3_gender = {}
-            for speaker_id in sorted(set(u["speaker"] for u in utterances) | set(l2_speakers.keys())):
+            speaker_ids = sorted(
+                {u["speaker"] for u in utterances if u.get("speaker")} | set(real_speaker_ids(l2_speakers))
+            )
+            for speaker_id in speaker_ids:
                 aggregated = _aggregate_gender(votes.get(speaker_id, []))
                 l3_gender[speaker_id] = {
                     "speaker_id": speaker_id,
