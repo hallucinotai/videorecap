@@ -199,6 +199,8 @@ def generate_recap_suggestions(transcription_file, target_duration=30, output_di
 
     cast_guidance = ""
     gender_guidance = ""
+    scene_guidance = ""
+    scene_clip_guidance = ""
     if transcription_file.endswith(".json"):
         try:
             with open(transcription_file, "r") as f:
@@ -217,6 +219,31 @@ def generate_recap_suggestions(transcription_file, target_duration=30, output_di
                         "\n\nDo not infer character gender from context. "
                         "Use speaker names when known, otherwise neutral they/them wording."
                     )
+                scene_summary = narration_ctx.get("scene_summary")
+                scene_segments = narration_ctx.get("scene_segments") or []
+                if scene_summary:
+                    scene_guidance = (
+                        "\n\nVisual scene understanding (from video frames — ground narration "
+                        "in visible actions, setting, and staging; do not invent unseen events):\n"
+                        f"{scene_summary}"
+                    )
+                    scene_clip_guidance = (
+                        "\n\nVisual scene understanding is available. Prefer clip windows that "
+                        "cover visually important actions, staging changes, and key on-screen "
+                        "moments described below (in addition to spoken content):\n"
+                        f"{scene_summary}"
+                    )
+                    if scene_segments:
+                        # Compact timed hints for clip selection (keep prompt bounded)
+                        timed = []
+                        for seg in scene_segments[:24]:
+                            start = seg.get("start", 0)
+                            end = seg.get("end", 0)
+                            desc = (seg.get("description") or "").strip()
+                            if desc:
+                                timed.append(f"- {start:.1f}–{end:.1f}s: {desc[:180]}")
+                        if timed:
+                            scene_clip_guidance += "\nTimed visual beats:\n" + "\n".join(timed)
         except (OSError, json.JSONDecodeError):
             pass
 
@@ -255,7 +282,7 @@ def generate_recap_suggestions(transcription_file, target_duration=30, output_di
         )
 
     clip_prompt = f"""Below is a transcript as a JSON array. Each element has "start" (seconds),
-"end" (seconds), and "text" (what was spoken).{emotion_context}
+"end" (seconds), and "text" (what was spoken).{emotion_context}{scene_clip_guidance}
 
 {transcript_json}
 
@@ -407,7 +434,7 @@ Return JSON only — no explanation, no markdown fences:
 {clip_summary}
 
 The original transcript:
-{transcript_json}{emotion_guidance}{cast_guidance}{gender_guidance}
+{transcript_json}{emotion_guidance}{cast_guidance}{gender_guidance}{scene_guidance}
 
 Tell this story like you're excitedly sharing it with a friend. Hit the highlights, use character names if you can spot them, and make it flow naturally.
 

@@ -14,6 +14,7 @@ from app.processing.enrichment import run_enrichment_pipeline_service
 from app.processing.progress import ProgressReporter
 from app.processing.transcription import transcribe_video_service, translate_transcription_service
 from app.processing.video_processing import extract_clips_service, generate_recap_service, remove_audio_service
+from app.processing.scene_understanding import run_scene_understanding_service
 from app.config import settings
 from app.services.storage import storage
 
@@ -360,6 +361,34 @@ class RecapPipeline:
             # Step 3: Generate recap (with emotion weighting if PREMIUM tier)
             if resume_from_step <= 3:
                 self._update_job(current_step=3, current_step_name="Generating recap")
+                # Optional visual scene understanding (pre-recap; skip on failure)
+                scene_result = run_scene_understanding_service(
+                    local_video_path,
+                    active_transcription,
+                    working_dir,
+                    progress_callback=self._progress_callback,
+                )
+                if not scene_result.get("skipped"):
+                    active_transcription = scene_result["transcript_path"]
+                    artifact = scene_result.get("scene_artifact_path")
+                    if artifact:
+                        self._upload_intermediate(intermediate_keys, "scene_understanding", artifact)
+                        # Persist patched transcript (with narration_context.scene_*) for resume
+                        self._upload_intermediate(
+                            intermediate_keys,
+                            "transcription_with_scene",
+                            active_transcription,
+                        )
+                    logger.info(
+                        "Scene understanding injected into transcript for recap (%s)",
+                        artifact,
+                    )
+                elif scene_result.get("skip_reason") not in (None, "disabled"):
+                    logger.info(
+                        "Scene understanding skipped: %s",
+                        scene_result.get("skip_reason"),
+                    )
+
                 self.progress.report(3, "Generating recap suggestions...", 0.0)
                 narration_lang = translate_to or language or "English"
                 result = generate_recap_service(

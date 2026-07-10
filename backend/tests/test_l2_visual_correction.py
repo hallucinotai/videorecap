@@ -1,4 +1,10 @@
-"""Tests for visual utterance correction logic."""
+"""Tests for visual utterance correction logic.
+
+These cover dormant ``apply_visual_utterance_corrections`` only. Production
+must not wire this path: auto-correcting who spoke from on-screen faces
+collapses diarization (on-screen ≠ speaker). See scorecard row 5 SKIPPED
+notes on face_analysis / reconcile / L2.S1.
+"""
 
 import sys
 from pathlib import Path

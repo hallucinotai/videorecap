@@ -43,7 +43,14 @@ _ENRICHMENT_DIR = Path(__file__).resolve().parent
 if str(_ENRICHMENT_DIR) not in sys.path:
     sys.path.insert(0, str(_ENRICHMENT_DIR))
 
-from common import add_run_name_arg, load_env_file, print_chain_hint, repo_root, setup_import_paths
+from common import (
+    add_run_name_arg,
+    load_env_file,
+    patched_module_paths,
+    print_chain_hint,
+    repo_root,
+    setup_import_paths,
+)
 from run_paths import resolve_run_name, transcriptions_dir
 
 
@@ -135,12 +142,13 @@ def main() -> None:
     )
 
     try:
-        json_path = transcribe_video_with_assemblyai(
-            str(video_path),
-            output_dir=str(output_dir_rel),
-            api_key=api_key,
-            language_code=args.language,
-        )
+        with patched_module_paths(working_dir):
+            json_path = transcribe_video_with_assemblyai(
+                str(video_path),
+                output_dir=str(output_dir_rel),
+                api_key=api_key,
+                language_code=args.language,
+            )
     except ImportError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         print("Install with: pip install assemblyai moviepy", file=sys.stderr)

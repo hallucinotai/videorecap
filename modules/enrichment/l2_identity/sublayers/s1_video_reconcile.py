@@ -1,4 +1,14 @@
-"""L2.S1: Observe on-screen characters from L1 sample points (no speaker merge)."""
+"""L2.S1: Observe on-screen characters (continuous tracking with sparse fallback).
+
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  This sublayer must remain observe-only. Do not wire lip sync
+  (``face_analysis.find_speaking_face``) or
+  ``reconcile.apply_visual_utterance_corrections`` here. Relabeling diarization
+  from whoever is on screen collapses speaker labels — on-screen presence is
+  not the same as who spoke. Speaker identity stays on audio diarization;
+  LP may propose ``speaker_predicted`` for review without overwriting
+  ``utterance.speaker`` from vision alone.
+"""
 
 from __future__ import annotations
 
@@ -16,12 +26,23 @@ from modules.enrichment.l2_identity.character_observation import (
     l2_character_observation_summary,
     run_l2_character_observation,
 )
+from modules.enrichment.l2_identity.continuous_tracking import (
+    continuous_tracking_available,
+    run_l2_continuous_tracking,
+    tracking_mode_from_env,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def _dependency_status() -> dict[str, Any]:
-    status: dict[str, Any] = {"opencv": False, "insightface": False, "errors": {}}
+    status: dict[str, Any] = {
+        "opencv": False,
+        "insightface": False,
+        "ultralytics": False,
+        "supervision": False,
+        "errors": {},
+    }
     try:
         import cv2  # noqa: F401
 
@@ -34,16 +55,32 @@ def _dependency_status() -> dict[str, Any]:
         status["insightface"] = True
     except ImportError as exc:
         status["errors"]["insightface"] = str(exc)
+
+    continuous = continuous_tracking_available()
+    status["ultralytics"] = continuous.get("ultralytics", False)
+    status["supervision"] = continuous.get("supervision", False)
+    for key, err in (continuous.get("errors") or {}).items():
+        if key not in status["errors"]:
+            status["errors"][key] = err
+    status["continuous_ready"] = bool(continuous.get("ready"))
     return status
 
 
-def _av_diagnostics(doc: dict[str, Any], ctx: Any, *, skip_reason: str | None = None) -> dict[str, Any]:
+def _av_diagnostics(
+    doc: dict[str, Any],
+    ctx: Any,
+    *,
+    skip_reason: str | None = None,
+    tracking_method: str | None = None,
+) -> dict[str, Any]:
     utterances = (doc.get("L1_transcript") or {}).get("utterances") or []
     video_path = getattr(ctx, "video_path", None)
     words_count = sum(len(u.get("words") or []) for u in utterances)
     return {
         "status": "skipped" if skip_reason else "ok",
         "skip_reason": skip_reason,
+        "tracking_method": tracking_method,
+        "tracking_mode_env": tracking_mode_from_env(),
         "video_path": video_path,
         "video_exists": bool(video_path and os.path.isfile(video_path)),
         "video_size_bytes": os.path.getsize(video_path) if video_path and os.path.isfile(video_path) else None,
@@ -66,7 +103,41 @@ def _skip_hint(skip_reason: str | None) -> str | None:
         return "No faces detected at transcript sample times — check lighting or install insightface for ArcFace."
     if skip_reason == "video_unreadable":
         return "OpenCV could not decode the video file."
+    if skip_reason and "continuous_tracking" in skip_reason:
+        return (
+            "Continuous tracking unavailable — install ultralytics, supervision, insightface, "
+            "onnxruntime or set L2_CHARACTER_TRACKING=sparse."
+        )
     return "See worker logs for L2.S1 enrichment details."
+
+
+def _run_sparse(doc: dict[str, Any], video_path: Path):
+    return run_l2_character_observation(doc, video_path)
+
+
+def _run_with_fallback(doc: dict[str, Any], video_path: Path) -> tuple[Any, list, str]:
+    """
+    Prefer continuous tracking when mode=continuous; fall back to sparse observation.
+    Returns (report, face_observations, method_used).
+    """
+    mode = tracking_mode_from_env()
+    if mode == "sparse":
+        report, observations = _run_sparse(doc, video_path)
+        return report, observations, report.method
+
+    try:
+        report, observations = run_l2_continuous_tracking(doc, video_path)
+        if observations:
+            return report, observations, report.method
+        logger.warning("L2.S1 continuous tracking returned no observations; falling back to sparse")
+    except Exception as exc:
+        logger.warning(
+            "L2.S1 continuous tracking failed (%s); falling back to character_observation_v1",
+            exc,
+        )
+
+    report, observations = _run_sparse(doc, video_path)
+    return report, observations, report.method
 
 
 class S1VideoReconcileEnricher:
@@ -111,7 +182,7 @@ class S1VideoReconcileEnricher:
 
         sample_points_total = sum(len(sample_timestamps_for_utterance(u)) for u in utterances)
 
-        report, face_observations = run_l2_character_observation(doc, Path(video_path))
+        report, face_observations, method_used = _run_with_fallback(doc, Path(video_path))
         if not face_observations:
             raise SublayerSkipped(f"no_faces_detected:{sample_points_total}_sample_points")
 
@@ -126,9 +197,9 @@ class S1VideoReconcileEnricher:
         updated_utterances = annotate_utterances_with_characters(utterances, face_observations)
 
         reconciliation = {
-            "method": "character_observation_v1",
+            "method": method_used,
             "status": "ok",
-            "diagnostics": _av_diagnostics(doc, ctx),
+            "diagnostics": _av_diagnostics(doc, ctx, tracking_method=method_used),
             "diarization_speaker_count": report.diarization_speaker_count,
             "character_count_visual": report.character_count_visual,
             "character_count_significant": report.character_count_significant,
@@ -156,7 +227,8 @@ class S1VideoReconcileEnricher:
         output["L2_character_observation"] = l2_character_observation_summary(report)
 
         logger.info(
-            "L2.S1 character observation: %d diarization speakers, %d visual characters, %d samples",
+            "L2.S1 %s: %d diarization speakers, %d visual characters, %d samples",
+            method_used,
             report.diarization_speaker_count,
             report.character_count_visual,
             report.faces_sampled,

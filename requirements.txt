@@ -4,3 +4,9 @@ openai
 moviepy
 assemblyai==0.64.0
 pydub>=0.25.1
+# L2.S1 continuous person tracking (YOLOv11 + ByteTrack + ArcFace)
+ultralytics>=8.3
+supervision>=0.24
+insightface>=0.7
+onnxruntime>=1.17
+opencv-python-headless>=4.8

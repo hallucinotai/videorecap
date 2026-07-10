@@ -1,552 +1,236 @@
 # Video Recap Agent
 
-AI-powered video processing agent for automatic transcription, translation, and recap generation with voiceover narration.
+Full-stack SaaS for AI-driven video transcription, speaker enrichment, scene understanding, and recap generation with voiceover narration.
 
-## 🎯 Features
+## Features
 
-- **Video Transcription** - Extract speech from videos using OpenAI Whisper
-- **Multi-language Translation** - Translate transcripts using GPT-4
-- **AI-Powered Recaps** - Generate engaging 30-second recaps with AI
-- **Smart Clip Selection** - Automatically select best moments from videos
-- **Text-to-Speech** - Professional voiceover narration using OpenAI TTS
-- **Modular Design** - Run complete workflow or individual steps
-- **CLI-Friendly** - All scripts accept command-line arguments
-- **Self-Contained** - Everything needed is in this directory
+- **Speaker diarization** — AssemblyAI transcription with speakers (L0)
+- **Enrichment pipeline** — L1 normalize → L2 identity / characters → LP attribution → L3 gender → L4 finalize (with optional HITL review)
+- **Continuous person tracking** — L2.S1 YOLO + ByteTrack + ArcFace (falls back to sparse observation if deps missing)
+- **Scene / event understanding** — optional GPT-4o vision describe before recap; injects into clip selection and narration
+- **AI recaps** — clip selection + narration + OpenAI TTS + final muxed MP4
+- **Web UI** — Next.js upload, jobs, billing, settings
+- **Async jobs** — FastAPI + Celery + Redis + MinIO/S3
+
+> **Note:** Root `run_recap_workflow.py` is a legacy local Whisper→recap CLI (no enrichment). Prefer the Docker product path or `scripts/enrichment/` for the full stack.
 
 ---
 
-## 🚀 Quick Start
+## Quick start (Docker — recommended)
 
-> 📖 **New user?** See [SETUP.md](SETUP.md) for detailed setup instructions.
+### Prerequisites
 
-### 1. Installation
+- Docker Desktop (or Docker Engine + Compose)
+- FFmpeg on the host is optional for local scripts; workers use container tooling
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 2. Configure API Keys
+### 1. Configure environment
 
 ```bash
-# Copy example environment file
 cp .env.example .env
-
-# Edit .env and add your OpenAI API key
-nano .env  # or use your favorite editor
+# Set at least:
+#   OPENAI_API_KEY=...
+#   ASSEMBLYAI_API_KEY=...
+#   ENABLE_ASSEMBLYAI_DIARIZATION=true
 ```
 
-**Required in `.env`:**
-```bash
-OPENAI_API_KEY=sk-...your-key-here...
-```
-
-**Optional in `.env`:**
-```bash
-model=gpt-4  # GPT model for AI analysis (default: gpt-4)
-             # Options: gpt-4, gpt-4-turbo, gpt-4o, gpt-3.5-turbo
-```
-
-**Get your API key:** https://platform.openai.com/api-keys
-
-### 3. Run Complete Workflow
+Useful local flags (see `.env.example` for full list):
 
 ```bash
-python run_recap_workflow.py /path/to/your/video.mp4
+DEBUG=true
+KEEP_PIPELINE_WORKING_DIR=true
+ENABLE_SCENE_UNDERSTANDING=true
+L2_CHARACTER_TRACKING=continuous
+MIN_TARGET_DURATION_SECONDS=10
+MAX_TARGET_DURATION_SECONDS=300   # 5 minutes (configurable)
 ```
 
-That's it! The script will:
-1. Transcribe the video
-2. Generate AI recap suggestions
-3. Extract and merge clips
-4. Generate TTS narration
-5. Create final video with voiceover
-
-**Output:** `output/videos/recap_video_with_narration.mp4`
-
-### 4. Resume from Checkpoint (Save Time & Costs!)
+### 2. Start the stack
 
 ```bash
-# Interactive menu - automatically detects what exists
-python resume_workflow.py /path/to/video.mp4
-
-# Or resume from specific point
-python resume/03_from_recap_generation.py /path/to/video.mp4  # Skip transcription
-python resume/05_from_tts_generation.py --voice shimmer        # Change voice only
+make dev
+# or: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-> 💡 **Save API costs**: Resume from any checkpoint instead of re-running everything!  
-> See [resume/README.md](resume/README.md) for details.
+| Service   | URL |
+|-----------|-----|
+| Frontend  | http://localhost:3000 |
+| API       | http://localhost:8000 |
+| MinIO     | http://localhost:9000 |
+
+```bash
+make migrate          # apply DB migrations
+make logs-worker      # follow Celery worker
+make logs-backend     # follow API
+```
+
+### 3. Upload a video
+
+1. Open http://localhost:3000 and sign up / log in
+2. Go to **Upload**, set **Target Duration** (range comes from `/api/v1/meta`)
+3. Start processing and watch the job page
+
+If enrichment pauses for gender review, confirm suggestions in the UI and continue.
 
 ---
 
-## 📂 Project Structure
+## Product pipeline
 
 ```
-video_recap_agent/
-├── run_recap_workflow.py      # Master script (runs everything)
-├── resume_workflow.py          # Resume from any checkpoint
-├── test_modular_workflow.py   # Test suite
-├── QUICK_REFERENCE.md          # Command cheat sheet
-├── README.md                   # This file
-│
-├── modules/                    # Core logic
-│   ├── transcription.py        # Video → Text
-│   ├── video_processing.py     # AI recap & clip extraction
-│   └── audio_processing.py     # TTS & audio merging
-│
-├── scripts/                    # Individual CLI tools
-│   ├── 01_transcribe.py
-│   ├── 02_translate.py
-│   ├── 03_generate_recap.py
-│   ├── 04_extract_clips.py
-│   ├── 05_remove_audio.py
-│   ├── 06_generate_tts.py
-│   └── 07_merge_audio_video.py
-│
-├── resume/                     # Resume from checkpoints
-│   ├── README.md               # Resume scripts guide
-│   ├── 01_from_audio_extraction.py
-│   ├── 02_from_transcription.py
-│   ├── 03_from_recap_generation.py
-│   ├── 04_from_clip_extraction.py
-│   ├── 05_from_tts_generation.py
-│   └── 06_from_audio_merge.py
-│
-└── output/                     # Generated files
-    ├── transcriptions/
-    ├── videos/
-    └── audio/
-```
-
----
-
-## 🔧 Individual Steps
-
-For debugging or custom workflows, run steps individually:
-
-Run steps individually:
-
-```bash
-# Step 1: Transcribe
-python scripts/01_transcribe.py /path/to/video.mp4
-
-# Step 2: Translate (optional)
-python scripts/02_translate.py output/transcriptions/transcription.txt English Tamil
-
-# Step 3: Generate recap
-python scripts/03_generate_recap.py output/transcriptions/transcription.txt
-
-# Step 4: Extract clips
-python scripts/04_extract_clips.py /path/to/video.mp4 output/transcriptions/recap_data.json
-
-# Step 5: Remove audio (optional)
-python scripts/05_remove_audio.py output/videos/recap_video.mp4
-
-# Step 6: Generate TTS
-python scripts/06_generate_tts.py output/transcriptions/recap_text.txt
-
-# Step 7: Merge audio+video
-python scripts/07_merge_audio_video.py output/videos/recap_video.mp4 output/audio/recap_narration.mp3
-```
-
-See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more examples and options.
-
----
-
-## ⚙️ Configuration
-
-### Environment Variables (.env)
-
-**Required:**
-```bash
-OPENAI_API_KEY=sk-...your-key-here...
-```
-Get your API key from: https://platform.openai.com/api-keys
-
-**Optional:**
-```bash
-model=gpt-4                    # GPT model for AI analysis
-                               # Options: gpt-4, gpt-4-turbo, gpt-4o, gpt-3.5-turbo
-                               # Default: gpt-4
-```
-
-### What the API is used for:
-- **GPT-4**: Analyzing transcripts and generating recap suggestions
-- **GPT-4**: Translating transcripts (optional, if you use --translate)
-- **Whisper**: Transcribing video audio (runs locally, no API cost)
-- **TTS (Text-to-Speech)**: Generating voiceover narration
-
-### Master Script Options
-
-```bash
-python run_recap_workflow.py VIDEO_PATH [OPTIONS]
-
-Options:
-  --translate SOURCE TARGET    Translate transcription
-  --duration SECONDS          Recap duration (default: 30)
-  --model SIZE                Whisper model: tiny|base|small|medium|large
-  --tts-model MODEL           TTS model: tts-1|tts-1-hd
-  --voice VOICE               Voice: alloy|echo|fable|onyx|nova|shimmer
-  --language LANG             Language code (e.g., 'en', 'es')
-  --pad-with-black            Pad video with black frames to exact duration
-  --remove-original-audio     Remove original audio before adding narration
-```
-
-### Examples
-
-**Basic usage:**
-```bash
-python run_recap_workflow.py /path/to/video.mp4
-```
-
-**With translation:**
-```bash
-python run_recap_workflow.py /path/to/video.mp4 --translate English Tamil
-```
-
-**Custom options:**
-```bash
-python run_recap_workflow.py /path/to/video.mp4 \
-  --duration 45 \
-  --voice shimmer \
-  --model medium \
-  --language en
-```
-
----
-
-## 🔧 Debugging Step Outputs
-
-During development, you can inspect intermediate outputs from each of the 7 steps to diagnose issues or verify quality.
-
-### Enable Debug Mode
-
-Set `DEBUG=true` in your backend `.env`:
-```bash
-echo "DEBUG=true" >> backend/.env
-docker-compose restart backend
-```
-
-### View Intermediate Outputs
-
-**Option 1: API Response** (easiest)
-```bash
-# Get job with intermediate_keys_detailed
-curl http://localhost:8000/api/v1/jobs/{job_id} | jq '.intermediate_keys_detailed'
-
-# Response includes:
-{
-  "transcription": {
-    "key": "jobs/{id}/transcription/transcription.json",
-    "name": "transcription",
-    "size_mb": 2.3,
-    "download_url": "/api/v1/jobs/{id}/debug/transcription"
-  },
-  ...
-}
-```
-
-**Option 2: Download via Endpoints**
-```bash
-# Download each intermediate directly
-curl http://localhost:8000/api/v1/jobs/{job_id}/debug/transcription > transcription.json
-curl http://localhost:8000/api/v1/jobs/{job_id}/debug/translation > translated.json
-curl http://localhost:8000/api/v1/jobs/{job_id}/debug/recap > recap_data.json
-curl http://localhost:8000/api/v1/jobs/{job_id}/debug/tts-audio > narration.mp3
-curl http://localhost:8000/api/v1/jobs/{job_id}/debug/recap-video > clips.mp4
-```
-
-### Understanding Intermediate Files
-
-| Step | File | What it contains | Use case |
-|------|------|---|---|
-| 1 | `transcription.json` | Timestamped transcript | Verify Whisper accuracy |
-| 2 | `translated.json` | Translated transcript | Check GPT translation quality |
-| 3 | `recap_data.json` | Clip timings + metadata | Verify which clips were selected |
-| 4 | `recap_narration.mp3` | TTS audio file | Check narration voice/quality |
-| 5 | `recap_video.mp4` | Merged clips (no audio) | Verify clip selection & timing |
-| 7 | `recap_video_with_narration.mp4` | Final output | Download completed video |
-
-### Check Log Metrics
-
-After each step completes, the server logs metrics like:
-```bash
-# Watch server logs
-docker logs autogen-worker-1
-
-# You'll see:
-Step 1 complete: Transcription | Size: 2.3MB | Segments: 142 | S3: jobs/{id}/transcription/transcription.json
-Step 3 complete: Recap Generation | Size: 45KB | Clips: 8 | Narration: 87 words | S3: jobs/{id}/recap_data/recap_data.json
-Step 4 complete: TTS Narration | Size: 1.8MB | Duration: 28.5s | Voice: nova | S3: jobs/{id}/tts_audio/recap_narration.mp3
-Step 5 complete: Clip Extraction | Size: 45MB | Duration: 30s | S3: jobs/{id}/recap_video/recap_video.mp4
-Step 7 complete: Final Merge | Size: 46MB | Duration: 30s | S3: results/{id}/recap_video_with_narration.mp4
-```
-
-### Troubleshooting Failed Steps
-
-```bash
-# 1. Get error message
-curl http://localhost:8000/api/v1/jobs/{job_id} | jq '.error_message'
-
-# 2. Download intermediate from last successful step
-curl http://localhost:8000/api/v1/jobs/{job_id}/debug/recap > last_good_recap.json
-
-# 3. Check server logs
-docker logs autogen-backend-1  # FastAPI logs
-docker logs autogen-worker-1   # Celery worker logs
-
-# 4. Resume from failed step
-curl -X POST http://localhost:8000/api/v1/jobs/{job_id}/resume
-# Job resumes from where it failed, using cached outputs
-```
-
----
-
-## 🎯 Claude Code Skills & Tools
-
-### Skills Architecture
-
-| Category | Config File | Source | Scope | Purpose |
-|----------|---|---|---|---|
-| **Project Skills** | `.agents/skills/` | Local (committed) | Project | Single source of truth for all skills |
-| **Tool Config** | `.claude/settings.json` | Local | Claude Code | References `.agents/skills/` |
-| **Tool Config** | `.cursor/settings.json` | Local | Cursor | References `.agents/skills/` |
-| **Local Overrides** | `.claude/settings.local.json` | Local (gitignored) | Personal | Individual preferences |
-
-**Single source of truth:** All skills live in `.agents/skills/` and are referenced from both `.claude/` and `.cursor/`
-
-### Custom Project Skills
-
-These skills are configured in `.claude/settings.json` with auto-trigger phrases:
-
-#### 1. **docs-router** — Documentation workflow orchestrator
-- **Purpose:** Route documentation requests to README.md (inline) or separate linked files
-- **Triggers:** "create documentation", "write docs", "add a README section", "document this", "generate a guide", "write a CHANGELOG", "add API docs", "create guide", "write guide"
-- **Workflow:** Ask → Route (inline or separate file) → Update README if needed
-- **Details:** [`.agents/skills/docs-router/SKILL.md`](./.agents/skills/docs-router/SKILL.md)
-
-#### 2. **fallow** — Codebase intelligence & quality audits
-- **Purpose:** JavaScript/TypeScript code health analysis, unused code detection, circular dependencies, complexity hotspots
-- **Triggers:** "analyze code health", "audit PR risk", "find cleanup opportunities", "unused code", "detect duplicates", "circular dependencies", "audit complexity", "run fallow", "fallow health", "clean up codebase"
-- **Use cases:** 
-  - Identify dead code before cleanup
-  - Detect circular dependency risks
-  - Find performance bottlenecks
-  - Quality audit before PR merge
-- **Details:** [`.agents/skills/fallow/SKILL.md`](./.agents/skills/fallow/SKILL.md)
-
-#### 3. **frontend-design** — Production-grade UI design
-- **Purpose:** Create distinctive, high-quality frontend interfaces with design principles and best practices
-- **Triggers:** "build web component", "design UI", "landing page", "dashboard", "style UI", "beautify UI", "frontend design", "build page"
-- **Use cases:**
-  - Design new UI components
-  - Create polished dashboards
-  - Build landing pages
-  - Improve visual consistency
-- **Details:** [`.agents/skills/frontend-design/SKILL.md`](./.agents/skills/frontend-design/SKILL.md)
-
-### Built-in Claude Code Skills
-
-| Skill | Trigger/Command | Purpose |
-|-------|---------|---------|
-| Verify | `/verify` | Run and test changes in browser (validates feature works) |
-| Code Review | `/code-review` | Audit code for bugs, security issues, and quality improvements |
-| Simplify | `/simplify` | Refactor code for efficiency and readability |
-| Security Review | `/security-review` | Security audit of pending changes |
-| Run | `/run` | Start and manage dev server for this project |
-| Init | `/init` | Initialize CLAUDE.md documentation for codebase |
-| Review | `/review` | Review pull requests |
-| Loop | `/loop` | Run a command/prompt on recurring interval |
-| Schedule | `/schedule` | Create scheduled remote agents (cron jobs) |
-
-### Using Skills
-
-**Method 1 — Auto-trigger:** Use any of the trigger phrases above naturally in your message
-```
-"analyze code health in the frontend components"  → Triggers fallow skill
-"design a new dashboard for users"                → Triggers frontend-design skill  
-"add documentation for the API endpoints"         → Triggers docs-router skill
-```
-
-**Method 2 — Manual invocation:** Use slash commands
-```
-/verify         # Test the app and report what you see
-/code-review    # Get an independent audit of pending changes
-/simplify       # Refactor for cleaner code
-/security-review # Security audit of current branch
-/run            # Start the development server
-```
-
-**Creating new skills** — See [`Cursor.md`](./Cursor.md#creating-a-new-skill) for step-by-step instructions.
-
----
-
-## 📚 Documentation
-
-- **`TECH_STACK.md`** - Tech stack, where each tool helps, and chained workflow diagrams
-- **`Cursor.md`** - Cursor IDE setup, skills, MCP, and agent workflows
-- **`SETUP.md`** - Complete setup guide for new users
-- **`QUICK_REFERENCE.md`** - Quick command reference with examples
-- **`OUTPUT_PATHS.md`** - Output file locations reference
-- **`resume/README.md`** - Resume workflow from checkpoints (save time & costs!)
-- **`CORE_PROCESS_FLOW.md`** - Detailed step-by-step process with AI models used
-- **`DEPLOYMENT.md`** - VPS deployment instructions
-
----
-
-## 🧪 Testing
-
-```bash
-python test_modular_workflow.py
-```
-
----
-
-## 💡 Use Cases
-
-### 1. Create Video Recaps
-Generate 30-second highlight reels from longer videos with AI narration.
-
-### 2. Video Transcription
-Extract accurate timestamped transcripts from any video.
-
-### 3. Multi-language Subtitles
-Transcribe and translate videos to multiple languages.
-
-### 4. Content Repurposing
-Extract best moments for social media clips.
-
-### 5. Accessibility
-Add narration to videos for accessibility.
-
----
-
-## 🛠️ Troubleshooting
-
-### "Import errors"
-Make sure you're running scripts from the `video_recap_agent` directory:
-```bash
-cd video_recap_agent
-python run_recap_workflow.py /path/to/video.mp4
-```
-
-### "OpenAI API error"
-Check your `.env` file has a valid `OPENAI_API_KEY`:
-```bash
-# Open .env file
-cat .env
-
-# Should contain:
-OPENAI_API_KEY=sk-...your-actual-key...
-
-# If missing or incorrect, get a new key from:
-# https://platform.openai.com/api-keys
-```
-
-### "File not found"
-Previous step may have failed. Run steps individually to identify the issue.
-
-### "Garbled transcription"
-Try:
-- Specify language: `--language en`
-- Use better model: `--model medium` or `--model large`
-- Check audio quality of source video
-
----
-
-## 📦 Dependencies
-
-**Core Libraries:**
-- `openai` - GPT-4 for AI analysis, TTS for narration
-- `openai-whisper` - Local speech recognition (no API needed)
-- `moviepy` - Video processing and editing
-- `python-dotenv` - Environment variable management
-
-**Optional:**
-- `pydub` - Audio duration analysis
-
-**System Requirements:**
-- Python 3.7+
-- FFmpeg (for video/audio processing)
-
-Install FFmpeg:
-```bash
-# macOS
-brew install ffmpeg
-
-# Ubuntu/Debian
-sudo apt install ffmpeg
-
-# Windows
-# Download from: https://ffmpeg.org/download.html
-```
-
-See `requirements.txt` for complete list.
-
----
-
-## 🎬 Workflow Diagram
-
-```
-Video Input
+Upload → S3/MinIO
     ↓
-[Transcribe] → transcription.txt
+Celery RecapPipeline
     ↓
-[Translate] → tamil_transcription.txt (optional)
+[0] Download
+[1] Transcribe (AssemblyAI) + enrichment L1→L4 / LP
+      ↳ optional HITL enrichment review
+[2] Translate (optional)
+[3] Scene understanding (optional) → inject narration_context.scene_*
+    → Clip selection + narration (uses transcript + scene + cast/gender)
+[4] TTS
+[5] Extract / merge clips
+[6] Remove original audio
+[7] Merge narration → final MP4
     ↓
-[AI Recap] → recap_data.json + recap_text.txt
-    ↓
-[Extract Clips] → recap_video.mp4
-    ↓
-[Remove Audio] → recap_video_no_audio.mp4 (optional)
-    ↓
-[Generate TTS] → recap_narration.mp3
-    ↓
-[Merge Audio] → recap_video_with_narration.mp4 ✨
+results/{job_id}/recap_video_with_narration.mp4
 ```
 
----
+Scene understanding feeds **both** clip selection and the final narration prompt via `narration_context.scene_summary` (and timed segments for clips). It does not rewrite speaker diarization from on-screen faces.
 
-## 🤝 Integration
+**Skipped by design:** auto-correcting “who spoke” from video / lip sync — on-screen presence is not the same as who spoke, and that collapses diarization. L2 stays observe-only; LP may propose attribution for review.
 
-This module is self-contained and can be:
-- Used standalone
-- Integrated into larger projects
-- Deployed as a service
-- Extended with custom steps
+Details: [docs/RECAP_PIPELINE_WORKFLOW.md](docs/RECAP_PIPELINE_WORKFLOW.md)
 
 ---
 
-## 📄 License
+## Local enrichment CLIs
 
-Part of the Autogen project.
+Same enrichers as the product (`modules/enrichment/`), for debugging without the UI:
 
----
-
-## 🆘 Support
-
-For help:
-1. Check [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for commands
-2. Check [OUTPUT_PATHS.md](OUTPUT_PATHS.md) for file locations
-3. Run `python scripts/<script>.py --help` for script-specific options
-
----
-
-## ✅ Quick Checklist
-
-Before running:
-- [ ] Python 3.7+ installed
-- [ ] Dependencies installed (`pip install -r requirements.txt`)
-- [ ] `.env` file configured with `OPENAI_API_KEY`
-- [ ] Video file path is correct
-
----
-
-**Ready to start? Run:**
 ```bash
-python run_recap_workflow.py /path/to/your/video.mp4
+# L0 transcription
+python scripts/enrichment/run_l0_transcribe.py --video assets/input_video.mp4
+
+# L1 → L4 (+ LP) chain
+python scripts/enrichment/run_enrichment_chain.py --video assets/input_video.mp4
+
+# Scene understanding (optional inject into L4 for local recap tests)
+python scripts/enrichment/run_scene_understanding.py \
+  --run-name input_video \
+  --video assets/input_video.mp4 \
+  --inject-into output/transcriptions/input_video/layers/enrichment_L4.json
 ```
 
-🎉 Enjoy your AI-powered video recaps!
+Outputs land under `output/transcriptions/<run-name>/` (e.g. `layers/enrichment_L4.json`, `layers/scene_understanding.json`).
 
+---
+
+## Configuration highlights
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENAI_API_KEY` | GPT, TTS, scene vision |
+| `ASSEMBLYAI_API_KEY` / `ENABLE_ASSEMBLYAI_DIARIZATION` | Speaker diarization |
+| `ENABLE_SCENE_UNDERSTANDING` | Pre-recap GPT-4o scene describe |
+| `SCENE_SAMPLE_FPS` / `SCENE_BATCH_FRAMES` / `SCENE_MAX_DURATION` | Scene sampling |
+| `L2_CHARACTER_TRACKING` | `continuous` (YOLO/ByteTrack) or `sparse` |
+| `MIN_TARGET_DURATION_SECONDS` / `MAX_TARGET_DURATION_SECONDS` | Upload form + API validation (exposed on `GET /api/v1/meta`) |
+| `DEBUG` / `KEEP_PIPELINE_WORKING_DIR` | Intermediate downloads + keep worker temp dirs |
+
+Full template: [.env.example](.env.example) · Full reference: [backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md)
+
+---
+
+## Project structure
+
+```
+├── backend/                 # FastAPI + Celery workers
+├── frontend/                # Next.js UI
+├── modules/                 # Shared processing + enrichment
+│   ├── enrichment/          # L0–L4, LP
+│   ├── scene_understanding.py
+│   ├── video_processing.py  # Recap clip + narration
+│   └── ...
+├── scripts/enrichment/      # Local enrichment runners
+├── scripts/                 # Lab / prototype CLIs (tracking, VLMs, etc.)
+├── docker-compose*.yml
+├── Makefile
+└── output/                  # Local CLI / enrichment artifacts
+```
+
+---
+
+## Documentation
+
+| Doc | Topic |
+|-----|--------|
+| [Architecture.md](Architecture.md) | Systems, workflow diagram, models (LLM/VLM/STT/TTS), OSS vs SaaS credits |
+| [SETUP.md](SETUP.md) | Detailed setup |
+| [backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md) | Full environment variable reference |
+| [.env.example](.env.example) | Local / Docker env template |
+| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | CLI cheat sheet |
+| [docs/RECAP_PIPELINE_WORKFLOW.md](docs/RECAP_PIPELINE_WORKFLOW.md) | Upload → recap product flow |
+| [TECH_STACK.md](TECH_STACK.md) | Stack and diagrams |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Deploy procedures |
+| [OUTPUT_PATHS.md](OUTPUT_PATHS.md) | Output locations |
+| [CODEBASE_Q&A.md](CODEBASE_Q&A.md) | Pipeline Q&A |
+| [CLAUDE.md](CLAUDE.md) | Agent-oriented project notes |
+| [Cursor.md](Cursor.md) | Cursor / skills setup |
+| [resume/README.md](resume/README.md) | Legacy Whisper CLI resume helpers |
+
+---
+
+## Makefile / Docker commands
+
+```bash
+make dev              # start dev stack
+make down             # stop
+make migrate          # alembic upgrade
+make logs-worker      # worker logs
+make logs-backend     # API logs
+make test             # backend pytest in container
+```
+
+---
+
+## Debugging jobs
+
+With `DEBUG=true`, job responses include intermediate download URLs (transcription, enrichment layers, recap data, TTS, etc.).
+
+```bash
+curl -s http://localhost:8000/api/v1/jobs/{job_id} | jq '.intermediate_keys_detailed'
+make logs-worker
+```
+
+---
+
+## Agent skills
+
+Project skills live in [`.agents/skills/`](.agents/skills/):
+
+- [docs-router](.agents/skills/docs-router/SKILL.md) — keep README as the doc root
+- [fallow](.agents/skills/fallow/SKILL.md) — JS/TS code health
+- [frontend-design](.agents/skills/frontend-design/SKILL.md) — UI design guidance
+
+---
+
+## Troubleshooting
+
+**Docker not running** — start Docker Desktop, then `make dev`.
+
+**Migration `DuplicateColumnError`** — schema may already match a later revision; stamp carefully (e.g. `alembic stamp 008`) only if the column already exists.
+
+**L2 continuous tracking falls back to sparse** — worker image may lack `ultralytics` / `insightface`; install in the worker image or set `L2_CHARACTER_TRACKING=sparse`.
+
+**OpenAI / AssemblyAI errors** — confirm keys in `.env` and recreate backend/worker so they reload env:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate backend worker
+```
+
+**Legacy Whisper CLI** — `python run_recap_workflow.py video.mp4` still works for a simple local smoke test but does **not** run enrichment or scene understanding.
+
+---
+
+## License
+
+Part of the Hallucinot / Autogen project family.

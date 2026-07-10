@@ -66,6 +66,9 @@ class Settings(BaseSettings):
 
     # File limits
     MAX_UPLOAD_SIZE_BYTES: int = 2 * 1024 * 1024 * 1024  # 2GB
+    # Recap target duration (seconds) — UI + JobConfig validation
+    MIN_TARGET_DURATION_SECONDS: int = 10
+    MAX_TARGET_DURATION_SECONDS: int = 300  # 5 minutes
 
     # Storage: remove uploaded original from object storage after pipeline succeeds (output retained)
     DELETE_INPUT_VIDEO_ON_COMPLETE: bool = True

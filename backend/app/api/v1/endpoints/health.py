@@ -63,4 +63,6 @@ async def app_meta():
         "google_client_id": settings.GOOGLE_CLIENT_ID or None,
         "enable_translation": settings.ENABLE_TRANSLATION,
         "debug": settings.DEBUG,
+        "min_target_duration_seconds": settings.MIN_TARGET_DURATION_SECONDS,
+        "max_target_duration_seconds": settings.MAX_TARGET_DURATION_SECONDS,
     }

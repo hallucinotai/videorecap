@@ -20,6 +20,8 @@ declare global {
       google_client_id: string | null;
       enable_translation: boolean;
       debug: boolean;
+      min_target_duration_seconds?: number;
+      max_target_duration_seconds?: number;
     };
   }
 }

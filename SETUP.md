@@ -109,19 +109,41 @@ Expected output:
 
 ### `.env` File
 
-**Required:**
+Copy from [`.env.example`](.env.example). Full reference: [`backend/ENV_VARIABLES.md`](backend/ENV_VARIABLES.md).
+
+**Required for product path:**
 ```bash
-OPENAI_API_KEY=sk-proj-...        # Your OpenAI API key
+OPENAI_API_KEY=sk-proj-...
+ASSEMBLYAI_API_KEY=...          # when ENABLE_ASSEMBLYAI_DIARIZATION=true
+ENABLE_ASSEMBLYAI_DIARIZATION=true
 ```
 
-**Optional:**
+**Common optional / local flags:**
 ```bash
-model=gpt-4                       # GPT model for AI analysis
-                                  # Options:
-                                  # - gpt-4 (recommended, default)
-                                  # - gpt-4-turbo (faster, cheaper)
-                                  # - gpt-4o (latest, best)
-                                  # - gpt-3.5-turbo (cheaper, lower quality)
+model=gpt-4                       # GPT model hint for some CLI paths
+DEBUG=true
+KEEP_PIPELINE_WORKING_DIR=true
+
+# L2 character tracking
+L2_CHARACTER_TRACKING=continuous  # or sparse
+L2_TRACKING_FRAME_STRIDE=5
+L2_TRACKING_DEVICE=cpu
+
+# Scene understanding (feeds clip + narration prompts)
+ENABLE_SCENE_UNDERSTANDING=true
+SCENE_VISION_MODEL=gpt-4o
+SCENE_SAMPLE_FPS=0.5
+SCENE_BATCH_FRAMES=8
+# SCENE_MAX_DURATION=60           # smoke-test first N seconds
+
+# Upload form + API duration limits (seconds)
+MIN_TARGET_DURATION_SECONDS=10
+MAX_TARGET_DURATION_SECONDS=300
+```
+
+After changing `.env` for Docker, recreate containers (restart alone may not reload env):
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate backend worker
 ```
 
 ### Command Line Options

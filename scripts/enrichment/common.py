@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -58,11 +60,31 @@ def setup_import_paths() -> Path:
     root = repo_root()
     backend = root / "backend"
     scripts = root / "scripts"
-    for path in (root, backend, scripts):
+    # Insert backend/scripts first, repo root last — root must win for `modules.*`
+    # (backend also ships a modules/ copy; without this, outputs land in backend/output/).
+    for path in (backend, scripts, root):
         path_str = str(path)
         if path_str not in sys.path:
             sys.path.insert(0, path_str)
     return root
+
+
+@contextmanager
+def patched_module_paths(working_dir: str | Path):
+    """Patch modules.transcription output paths to resolve under working_dir."""
+    import modules.transcription as mod
+
+    original_script_dir = mod.SCRIPT_DIR
+    original_get_output_path = mod.get_output_path
+    base = str(Path(working_dir).expanduser().resolve())
+
+    mod.SCRIPT_DIR = base
+    mod.get_output_path = lambda rel: os.path.join(base, rel)
+    try:
+        yield
+    finally:
+        mod.SCRIPT_DIR = original_script_dir
+        mod.get_output_path = original_get_output_path
 
 
 def load_env_file() -> None:

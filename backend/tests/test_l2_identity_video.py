@@ -78,7 +78,8 @@ def _fake_face_observations() -> list[FaceObservation]:
 
 @patch("modules.enrichment.l2_identity.sublayers.s1_video_reconcile.build_video_faces_from_observations")
 @patch("modules.enrichment.l2_identity.sublayers.s1_video_reconcile.run_l2_character_observation")
-def test_s1_character_observation_enriches_without_relabel(mock_run, mock_portraits, tmp_path):
+def test_s1_character_observation_enriches_without_relabel(mock_run, mock_portraits, tmp_path, monkeypatch):
+    monkeypatch.setenv("L2_CHARACTER_TRACKING", "sparse")
     video_path = tmp_path / "clip.mp4"
     video_path.write_bytes(b"fake")
     mock_run.return_value = (_fake_report(), _fake_face_observations())

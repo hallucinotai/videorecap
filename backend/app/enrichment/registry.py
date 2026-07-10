@@ -62,7 +62,7 @@ LAYER_REGISTRY: tuple[LayerDefinition, ...] = (
     LayerDefinition(
         layer_id="L2",
         label="Speaker identity",
-        description="Video face clustering + speaker merge, then text names (JSON)",
+        description="Continuous person tracking (or sparse face observation) + text names (JSON)",
         filename="enrichment_L2.json",
         depends_on="L1",
         enricher_module="modules.enrichment.l2_identity.enricher",
@@ -70,7 +70,7 @@ LAYER_REGISTRY: tuple[LayerDefinition, ...] = (
         sublayers=(
             SubLayerDefinition(
                 sublayer_id="S1",
-                label="Video reconcile",
+                label="Video character tracking",
                 artifact_filename="S1_video.json",
                 enricher_module="modules.enrichment.l2_identity.sublayers.s1_video_reconcile",
                 enricher_class_name="S1VideoReconcileEnricher",

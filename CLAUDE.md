@@ -241,9 +241,17 @@ DATABASE_URL=postgresql://...      # PostgreSQL connection
 REDIS_URL=redis://...              # Redis connection (Celery)
 ```
 
-### Optional
+### Optional / product enrichment
 ```bash
 GPT_MODEL=gpt-4                    # Default: gpt-4 (options: gpt-4-turbo, gpt-4o, gpt-3.5-turbo)
+ASSEMBLYAI_API_KEY=...
+ENABLE_ASSEMBLYAI_DIARIZATION=true
+REQUIRE_ASSEMBLYAI_KEY=false
+L2_CHARACTER_TRACKING=continuous
+ENABLE_SCENE_UNDERSTANDING=true
+MIN_TARGET_DURATION_SECONDS=10
+MAX_TARGET_DURATION_SECONDS=300
+KEEP_PIPELINE_WORKING_DIR=true
 AWS_ACCESS_KEY_ID=...              # AWS S3 access
 AWS_SECRET_ACCESS_KEY=...
 AWS_S3_BUCKET_NAME=...
@@ -252,6 +260,8 @@ RESEND_API_KEY=...                 # Transactional email service
 GOOGLE_CLIENT_ID=...               # Google OAuth
 GOOGLE_CLIENT_SECRET=...
 ```
+
+Full reference: `backend/ENV_VARIABLES.md` and `.env.example`.
 
 ## 📊 API Endpoints
 

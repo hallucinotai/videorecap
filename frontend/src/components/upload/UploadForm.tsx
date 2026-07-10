@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Globe } from "lucide-react";
 import type { JobConfig } from "@/lib/types";
 
@@ -9,12 +9,42 @@ interface UploadFormProps {
   disabled?: boolean;
 }
 
+const DEFAULT_MIN_DURATION = 10;
+const DEFAULT_MAX_DURATION = 300;
+
 export function UploadForm({ onSubmit, disabled }: UploadFormProps) {
+  const [minDuration, setMinDuration] = useState(DEFAULT_MIN_DURATION);
+  const [maxDuration, setMaxDuration] = useState(DEFAULT_MAX_DURATION);
   const [targetDuration, setTargetDuration] = useState(30);
   const [voice, setVoice] = useState("nova");
   const [language, setLanguage] = useState("");
   const [translateTo, setTranslateTo] = useState("");
   const [includeEmotions, setIncludeEmotions] = useState(false);
+
+  useEffect(() => {
+    const applyMeta = () => {
+      const meta = window.__meta__;
+      if (!meta) return;
+      const min =
+        typeof meta.min_target_duration_seconds === "number"
+          ? meta.min_target_duration_seconds
+          : DEFAULT_MIN_DURATION;
+      const max =
+        typeof meta.max_target_duration_seconds === "number"
+          ? meta.max_target_duration_seconds
+          : DEFAULT_MAX_DURATION;
+      setMinDuration(min);
+      setMaxDuration(max);
+      setTargetDuration((prev) => Math.min(max, Math.max(min, prev)));
+    };
+    applyMeta();
+    const id = window.setInterval(applyMeta, 500);
+    const stop = window.setTimeout(() => window.clearInterval(id), 5000);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(stop);
+    };
+  }, []);
 
   const translationEnabled = typeof window !== "undefined" && window.__meta__?.enable_translation === true;
 
@@ -41,12 +71,15 @@ export function UploadForm({ onSubmit, disabled }: UploadFormProps) {
         </label>
         <input
           type="number"
-          min={10}
-          max={120}
+          min={minDuration}
+          max={maxDuration}
           value={targetDuration}
           onChange={(e) => setTargetDuration(Number(e.target.value))}
           className="w-full rounded-md border px-3 py-2 text-sm"
         />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Allowed range: {minDuration}–{maxDuration}s
+        </p>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">

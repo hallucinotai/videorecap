@@ -9,6 +9,7 @@ from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
 
 from app.api.v1.deps import get_current_user, get_current_admin_user, get_db
+from app.config import settings
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -243,8 +244,16 @@ async def get_available_tiers():
         {
             "name": "enterprise",
             "price": 99,
-            "max_duration": 3600,
+            "max_duration": settings.MAX_TARGET_DURATION_SECONDS,
             "max_jobs_per_month": -1,
-            "features": ["Unlimited duration", "Priority queue", "Custom branding", "90-day retention", "Dedicated support"]
+            "features": [
+                f"{settings.MAX_TARGET_DURATION_SECONDS // 60} min max duration"
+                if settings.MAX_TARGET_DURATION_SECONDS >= 60
+                else f"{settings.MAX_TARGET_DURATION_SECONDS}s max duration",
+                "Priority queue",
+                "Custom branding",
+                "90-day retention",
+                "Dedicated support",
+            ],
         }
     ]

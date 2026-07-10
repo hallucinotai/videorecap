@@ -4,6 +4,11 @@ Detect and track faces (characters) in a video using MTCNN + OpenCV CSRT tracker
 
 Local test utility — lives under scripts/ (gitignored). Not part of the app pipeline.
 
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  Face tracks are for character presence only. Do not map on-screen faces to
+  diarization speakers or rewrite who spoke: on-screen ≠ speaker, and that
+  collapses speaker diarization. Same skip as product L2 / dormant lip paths.
+
 Pipeline:
   1. MTCNN detects faces on a schedule (~1/sec)
   2. NMS deduplicates overlapping boxes in the same frame

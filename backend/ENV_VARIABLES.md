@@ -9,7 +9,7 @@ Complete documentation of all backend environment variables with possible values
 | **CRITICAL** | `DATABASE_URL`, `REDIS_URL`, `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`, `S3_*`, `OPENAI_API_KEY` | App startup + core features | **Everything** - app can't start or process videos |
 | **HIGH** | `JWT_SECRET`, `CORS_ORIGINS` | User auth + frontend communication | User login broken, API requests blocked |
 | **MEDIUM** | `RESEND_API_KEY`, `GOOGLE_CLIENT_ID`, `STRIPE_*` | Optional auth/billing features | Email signup, social login, billing disabled (graceful) |
-| **LOW** | Feature flags, `MAX_UPLOAD_SIZE_BYTES`, `DELETE_INPUT_VIDEO_ON_COMPLETE` | User experience, storage | Feature visibility, storage costs, upload limits |
+| **LOW** | Feature flags, `MAX_UPLOAD_SIZE_BYTES`, `MIN/MAX_TARGET_DURATION_SECONDS`, `DELETE_INPUT_VIDEO_ON_COMPLETE`, L2/scene tuning | User experience, storage, enrichment quality | Feature visibility, storage costs, upload/duration limits, tracking/scene behavior |
 
 **Minimum to start:** DATABASE_URL, REDIS_URL, CELERY_BROKER_URL, CELERY_RESULT_BACKEND, S3_*, OPENAI_API_KEY, JWT_SECRET
 
@@ -175,11 +175,11 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 | Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
 |----------|------|---------|-----------------|----------|-------------|
-| `OPENAI_API_KEY` | string | `` (empty, **REQUIRED**) | GPT-4o recap generation, TTS narration, translation (if enabled) | **ALL transcription and TTS fails**, entire video recap pipeline broken | API key for GPT-4o (recap generation), TTS (text-to-speech narration), and translation (CRITICAL - without this feature is completely broken) |
-| `WHISPER_MODEL_SIZE` | string | `small` | `tiny`, `base`, `small`, `medium`, `large` | Transcription not available with invalid value | Whisper model size for audio transcription - larger = more accurate but slower/more GPU memory |
+| `OPENAI_API_KEY` | string | `` (empty, **REQUIRED**) | GPT-4o recap generation, TTS narration, translation, scene understanding (if enabled) | **Recap / TTS / scene vision fail**, pipeline broken for AI steps | API key for GPT-4o (recap + optional vision), TTS, and translation |
+| `WHISPER_MODEL_SIZE` | string | `small` | `tiny`, `base`, `small`, `medium`, `large` | Transcription not available with invalid value | Whisper model size for legacy / non-AssemblyAI transcription - larger = more accurate but slower/more GPU memory |
 
 **Used in:**
-- `backend/app/workers/tasks.py` - Whisper transcription, GPT-4o recap generation, TTS narration generation
+- `backend/app/workers/tasks.py` / pipeline — GPT-4o recap, TTS, optional scene understanding
 - Can be overridden per-user if `ENABLE_USER_API_KEYS=true` (user provides their own key)
 
 **Whisper Model Sizes:**
@@ -189,15 +189,73 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 - `medium`: ~1.5GB, high accuracy, slower (for critical content)
 - `large`: ~2.9GB, highest accuracy, slowest (for important content)
 
-**Features Dependent:** 
-- **Transcription** - Audio → Text (via Whisper)
-- **Recap Generation** - Text → AI summary (via GPT-4o)
-- **Text-to-Speech** - Text → MP3 narration (via OpenAI TTS)
-- **Translation** - Multi-language support (via GPT-4o, if `ENABLE_TRANSLATION=true`)
+**Features Dependent:**
+- **Transcription** — AssemblyAI (preferred) or Whisper
+- **Recap Generation** — Text → AI summary (via GPT-4o)
+- **Scene understanding** — Video frames → narrative (via GPT-4o vision, if enabled)
+- **Text-to-Speech** — Text → MP3 narration (via OpenAI TTS)
+- **Translation** — Multi-language support (via GPT-4o, if `ENABLE_TRANSLATION=true`)
 
 **Fallback:** If `ENABLE_USER_API_KEYS=true`, system key is only used if user hasn't provided their own key
 
 **Get OpenAI key from:** https://platform.openai.com/api-keys
+
+## AssemblyAI (Speaker Diarization)
+
+| Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
+|----------|------|---------|-----------------|----------|-------------|
+| `ASSEMBLYAI_API_KEY` | string | `` (empty) | L0 transcription with speakers when diarization enabled | **Diarization fails** if required / no user key | System AssemblyAI API key |
+| `ENABLE_ASSEMBLYAI_DIARIZATION` | boolean | `false` | Product transcription path (speakers A/B/C…) | Falls back to non-diarized / Whisper path depending on job config | Enable AssemblyAI speaker diarization |
+| `ASSEMBLYAI_LANGUAGE_CODE` | string | `en` | AssemblyAI language hint | Wrong language / lower accuracy | Language code passed to AssemblyAI |
+| `REQUIRE_ASSEMBLYAI_KEY` | boolean | `true` | Settings: force users to supply their own AssemblyAI key | If `false`, system `ASSEMBLYAI_API_KEY` is used | When `true`, users must set a key in Settings |
+
+**Used in:** `backend/app/config.py`, transcription / enrichment L0 path, auth feature flags.
+
+**Get key from:** https://www.assemblyai.com/app/account
+
+## L2.S1 Character Tracking (Enrichment)
+
+Read from the environment by enrichment modules (worker must see the same `.env`).
+
+| Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
+|----------|------|---------|-----------------|----------|-------------|
+| `L2_CHARACTER_TRACKING` | string | `continuous` | L2.S1 video identity | Invalid / missing deps → **sparse fallback** | `continuous` = YOLO + ByteTrack + ArcFace; `sparse` (aliases: `sample`, `observation`) = utterance-sampled faces only |
+| `L2_TRACKING_FRAME_STRIDE` | int | `2` (code); often `5` in `.env.example` | Continuous tracking only | Higher = faster / fewer samples | Analyze every Nth frame |
+| `L2_TRACKING_MAX_FRAMES` | int / unset | unset = full video | Continuous tracking only | Early stop may miss late speakers → sparse fallback | Cap frames from start of video (smoke tests) |
+| `L2_TRACKING_DEVICE` | string | `cpu` | YOLO / ArcFace device | Wrong device → runtime error / CPU fallback | `cpu` \| `cuda` \| `cuda:0` \| `mps` |
+
+**Note:** Continuous mode needs `ultralytics`, `supervision`, `insightface`, `onnxruntime` in the **worker** image. Without them, L2 falls back to sparse observation.
+
+## Scene / Event Understanding (Pre-Recap)
+
+| Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
+|----------|------|---------|-----------------|----------|-------------|
+| `ENABLE_SCENE_UNDERSTANDING` | boolean-ish | `false` | Pre-recap GPT-4o vision; injects `narration_context.scene_*` | Scene step skipped; clip/narration use transcript only | `true`/`false`/`1`/`0`/`yes`/`no`/`on`/`off` |
+| `SCENE_VISION_MODEL` | string | `gpt-4o` | Vision API model | Invalid model → API errors (step skip-on-failure) | Vision-capable OpenAI model |
+| `SCENE_SAMPLE_FPS` | float | `0.5` | Frame sampling rate | Too high → cost/latency; too low → sparse scenes | Frames per second to sample |
+| `SCENE_BATCH_FRAMES` | int | `8` | Frames per vision API call | Large batches → token limits | Batch size for describe calls |
+| `SCENE_MAX_DURATION` | float / unset | unset = full video | Limit analysis window | Only first N seconds described | Smoke-test / cost control |
+
+**Used in:** `modules/scene_understanding.py`, `backend/app/processing/scene_understanding.py`, `RecapPipeline` step 3 (before clip + narration). Scene summary is used in **both** clip selection and final narration prompts.
+
+## Recap Target Duration Limits
+
+| Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
+|----------|------|---------|-----------------|----------|-------------|
+| `MIN_TARGET_DURATION_SECONDS` | int | `10` | `JobConfig` validation, upload form via `/meta` | Defaults apply | Minimum allowed target duration (seconds) |
+| `MAX_TARGET_DURATION_SECONDS` | int | `300` | `JobConfig` validation, upload form via `/meta` | Defaults apply (5 minutes) | Maximum allowed target duration (seconds) |
+
+**Used in:** `backend/app/config.py`, `backend/app/schemas/job.py`, `GET /api/v1/meta` → frontend `UploadForm`.
+
+**Change duration cap:** set `MAX_TARGET_DURATION_SECONDS` in `.env`, recreate backend (`--force-recreate`), refresh the upload page.
+
+## Pipeline Workspace Retention
+
+| Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
+|----------|------|---------|-----------------|----------|-------------|
+| `KEEP_PIPELINE_WORKING_DIR` | bool / unset | unset → follow `DEBUG` | Celery temp dirs after job | Disk fills if always true | When `true`, keep `/tmp/recap_*` workspaces; when unset, preserve only if `DEBUG=true` |
+
+**Used in:** `backend/app/config.py` → `preserve_pipeline_working_dir()`, `backend/app/workers/pipeline.py`.
 
 ## Email & OTP (Resend)
 
@@ -248,6 +306,8 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 | Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
 |----------|------|---------|-----------------|----------|-------------|
 | `MAX_UPLOAD_SIZE_BYTES` | integer | `2147483648` (2GB) | Video upload validation, `/uploads` endpoint | **No file size limit enforced**, memory exhaustion possible, oversized uploads hang server | Maximum allowed video file size for uploads (in bytes) |
+| `MIN_TARGET_DURATION_SECONDS` | integer | `10` | Job create + upload UI | Defaults to 10 | See **Recap Target Duration Limits** above |
+| `MAX_TARGET_DURATION_SECONDS` | integer | `300` | Job create + upload UI | Defaults to 300 (5 min) | See **Recap Target Duration Limits** above |
 
 **Used in:**
 - `backend/app/api/v1/endpoints/uploads.py` - File size validation before upload
@@ -285,6 +345,8 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 | `ENABLE_BILLING` | boolean | `false` | Quota enforcement, billing endpoints, subscription checks, `/meta` endpoint | **If false:** Unlimited quotas, billing endpoints disabled (graceful degradation) | Enable Stripe billing and subscription tiers (requires `STRIPE_*` keys) |
 | `BILLING_DISABLED_MESSAGE` | string | `Billing is not available yet. All features are currently free.` | User-facing messaging, settings page | Message shown to users, custom per deployment | Custom message shown when billing is disabled (user-friendly explanation) |
 | `ENABLE_API_KEYS_MENU` | boolean | `true` | Frontend feature flag, settings menu visibility | **If false:** API keys menu hidden from UI | Show API keys settings menu in user settings (frontend-only feature flag) |
+| `ENABLE_ASSEMBLYAI_DIARIZATION` | boolean | `false` | L0 speaker diarization | Non-diarized path / Whisper depending on config | See **AssemblyAI** section |
+| `ENABLE_SCENE_UNDERSTANDING` | boolean-ish | `false` | Pre-recap vision describe | Scene skipped; recap still runs | See **Scene / Event Understanding** section |
 
 **Used in:**
 - `backend/app/services/user_service.py` - User API key validation and storage
@@ -321,8 +383,19 @@ S3_SECRET_KEY=minioadmin
 S3_BUCKET=video-recaps
 S3_REGION=us-east-1
 OPENAI_API_KEY=sk-...your-key...
+ASSEMBLYAI_API_KEY=...
+ENABLE_ASSEMBLYAI_DIARIZATION=true
+REQUIRE_ASSEMBLYAI_KEY=false
 JWT_SECRET=dev-secret-change-me
 CORS_ORIGINS=["http://localhost:3000"]
+DEBUG=true
+KEEP_PIPELINE_WORKING_DIR=true
+ENABLE_SCENE_UNDERSTANDING=true
+L2_CHARACTER_TRACKING=continuous
+L2_TRACKING_FRAME_STRIDE=5
+L2_TRACKING_DEVICE=cpu
+MIN_TARGET_DURATION_SECONDS=10
+MAX_TARGET_DURATION_SECONDS=300
 ```
 
 ### Staging
@@ -413,6 +486,22 @@ MAX_UPLOAD_SIZE_BYTES=5368709120
 | ENABLE_BILLING | Low | bool | No | false | Billing disabled | Production only |
 | BILLING_DISABLED_MESSAGE | Low | string | No | default | Wrong message | Per UI needs |
 | ENABLE_API_KEYS_MENU | Low | bool | No | true | Menu hidden | Rare |
+| ASSEMBLYAI_API_KEY | High | string | For diarization | (empty) | No speakers / L0 fail | Per environment |
+| ENABLE_ASSEMBLYAI_DIARIZATION | High | bool | No | false | No diarization | When using speakers |
+| ASSEMBLYAI_LANGUAGE_CODE | Low | string | No | en | Wrong language | Per content |
+| REQUIRE_ASSEMBLYAI_KEY | Low | bool | No | true | Users must set key | Local vs prod |
+| L2_CHARACTER_TRACKING | Medium | string | No | continuous | Sparse fallback | Perf / deps |
+| L2_TRACKING_FRAME_STRIDE | Low | int | No | 2 | Speed vs density | Perf tuning |
+| L2_TRACKING_MAX_FRAMES | Low | int | No | unset | Partial track | Smoke tests |
+| L2_TRACKING_DEVICE | Low | string | No | cpu | Device errors | GPU hosts |
+| ENABLE_SCENE_UNDERSTANDING | Medium | bool | No | false | No visual context in recap | Cost / quality |
+| SCENE_VISION_MODEL | Low | string | No | gpt-4o | Vision API errors | Model choice |
+| SCENE_SAMPLE_FPS | Low | float | No | 0.5 | Cost / coverage | Cost tuning |
+| SCENE_BATCH_FRAMES | Low | int | No | 8 | Token limits | Cost tuning |
+| SCENE_MAX_DURATION | Low | float | No | unset | Partial scene | Smoke tests |
+| MIN_TARGET_DURATION_SECONDS | Low | int | No | 10 | Form/API min | Product policy |
+| MAX_TARGET_DURATION_SECONDS | Low | int | No | 300 | Form/API max | Product policy |
+| KEEP_PIPELINE_WORKING_DIR | Low | bool | No | unset→DEBUG | Disk growth | Local debug |
 | APP_NAME | Low | string | No | Video Recap Agent | Wrong app name | Rare |
 | APP_VERSION | Low | string | No | dev | Wrong version | Per release |
 | API_V1_PREFIX | Low | string | No | /api/v1 | Wrong API path | Rare |
@@ -452,7 +541,17 @@ MAX_UPLOAD_SIZE_BYTES=5368709120
 - Verify: Protocol (http/https) and port (3000/80/443) are correct
 - Test: Check browser console for CORS errors
 
-**"Users can't login"**
-- Check: JWT_SECRET is set and consistent
-- Verify: DATABASE_URL connects to correct database
-- Test: Check if tokens are being created in logs
+**"Scene understanding not in recap"**
+- Check: `ENABLE_SCENE_UNDERSTANDING=true` in `.env` and worker was recreated
+- Verify: job intermediates include `scene_understanding` / transcript has `narration_context.scene_summary`
+- Test: `curl -s http://localhost:8000/api/v1/meta | jq .` (duration keys); worker logs for "Scene understanding"
+
+**"Target duration rejected / form max wrong"**
+- Check: `MIN_TARGET_DURATION_SECONDS`, `MAX_TARGET_DURATION_SECONDS`
+- Verify: `GET /api/v1/meta` returns expected min/max; recreate backend after `.env` change
+- Refresh upload page so `__meta__` reloads
+
+**"L2 continuous tracking not used"**
+- Check: `L2_CHARACTER_TRACKING=continuous` and worker has `ultralytics` / `insightface`
+- Verify: enrichment L2 method string (`continuous_tracking_v1` vs `character_observation_v1`)
+- Fallback: set `L2_CHARACTER_TRACKING=sparse` or install tracking deps in worker image

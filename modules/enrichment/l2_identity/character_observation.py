@@ -1,4 +1,9 @@
-"""Observe distinct video characters from L1 utterance sample points (no speaker merge)."""
+"""Observe distinct video characters from L1 utterance sample points (no speaker merge).
+
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  Observation only. Do not use visible characters to rewrite ``utterance.speaker``.
+  On-screen presence is not the same as who spoke; that collapses diarization.
+"""
 
 from __future__ import annotations
 

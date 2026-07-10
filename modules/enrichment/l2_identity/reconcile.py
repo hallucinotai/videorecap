@@ -1,4 +1,12 @@
-"""Face clustering and AssemblyAI speaker merge logic for L2 video reconciliation."""
+"""Face clustering and AssemblyAI speaker merge logic for L2 video reconciliation.
+
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  ``apply_visual_utterance_corrections`` (and lip-weighted cluster picks) must
+  not be wired into L2.S1 or the product pipeline. Relabeling utterances from
+  on-screen faces collapses speaker diarization: whoever appears on screen is
+  not necessarily the speaker. L2 stays observe-only; do not overwrite
+  ``utterance.speaker`` from vision.
+"""
 
 from __future__ import annotations
 
@@ -261,7 +269,11 @@ def apply_visual_utterance_corrections(
     min_lip_score: float = 0.5,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
     """
-    Relabel utterances when lip-active face cluster disagrees with AAI speaker label.
+    DORMANT — do not call from production L2/LP.
+
+    Would relabel utterances when a lip-active face cluster disagrees with the
+    AAI speaker label. Skipped intentionally: on-screen face ≠ speaker, so this
+    collapses diarization. Kept for unit tests / historical reference only.
 
     Returns (updated_utterances, correction_log, relabel_count).
     """

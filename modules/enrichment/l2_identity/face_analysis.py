@@ -1,4 +1,12 @@
-"""Multi-face detection and lip-motion scoring via MediaPipe."""
+"""Multi-face detection and lip-motion scoring via MediaPipe.
+
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  Lip / speaking-face helpers below are dormant and must not be wired into
+  L2.S1 or the product pipeline. Using on-screen faces (or lip motion) to
+  rewrite diarization labels collapses speaker diarization: whoever appears
+  on screen is not necessarily the speaker. Keep vision observe-only;
+  attribution stays on audio diarization + LP proposals / human review.
+"""
 
 from __future__ import annotations
 
@@ -125,6 +133,7 @@ def _mouth_metrics(landmarks, w: int, h: int) -> tuple[float, float]:
 
 
 def lip_motion_on_crop(crop_series: list[Any]) -> tuple[float, float]:
+    """Dormant: lip motion for speaking-face. Not used — see module SKIPPED note."""
     """
     Compute lip activity score on a series of face crops (same person).
     Returns (motion_score, final_openness).
@@ -204,8 +213,8 @@ def find_speaking_face(
     face_histogram_embedding,
 ) -> SpeakingFaceResult | None:
     """
-    At timestamp_sec, detect all faces, score lip motion in a ±0.2s window,
-    return the face with highest mouth activity.
+    Dormant: pick highest lip-motion face at timestamp. Not used — see module
+    SKIPPED note (on-screen / lips ≠ speaker; do not rewrite diarization).
     """
     window_frames = reader.read_window(timestamp_sec)
     if not window_frames:

@@ -1,4 +1,11 @@
-"""LP.S2: Visual fusion from L2 identity artifacts (no lip sync)."""
+"""LP.S2: Visual fusion from L2 identity artifacts (no lip sync).
+
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  This sublayer may attach visual co-occurrence signals for LP proposals /
+  review. It must not overwrite ``utterance.speaker`` from on-screen faces.
+  On-screen presence is not the same as who spoke; auto-correct from video
+  collapses diarization. Lip / speaking-face paths stay unwired.
+"""
 
 from __future__ import annotations
 

@@ -3,13 +3,14 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
+from app.config import settings
 from app.models.job import RecapJob
 
 
 class JobConfig(BaseModel):
-    target_duration: int = Field(default=30, ge=10, le=120)
+    target_duration: int = Field(default=30)
     whisper_model: str = "small"
     tts_voice: str = "nova"
     tts_model: str = "tts-1"
@@ -17,6 +18,18 @@ class JobConfig(BaseModel):
     translate_to: str | None = None
     pad_with_black: bool = False
     include_emotions: bool = False  # Premium tier: emotion analysis from audio
+
+    @field_validator("target_duration")
+    @classmethod
+    def validate_target_duration(cls, value: int) -> int:
+        lo = settings.MIN_TARGET_DURATION_SECONDS
+        hi = settings.MAX_TARGET_DURATION_SECONDS
+        if value < lo or value > hi:
+            raise ValueError(
+                f"target_duration must be between {lo} and {hi} seconds "
+                f"(configured via MIN/MAX_TARGET_DURATION_SECONDS)"
+            )
+        return value
 
 
 class IntermediateFile(BaseModel):

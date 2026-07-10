@@ -4,6 +4,12 @@ Layer 1: Character tracking + pipeline scaffolding.
 
 Local test utility — lives under scripts/ (gitignored).
 
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  Character timelines here are for presence / identity, not speaker labels.
+  Do not use on-screen tracks (or lip sync) to rewrite who spoke: whoever
+  appears on screen is not necessarily the speaker, and that collapses
+  diarization. Same decision as product L2.S1 (observe-only).
+
 Full pipeline (movie-scene use case)
 ------------------------------------
 Video

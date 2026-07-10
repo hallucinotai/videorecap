@@ -2,6 +2,11 @@
 """
 Observe distinct video characters from L1 utterance samples (prototype for new L2.S1).
 
+SKIPPED — auto-correct "who spoke" from video (scorecard row 5):
+  Lab scripts must not rewrite diarization from on-screen faces or lip motion.
+  Whoever appears on screen is not necessarily the speaker; doing so collapses
+  speaker diarization. This tool stays observe-only (characters vs labels).
+
 Does NOT merge/collapse AssemblyAI speakers. Samples frames using the same logic as
 enrichment L2 (word-chunk timestamps), clusters faces into char_1, char_2, …, optionally
 describes appearance via OpenAI vision, and reports count mismatch vs diarization.
