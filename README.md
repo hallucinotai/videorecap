@@ -131,7 +131,9 @@ Outputs land under `output/transcriptions/<run-name>/` (e.g. `layers/enrichment_
 | `OPENAI_API_KEY` | GPT, TTS, scene vision |
 | `ASSEMBLYAI_API_KEY` / `ENABLE_ASSEMBLYAI_DIARIZATION` | Speaker diarization |
 | `ENABLE_SCENE_UNDERSTANDING` | Pre-recap GPT-4o scene describe |
+| `SCENE_BOUNDARY_MODE` | `fixed` (time batches) or `pyscenedetect` (shot detect + merge) |
 | `SCENE_SAMPLE_FPS` / `SCENE_BATCH_FRAMES` / `SCENE_MAX_DURATION` | Scene sampling |
+| `SCENE_DETECT_THRESHOLD` / `SCENE_MIN_DURATION_SEC` / `SCENE_MAX_DURATION_SEC` | PySceneDetect merge knobs |
 | `L2_CHARACTER_TRACKING` | `continuous` (YOLO/ByteTrack) or `sparse` |
 | `MIN_TARGET_DURATION_SECONDS` / `MAX_TARGET_DURATION_SECONDS` | Upload form + API validation (exposed on `GET /api/v1/meta`) |
 | `DEBUG` / `KEEP_PIPELINE_WORKING_DIR` | Intermediate downloads + keep worker temp dirs |

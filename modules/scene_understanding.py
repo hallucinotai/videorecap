@@ -2,6 +2,10 @@
 
 Produces a scene timeline + narrative, and can inject compact fields into
 narration_context for clip selection / narration prompts.
+
+Boundary modes (SCENE_BOUNDARY_MODE):
+  - fixed (default): sample at SCENE_SAMPLE_FPS, chunk by SCENE_BATCH_FRAMES
+  - pyscenedetect: PySceneDetect shot cuts → merge short shots → sample frames per scene
 """
 
 from __future__ import annotations
@@ -12,6 +16,13 @@ import logging
 import os
 from pathlib import Path
 from typing import Any
+
+from modules.scene_boundaries import (
+    boundary_mode_from_env,
+    detect_merged_scenes,
+    pyscenedetect_available,
+    sample_timestamps_in_window,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -304,13 +315,18 @@ def run_scene_understanding(
     max_duration: float | None = None,
     skip_merge: bool = False,
     save_frames_dir: Path | None = None,
+    boundary_mode: str | None = None,
 ) -> dict[str, Any]:
     """
     Sample video frames and describe scenes with a vision LLM.
 
+    boundary_mode:
+      - fixed: uniform sampling + SCENE_BATCH_FRAMES chunks
+      - pyscenedetect: ContentDetector shots merged into scenes, then sample per scene
+
     Returns:
       {
-        method, model, sample_fps, batch_frames,
+        method, model, sample_fps, batch_frames, boundary_mode,
         video_duration_sec, analyzed_duration_sec, frame_count, batch_count,
         narrative, segments: [{start_sec, end_sec, description, ...}]
       }
@@ -323,61 +339,142 @@ def run_scene_understanding(
     resolved_batch = batch_frames if batch_frames is not None else _env_int("SCENE_BATCH_FRAMES", DEFAULT_BATCH_FRAMES)
     resolved_model = model or os.environ.get("SCENE_VISION_MODEL") or DEFAULT_MODEL
     resolved_max = max_duration if max_duration is not None else _env_optional_float("SCENE_MAX_DURATION")
+    mode = boundary_mode_from_env(boundary_mode)
 
     extractor = FrameExtractor(path)
     duration = extractor.duration_sec
     extractor.close()
 
-    timestamps = sample_timestamps(
-        duration_sec=duration or 0.0,
-        sample_fps=resolved_fps,
-        max_duration=resolved_max,
-    )
-    if not timestamps:
-        raise ValueError("No timestamps to sample.")
+    if mode == "pyscenedetect":
+        avail = pyscenedetect_available()
+        if not avail.get("scenedetect"):
+            logger.warning(
+                "SCENE_BOUNDARY_MODE=pyscenedetect but scenedetect missing (%s); falling back to fixed",
+                avail.get("error"),
+            )
+            mode = "fixed"
 
-    logger.info(
-        "Scene understanding: video=%s duration=%.1fs sample_fps=%s frames=%d model=%s",
-        path.name,
-        duration or 0.0,
-        resolved_fps,
-        len(timestamps),
-        resolved_model,
-    )
+    if mode == "pyscenedetect":
+        try:
+            scene_windows = detect_merged_scenes(path, max_duration=resolved_max)
+        except Exception as exc:
+            logger.warning("PySceneDetect failed (%s); falling back to fixed", exc)
+            mode = "fixed"
+            scene_windows = []
+    else:
+        scene_windows = []
 
-    frames = extract_frames(video_path=path, timestamps=timestamps, output_dir=save_frames_dir)
-    usable_frames = [f for f in frames if f.get("jpeg_base64")]
-    if not usable_frames:
-        raise ValueError("No frames could be read from the video.")
+    if mode == "fixed":
+        timestamps = sample_timestamps(
+            duration_sec=duration or 0.0,
+            sample_fps=resolved_fps,
+            max_duration=resolved_max,
+        )
+        if not timestamps:
+            raise ValueError("No timestamps to sample.")
 
-    batches = _chunk(usable_frames, resolved_batch)
+        logger.info(
+            "Scene understanding [fixed]: video=%s duration=%.1fs sample_fps=%s frames=%d model=%s",
+            path.name,
+            duration or 0.0,
+            resolved_fps,
+            len(timestamps),
+            resolved_model,
+        )
+
+        frames = extract_frames(video_path=path, timestamps=timestamps, output_dir=save_frames_dir)
+        usable_frames = [f for f in frames if f.get("jpeg_base64")]
+        if not usable_frames:
+            raise ValueError("No frames could be read from the video.")
+
+        frame_batches = _chunk(usable_frames, resolved_batch)
+        batch_specs: list[dict[str, Any]] = []
+        for i, batch in enumerate(frame_batches):
+            batch_specs.append(
+                {
+                    "batch_index": i,
+                    "start_sec": batch[0]["timestamp_sec"],
+                    "end_sec": batch[-1]["timestamp_sec"],
+                    "frames": batch,
+                    "boundary": "fixed",
+                }
+            )
+        analyzed_end = timestamps[-1]
+    else:
+        if not scene_windows:
+            raise ValueError("PySceneDetect produced no scene windows.")
+
+        logger.info(
+            "Scene understanding [pyscenedetect]: video=%s duration=%.1fs scenes=%d "
+            "sample_fps=%s max_frames/scene=%d model=%s",
+            path.name,
+            duration or 0.0,
+            len(scene_windows),
+            resolved_fps,
+            resolved_batch,
+            resolved_model,
+        )
+
+        batch_specs = []
+        all_timestamps: list[float] = []
+        for i, (start_sec, end_sec) in enumerate(scene_windows):
+            ts_list = sample_timestamps_in_window(
+                start_sec,
+                end_sec,
+                sample_fps=resolved_fps,
+                max_frames=resolved_batch,
+            )
+            all_timestamps.extend(ts_list)
+            frames = extract_frames(video_path=path, timestamps=ts_list, output_dir=save_frames_dir)
+            usable = [f for f in frames if f.get("jpeg_base64")]
+            if not usable:
+                logger.warning("Scene %d (%.1f–%.1fs): no readable frames; skipping", i, start_sec, end_sec)
+                continue
+            batch_specs.append(
+                {
+                    "batch_index": i,
+                    "start_sec": start_sec,
+                    "end_sec": end_sec,
+                    "frames": usable,
+                    "boundary": "pyscenedetect",
+                }
+            )
+        if not batch_specs:
+            raise ValueError("No frames could be read from PySceneDetect scenes.")
+        analyzed_end = scene_windows[-1][1]
+
     client = _get_openai_client()
 
     segments: list[dict[str, Any]] = []
-    for i, batch in enumerate(batches):
+    total_frames = 0
+    for spec in batch_specs:
+        batch = spec["frames"]
+        total_frames += len(batch)
         description = describe_batch(
             client,
             model=resolved_model,
             frames=batch,
-            batch_index=i,
-            batch_count=len(batches),
+            batch_index=spec["batch_index"],
+            batch_count=len(batch_specs),
             sample_fps=resolved_fps,
         )
         segments.append(
             {
-                "batch_index": i,
-                "start_sec": batch[0]["timestamp_sec"],
-                "end_sec": batch[-1]["timestamp_sec"],
+                "batch_index": spec["batch_index"],
+                "start_sec": spec["start_sec"],
+                "end_sec": spec["end_sec"],
                 "frame_count": len(batch),
+                "boundary": spec["boundary"],
                 "description": description,
             }
         )
         logger.info(
-            "Scene batch %d/%d (%.1f–%.1fs) done",
-            i + 1,
-            len(batches),
-            batch[0]["timestamp_sec"],
-            batch[-1]["timestamp_sec"],
+            "Scene batch %d/%d (%.1f–%.1fs, %s) done",
+            spec["batch_index"] + 1,
+            len(batch_specs),
+            spec["start_sec"],
+            spec["end_sec"],
+            spec["boundary"],
         )
 
     if skip_merge or len(segments) == 1:
@@ -394,12 +491,14 @@ def run_scene_understanding(
         "method": METHOD,
         "video": str(path.resolve()),
         "model": resolved_model,
+        "boundary_mode": mode,
         "sample_fps": resolved_fps,
         "batch_frames": resolved_batch,
         "video_duration_sec": duration,
-        "analyzed_duration_sec": timestamps[-1],
-        "frame_count": len(usable_frames),
-        "batch_count": len(batches),
+        "analyzed_duration_sec": analyzed_end,
+        "frame_count": total_frames,
+        "batch_count": len(batch_specs),
+        "scene_window_count": len(scene_windows) if mode == "pyscenedetect" else None,
         "merge_skipped": merge_skipped,
         "narrative": narrative,
         "description": narrative,  # alias for lab script compatibility

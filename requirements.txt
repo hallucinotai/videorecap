@@ -10,3 +10,5 @@ supervision>=0.24
 insightface>=0.7
 onnxruntime>=1.17
 opencv-python-headless>=4.8
+# Scene understanding: optional PySceneDetect shot boundaries
+scenedetect>=0.6.4

@@ -38,6 +38,8 @@ google-cloud-speech==2.29.0
 assemblyai==0.64.0
 mediapipe==0.10.18
 opencv-python-headless==4.10.0.84
+# Scene understanding: optional PySceneDetect shot boundaries
+scenedetect>=0.6.4
 # L2.S1 continuous person tracking (YOLOv11 + ByteTrack + ArcFace)
 ultralytics>=8.3
 supervision>=0.24

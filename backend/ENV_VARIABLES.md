@@ -231,9 +231,13 @@ Read from the environment by enrichment modules (worker must see the same `.env`
 | Variable | Type | Default | Used By / Features | Impact if Missing/Invalid | Description |
 |----------|------|---------|-----------------|----------|-------------|
 | `ENABLE_SCENE_UNDERSTANDING` | boolean-ish | `false` | Pre-recap GPT-4o vision; injects `narration_context.scene_*` | Scene step skipped; clip/narration use transcript only | `true`/`false`/`1`/`0`/`yes`/`no`/`on`/`off` |
+| `SCENE_BOUNDARY_MODE` | string | `fixed` | How describe windows are chosen | Invalid → `fixed` | `fixed` = uniform FPS batches; `pyscenedetect` = ContentDetector shots merged into scenes |
+| `SCENE_DETECT_THRESHOLD` | float | `27` | PySceneDetect ContentDetector | More/fewer cuts | Lower = more sensitive cuts (pyscenedetect only) |
+| `SCENE_MIN_DURATION_SEC` | float | `4` | Merge short shots | Too many tiny scenes | Absorb shots shorter than this into neighbors |
+| `SCENE_MAX_DURATION_SEC` | float | `45` | Cap merged scene length | Overlong vision windows | Prefer not to grow a merged scene past this |
 | `SCENE_VISION_MODEL` | string | `gpt-4o` | Vision API model | Invalid model → API errors (step skip-on-failure) | Vision-capable OpenAI model |
 | `SCENE_SAMPLE_FPS` | float | `0.5` | Frame sampling rate | Too high → cost/latency; too low → sparse scenes | Frames per second to sample |
-| `SCENE_BATCH_FRAMES` | int | `8` | Frames per vision API call | Large batches → token limits | Batch size for describe calls |
+| `SCENE_BATCH_FRAMES` | int | `8` | Fixed: frames/call; pyscenedetect: max frames/scene | Large batches → token limits | Batch / per-scene frame cap |
 | `SCENE_MAX_DURATION` | float / unset | unset = full video | Limit analysis window | Only first N seconds described | Smoke-test / cost control |
 
 **Used in:** `modules/scene_understanding.py`, `backend/app/processing/scene_understanding.py`, `RecapPipeline` step 3 (before clip + narration). Scene summary is used in **both** clip selection and final narration prompts.

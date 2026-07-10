@@ -135,7 +135,7 @@ Source: `backend/app/workers/pipeline.py` + `modules/*`.
 | **1b** | Emotions (opt.) | Google Cloud Speech | Yes | `latest_long` (+ heuristics) | STT + emotion features | Premium clip weighting when `include_emotions=true`. |
 | **1c** | Enrichment | L1→L2∥LP→L3→L4 | Mixed | See §4 | — | Speaker names, characters, gender, attribution proposals. |
 | **2** | Translate (opt.) | OpenAI Chat | Yes | `OPENAI_MODEL` → **`gpt-4o`** | Text→text **LLM** | Keep timings; rewrite segment text. Gated by `ENABLE_TRANSLATION`. |
-| **3a** | Scene understanding (opt.) | OpenAI Vision | Yes | `SCENE_VISION_MODEL` → **`gpt-4o`** | Video frames→text **VLM** | Visual play-by-play for clip + narration; skip-on-failure. |
+| **3a** | Scene understanding (opt.) | OpenAI Vision | Yes | `SCENE_VISION_MODEL` → **`gpt-4o`** | Video frames→text **VLM** | Windows from `SCENE_BOUNDARY_MODE=fixed` (time batches) or `pyscenedetect` (shot detect + merge); skip-on-failure. |
 | **3b** | Generate recap | OpenAI Chat (2 calls) | Yes | `OPENAI_MODEL` → **`gpt-4o`** | Text→text **LLM** | Call 1 = clip windows; Call 2 = narration script. Uses transcript + cast/gender + **scene_summary**. |
 | **4** | TTS | OpenAI Audio | Yes | Job `tts_model` → **`tts-1`**, voice **`nova`** | Text→speech **TTS** | Narration audio for final mux (`tts-1-hd` optional). |
 | **5** | Extract clips | moviepy / FFmpeg | No | — | Video edit | Cut/concat selected ranges → `recap_video.mp4`. |

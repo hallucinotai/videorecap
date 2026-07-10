@@ -83,6 +83,12 @@ def main() -> int:
         help="Vision model (default SCENE_VISION_MODEL or gpt-4o)",
     )
     parser.add_argument(
+        "--boundary-mode",
+        choices=["fixed", "pyscenedetect"],
+        default=None,
+        help="Scene windows: fixed time batches or PySceneDetect+merge (default: SCENE_BOUNDARY_MODE / fixed)",
+    )
+    parser.add_argument(
         "--skip-merge",
         action="store_true",
         help="Keep segment descriptions separate instead of merging",
@@ -128,6 +134,7 @@ def main() -> int:
             max_duration=args.max_duration,
             model=args.model,
             skip_merge=args.skip_merge,
+            boundary_mode=args.boundary_mode,
         )
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
@@ -135,7 +142,8 @@ def main() -> int:
 
     write_scene_artifact(result, output_path)
     print(
-        f"\nDone. method={result.get('method')} segments={len(result.get('segments') or [])} "
+        f"\nDone. method={result.get('method')} boundary={result.get('boundary_mode')} "
+        f"segments={len(result.get('segments') or [])} "
         f"frames={result.get('frame_count')} narrative_chars={len(result.get('narrative') or '')}"
     )
 
