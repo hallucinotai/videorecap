@@ -1,0 +1,76 @@
+{
+  "LP_attribution": {
+    "method": "multimodal_fusion_v1",
+    "count_mismatch": true,
+    "pending_review_count": 0,
+    "speaker_merge_suggestions": [
+      {
+        "from_speaker": "B",
+        "to_speaker": "A",
+        "character_id": "char_1",
+        "reason": "shared_visual_cluster",
+        "confidence": 0.35
+      }
+    ],
+    "utterances": {
+      "u1": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u2": {
+        "speaker_predicted": "B",
+        "character_predicted": "char_1",
+        "attribution_confidence": 0.56,
+        "attribution_status": "proposed"
+      },
+      "u3": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u4": {
+        "speaker_predicted": "C",
+        "character_predicted": null,
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u5": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u6": {
+        "speaker_predicted": "B",
+        "character_predicted": "char_1",
+        "attribution_confidence": 0.56,
+        "attribution_status": "proposed"
+      },
+      "u7": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      }
+    }
+  },
+  "LP_character_profiles": {
+    "char_1": {
+      "speaking_style": "cautious and hesitant",
+      "typical_mood": "tense",
+      "context_summary": "B is resistant to A's offers, indicating a sense of unease and the desire to maintain distance.",
+      "speaker_id": "B",
+      "character_id": "char_1"
+    },
+    "C": {
+      "speaking_style": "urgent and directive",
+      "typical_mood": "surprised",
+      "context_summary": "C interjects with urgency, warning A against escalating the situation by involving the police.",
+      "speaker_id": "C",
+      "character_id": null
+    }
+  }
+}

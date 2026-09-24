@@ -70,12 +70,15 @@ export interface ReviewPresentation {
 }
 
 export interface GenderReviewItem {
+  type?: "gender" | "attribution" | string;
   speaker_id: string;
   field: string;
   proposed: string;
   confidence: number;
   evidence: string[];
   presentation?: ReviewPresentation | null;
+  utterance_id?: string | null;
+  character_predicted?: string | null;
 }
 
 export interface Job {

@@ -1,0 +1,67 @@
+{
+  "status": "ok",
+  "L2_reconciliation": {
+    "method": "character_observation_v1",
+    "status": "ok",
+    "diarization_speaker_count": 3,
+    "canonical_speaker_count": 3,
+    "visual_cluster_count": 1,
+    "character_count_visual": 1,
+    "character_count_significant": 1,
+    "count_mismatch": true,
+    "utterances_relabeled": 0,
+    "utterances_visual_corrected": 0,
+    "utterances_merge_corrected": 0,
+    "over_segmentation_corrected": false,
+    "faces_sampled": 17,
+    "sample_points": 60,
+    "embedding_method": "histogram"
+  },
+  "L2_character_observation": {
+    "method": "character_observation_v1",
+    "diarization_speaker_count": 3,
+    "diarization_speaker_ids": [
+      "A",
+      "B",
+      "C"
+    ],
+    "character_count_visual": 1,
+    "character_count_significant": 1,
+    "min_cluster_samples": 3,
+    "count_mismatch": true,
+    "embedding_method": "histogram",
+    "sample_points": 60,
+    "faces_sampled": 17,
+    "characters": {
+      "char_1": {
+        "character_id": "char_1",
+        "sample_count": 17,
+        "first_seen_sec": 69.113,
+        "last_seen_sec": 169.948,
+        "utterances_visible": [
+          "u2",
+          "u3",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "aai_speaker_cooccurrence": {
+          "B": 6,
+          "A": 11
+        },
+        "appearance": null,
+        "portrait": null
+      }
+    },
+    "speaker_character_votes": {
+      "A": {
+        "char_1": 8.98
+      },
+      "B": {
+        "char_1": 4.89
+      }
+    }
+  },
+  "corrected_utterances": [],
+  "utterance_count": 7
+}

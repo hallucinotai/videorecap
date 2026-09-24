@@ -311,6 +311,8 @@ def prune_l4_document(doc: dict[str, Any]) -> dict[str, Any]:
         and not narration.get("speaker_map")
         and not narration.get("review_queue")
         and not narration.get("pronoun_hints")
+        and not narration.get("scene_summary")
+        and not narration.get("scene_segments")
     ):
         doc.pop("narration_context", None)
     elif narration.get("speaker_map") == {}:

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class RecapPipeline:
-    """Orchestrates the 7-step video recap pipeline with S3 integration."""
+    """Orchestrates Step 1 (transcribe + enrich + scene → L4). Steps 2–7 retained but unused."""
 
     def __init__(self, job_id: str, job_config: dict, input_video_key: str | None,
                  update_job_fn=None, publish_progress_fn=None):
@@ -286,6 +286,40 @@ class RecapPipeline:
                             enrichment_result.latest_layer_path,
                         )
 
+                    # Scene understanding → inject into L4 (terminal Step 1 artifact)
+                    scene_target = enrichment_result.latest_layer_path or active_transcription
+                    scene_result = run_scene_understanding_service(
+                        local_video_path,
+                        scene_target,
+                        working_dir,
+                        progress_callback=self._progress_callback,
+                    )
+                    if not scene_result.get("skipped"):
+                        active_transcription = scene_result["transcript_path"]
+                        artifact = scene_result.get("scene_artifact_path")
+                        if artifact:
+                            self._upload_intermediate(
+                                intermediate_keys, "scene_understanding", artifact
+                            )
+                        # Re-upload L4 so S3 layer.L4 includes narration_context.scene_*
+                        if enrichment_result.latest_layer_id and os.path.isfile(active_transcription):
+                            s3_key = layer_storage.upload_layer(
+                                enrichment_result.latest_layer_id, active_transcription
+                            )
+                            intermediate_keys[
+                                intermediate_key_for(enrichment_result.latest_layer_id)
+                            ] = s3_key
+                            self._update_job(intermediate_keys=dict(intermediate_keys))
+                        logger.info(
+                            "Scene understanding injected into L4 (%s)",
+                            artifact,
+                        )
+                    elif scene_result.get("skip_reason") not in (None, "disabled"):
+                        logger.info(
+                            "Scene understanding skipped: %s",
+                            scene_result.get("skip_reason"),
+                        )
+
                     if enrichment_result.review_required:
                         self._update_job(
                             status="awaiting_enrichment_review",
@@ -318,9 +352,32 @@ class RecapPipeline:
                 log_msg += f" | S3: {intermediate_keys.get('transcription', 'N/A')}"
                 logger.info(log_msg)
                 self.progress.report(1, "Transcription complete", 1.0)
+
+                # Enrichment-only pipeline: complete after Step 1 (no Steps 2–7)
+                expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+                self._update_job(
+                    status="completed",
+                    current_step=1,
+                    current_step_name="Complete",
+                    progress_pct=100.0,
+                    output_video_key=None,
+                    intermediate_keys=dict(intermediate_keys),
+                    completed_at=datetime.now(timezone.utc),
+                    expires_at=expires_at,
+                )
+                logger.info(
+                    "Job %s completed after Step 1 (enrichment + scene); Steps 2–7 skipped",
+                    self.job_id,
+                )
+                return {
+                    "output_key": None,
+                    "intermediate_keys": intermediate_keys,
+                    "input_removed": False,
+                }
             else:
                 self.progress.report(1, "Transcription (cached)", 1.0)
 
+            # Steps 2–7 retained below but unreachable for normal Step-1-only completion.
             # Step 2: Translate (optional)
             if resume_from_step <= 2:
                 if translate_to:
@@ -359,36 +416,9 @@ class RecapPipeline:
                 self.progress.report(2, "Translation (cached)", 1.0)
 
             # Step 3: Generate recap (with emotion weighting if PREMIUM tier)
+            # NOTE: Scene understanding now runs in Step 1 (injected into L4).
             if resume_from_step <= 3:
                 self._update_job(current_step=3, current_step_name="Generating recap")
-                # Optional visual scene understanding (pre-recap; skip on failure)
-                scene_result = run_scene_understanding_service(
-                    local_video_path,
-                    active_transcription,
-                    working_dir,
-                    progress_callback=self._progress_callback,
-                )
-                if not scene_result.get("skipped"):
-                    active_transcription = scene_result["transcript_path"]
-                    artifact = scene_result.get("scene_artifact_path")
-                    if artifact:
-                        self._upload_intermediate(intermediate_keys, "scene_understanding", artifact)
-                        # Persist patched transcript (with narration_context.scene_*) for resume
-                        self._upload_intermediate(
-                            intermediate_keys,
-                            "transcription_with_scene",
-                            active_transcription,
-                        )
-                    logger.info(
-                        "Scene understanding injected into transcript for recap (%s)",
-                        artifact,
-                    )
-                elif scene_result.get("skip_reason") not in (None, "disabled"):
-                    logger.info(
-                        "Scene understanding skipped: %s",
-                        scene_result.get("skip_reason"),
-                    )
-
                 self.progress.report(3, "Generating recap suggestions...", 0.0)
                 narration_lang = translate_to or language or "English"
                 result = generate_recap_service(

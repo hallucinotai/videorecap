@@ -1,0 +1,72 @@
+{
+  "method": "llm_batch_v1",
+  "model": "gpt-4o-mini",
+  "utterances": {
+    "u1": {
+      "dialogue_act": "greeting",
+      "mood": "warm",
+      "addressee_hint": "B",
+      "speaker_hint": "A",
+      "text_evidence": "A expresses concern for B's well-being."
+    },
+    "u2": {
+      "dialogue_act": "statement",
+      "mood": "tense",
+      "addressee_hint": "A",
+      "speaker_hint": "B",
+      "text_evidence": "B declines A's offer, indicating discomfort with the situation."
+    },
+    "u3": {
+      "dialogue_act": "statement",
+      "mood": "assertive",
+      "addressee_hint": "C",
+      "speaker_hint": "A",
+      "text_evidence": "A suggests calling the police, indicating a serious approach to the situation."
+    },
+    "u4": {
+      "dialogue_act": "reaction",
+      "mood": "surprised",
+      "addressee_hint": "A",
+      "speaker_hint": "C",
+      "text_evidence": "C warns A against calling the police, showing urgency."
+    },
+    "u5": {
+      "dialogue_act": "statement",
+      "mood": "warm",
+      "addressee_hint": "B",
+      "speaker_hint": "A",
+      "text_evidence": "A continues to offer help, trying to reassure B about getting into the truck."
+    },
+    "u6": {
+      "dialogue_act": "statement",
+      "mood": "assertive",
+      "addressee_hint": "A",
+      "speaker_hint": "B",
+      "text_evidence": "B tells A to go back to the car, showing authority in the situation."
+    },
+    "u7": {
+      "dialogue_act": "statement",
+      "mood": "other",
+      "addressee_hint": "B",
+      "speaker_hint": "A",
+      "text_evidence": "A tries to calm B, repeating that everything is okay."
+    }
+  },
+  "speakers": {
+    "A": {
+      "speaking_style": "supportive and persuasive",
+      "typical_mood": "warm",
+      "context_summary": "A is trying to help B, showing concern for their well-being while attempting to persuade them to accept help."
+    },
+    "B": {
+      "speaking_style": "cautious and hesitant",
+      "typical_mood": "tense",
+      "context_summary": "B is resistant to A's offers, indicating a sense of unease and the desire to maintain distance."
+    },
+    "C": {
+      "speaking_style": "urgent and directive",
+      "typical_mood": "surprised",
+      "context_summary": "C interjects with urgency, warning A against escalating the situation by involving the police."
+    }
+  }
+}

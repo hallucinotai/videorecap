@@ -2,12 +2,14 @@
 
 Two strategies feed the same vision describe path:
   - fixed: uniform time windows (handled in scene_understanding)
-  - pyscenedetect: ContentDetector cuts, then merge short adjacent shots
+  - pyscenedetect: ContentDetector cuts, then merge short adjacent shots,
+    then hard-split any window longer than SCENE_MAX_DURATION_SEC
 """
 
 from __future__ import annotations
 
 import logging
+import math
 import os
 from pathlib import Path
 from typing import Any
@@ -18,6 +20,8 @@ DEFAULT_BOUNDARY_MODE = "fixed"
 DEFAULT_DETECT_THRESHOLD = 27.0
 DEFAULT_MIN_SCENE_SEC = 4.0
 DEFAULT_MAX_SCENE_SEC = 45.0
+# Safety cap for vision API calls when duration * sample_fps is large.
+DEFAULT_MAX_FRAMES_PER_SCENE = 48
 
 
 def boundary_mode_from_env(override: str | None = None) -> str:
@@ -199,6 +203,104 @@ def merge_scene_windows(
     return [(round(s, 3), round(e, 3)) for s, e in merged]
 
 
+def split_windows_by_max_duration(
+    windows: list[tuple[float, float]],
+    *,
+    max_duration_sec: float | None = None,
+) -> list[tuple[float, float]]:
+    """
+    Hard-split any window longer than max_duration_sec into consecutive chunks.
+
+    Merge only limits how far short shots are combined; a single long PySceneDetect
+    shot can still exceed max. This pass enforces the ceiling.
+    """
+    max_d = (
+        max_duration_sec
+        if max_duration_sec is not None
+        else _env_float("SCENE_MAX_DURATION_SEC", DEFAULT_MAX_SCENE_SEC)
+    )
+    if max_d <= 0:
+        return [(round(s, 3), round(e, 3)) for s, e in windows]
+
+    out: list[tuple[float, float]] = []
+    for start, end in windows:
+        if end <= start + 1e-3:
+            continue
+        duration = end - start
+        if duration <= max_d + 1e-6:
+            out.append((round(start, 3), round(end, 3)))
+            continue
+        t = start
+        while t < end - 1e-6:
+            chunk_end = min(t + max_d, end)
+            if chunk_end > t + 1e-3:
+                out.append((round(t, 3), round(chunk_end, 3)))
+            t = chunk_end
+
+    if len(out) != len(windows):
+        logger.info(
+            "Scene split: %d → %d windows (max=%.1fs)",
+            len(windows),
+            len(out),
+            max_d,
+        )
+    return out
+
+
+def frame_count_for_duration(
+    duration_sec: float,
+    sample_fps: float,
+    *,
+    min_frames: int = 1,
+    max_frames: int | None = None,
+) -> int:
+    """
+    Choose how many frames to sample for a scene window from its duration.
+
+    Ideal count is ceil(duration * sample_fps); clamped to [min_frames, max_frames].
+    """
+    if duration_sec <= 0:
+        return max(1, min_frames)
+    fps = sample_fps if sample_fps > 0 else 0.5
+    n = max(min_frames, int(math.ceil(duration_sec * fps)))
+    if max_frames is not None and max_frames > 0:
+        n = min(n, max_frames)
+    return n
+
+
+def max_frames_per_scene_from_env() -> int | None:
+    """
+    Hard cap for frames sent in one vision call.
+
+    - unset / invalid → default (48)
+    - 0 → no cap (duration × sample_fps only)
+    - >0 → that cap
+    """
+    raw = os.environ.get("SCENE_MAX_FRAMES_PER_SCENE")
+    if raw is None or not str(raw).strip():
+        return DEFAULT_MAX_FRAMES_PER_SCENE
+    try:
+        value = int(str(raw).strip().split()[0])  # tolerate inline comments
+    except ValueError:
+        return DEFAULT_MAX_FRAMES_PER_SCENE
+    if value == 0:
+        return None
+    if value < 0:
+        return DEFAULT_MAX_FRAMES_PER_SCENE
+    return value
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return default
+    try:
+        value = int(str(raw).strip().split()[0])
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
 def sample_timestamps_in_window(
     start_sec: float,
     end_sec: float,
@@ -251,14 +353,18 @@ def detect_merged_scenes(
     max_duration_sec: float | None = None,
     max_duration: float | None = None,
 ) -> list[tuple[float, float]]:
-    """Detect shots with PySceneDetect and merge into scene windows."""
+    """Detect shots with PySceneDetect, merge short ones, then hard-split long ones."""
     raw = detect_raw_scenes_pyscenedetect(
         video_path,
         threshold=threshold,
         max_duration=max_duration,
     )
-    return merge_scene_windows(
+    merged = merge_scene_windows(
         raw,
         min_duration_sec=min_duration_sec,
+        max_duration_sec=max_duration_sec,
+    )
+    return split_windows_by_max_duration(
+        merged,
         max_duration_sec=max_duration_sec,
     )

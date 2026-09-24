@@ -1,4 +1,4 @@
-"""Service wrapper for GPT-4o scene understanding (pre-recap)."""
+"""Service wrapper for GPT-4o scene understanding (post-enrichment / Step 1)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,10 @@ def run_scene_understanding_service(
     progress_callback: Callable | None = None,
 ) -> dict[str, Any]:
     """
-    Run scene understanding and inject fields into the transcript JSON.
+    Run scene understanding and inject fields into the enrichment/transcript JSON.
+
+    Intended to run at the end of Step 1 (after L4 finalize) so
+    ``narration_context.scene_*`` is baked into the terminal L4 artifact.
 
     Returns:
       {
@@ -57,7 +60,7 @@ def run_scene_understanding_service(
         }
 
     if progress_callback:
-        progress_callback(step=3, message="Analyzing visual scenes for recap…")
+        progress_callback(step=1, message="Analyzing visual scenes…")
 
     try:
         scene_result = run_scene_understanding(video_path)
@@ -77,7 +80,7 @@ def run_scene_understanding_service(
     updated_transcript = inject_scene_into_transcript_file(transcript_path, scene_result)
 
     if progress_callback:
-        progress_callback(step=3, message="Scene understanding complete")
+        progress_callback(step=1, message="Scene understanding complete")
 
     logger.info(
         "Scene understanding: %d segments, narrative_chars=%d → %s",

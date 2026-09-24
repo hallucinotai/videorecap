@@ -13,8 +13,11 @@ if str(ROOT) not in sys.path:
 
 from modules.scene_boundaries import (
     boundary_mode_from_env,
+    frame_count_for_duration,
+    max_frames_per_scene_from_env,
     merge_scene_windows,
     sample_timestamps_in_window,
+    split_windows_by_max_duration,
 )
 
 
@@ -57,6 +60,48 @@ def test_merge_folds_short_tail():
     assert any(end == 22.0 and start <= 10.0 for start, end in merged)
 
 
+def test_split_windows_by_max_duration_chops_long_scene():
+    windows = [(0.0, 5.0), (5.0, 245.0), (245.0, 295.0)]
+    split = split_windows_by_max_duration(windows, max_duration_sec=45.0)
+    assert split[0] == (0.0, 5.0)
+    assert split[-1][1] == 295.0
+    # Long middle scene must be chopped into ≤45s pieces
+    for start, end in split:
+        assert (end - start) <= 45.0 + 1e-6
+    # Coverage preserved
+    assert split[0][0] == 0.0
+    assert abs(split[-1][1] - 295.0) < 1e-6
+    assert len(split) > len(windows)
+
+
+def test_split_windows_leaves_short_scenes():
+    windows = [(0.0, 10.0), (10.0, 40.0)]
+    split = split_windows_by_max_duration(windows, max_duration_sec=45.0)
+    assert split == [(0.0, 10.0), (10.0, 40.0)]
+
+
+def test_frame_count_for_duration_scales():
+    # 45s @ 0.5fps → 23 frames
+    assert frame_count_for_duration(45.0, 0.5, max_frames=48) == 23
+    # Short scene still gets at least 1
+    assert frame_count_for_duration(1.0, 0.5, min_frames=1) == 1
+    # Cap applies
+    assert frame_count_for_duration(240.0, 0.5, max_frames=8) == 8
+    # Uncapped long scene would be 120
+    assert frame_count_for_duration(240.0, 0.5, max_frames=48) == 48
+    # None / no cap
+    assert frame_count_for_duration(240.0, 0.5, max_frames=None) == 120
+
+
+def test_max_frames_per_scene_from_env_zero_means_uncapped(monkeypatch):
+    monkeypatch.delenv("SCENE_MAX_FRAMES_PER_SCENE", raising=False)
+    assert max_frames_per_scene_from_env() == 48
+    monkeypatch.setenv("SCENE_MAX_FRAMES_PER_SCENE", "0")
+    assert max_frames_per_scene_from_env() is None
+    monkeypatch.setenv("SCENE_MAX_FRAMES_PER_SCENE", "225")
+    assert max_frames_per_scene_from_env() == 225
+
+
 def test_sample_timestamps_in_window_caps_frames():
     ts = sample_timestamps_in_window(0.0, 20.0, sample_fps=0.5, max_frames=8)
     assert ts[0] == 0.0
@@ -68,3 +113,11 @@ def test_sample_timestamps_in_window_short_scene():
     ts = sample_timestamps_in_window(5.0, 6.0, sample_fps=0.5, max_frames=8)
     assert ts[0] == 5.0
     assert len(ts) >= 1
+
+
+def test_sample_timestamps_duration_based_frame_count():
+    # 45s scene with duration-based count (~23) should keep more than old fixed 8
+    n = frame_count_for_duration(45.0, 0.5, max_frames=48)
+    ts = sample_timestamps_in_window(5.172, 5.172 + 45.0, sample_fps=0.5, max_frames=n)
+    assert len(ts) == n
+    assert ts[0] == 5.172

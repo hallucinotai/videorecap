@@ -15,13 +15,7 @@ import { EnrichmentReviewPanel } from "./EnrichmentReviewPanel";
 
 const STEP_NAMES = [
   "",
-  "Transcribing video",
-  "Translating transcription",
-  "Generating recap",
-  "Generating narration",
-  "Extracting clips",
-  "Removing audio",
-  "Merging final video",
+  "Transcribe & enrich",
 ];
 
 export interface JobDetailContentProps {
@@ -289,9 +283,10 @@ export function JobDetailContent({
         <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">
           <p className="font-medium">Original file no longer stored</p>
           <p className="mt-1 text-sky-800/90 dark:text-sky-200/90">
-            Your uploaded video was removed from our storage after this recap finished successfully. Your
-            recap file stays available to download
-            {job.expires_at ? ` until ${formatDate(job.expires_at)}` : ""}.
+            Your uploaded video was removed from our storage after processing finished.
+            {job.output_video_key
+              ? ` Your recap file stays available to download${job.expires_at ? ` until ${formatDate(job.expires_at)}` : ""}.`
+              : ` Enrichment outputs remain available${job.expires_at ? ` until ${formatDate(job.expires_at)}` : ""}.`}
           </p>
         </div>
       )}
@@ -321,7 +316,7 @@ export function JobDetailContent({
               {resuming ? "Resuming..." : `Resume from Step ${job.current_step}`}
             </button>
           )}
-          {job.status === "completed" && (
+          {job.status === "completed" && job.output_video_key && (
             <button
               type="button"
               onClick={handleDownload}
@@ -331,7 +326,7 @@ export function JobDetailContent({
               Download
             </button>
           )}
-          {job.status === "completed" && isDebug && (
+          {job.status === "completed" && isDebug && job.output_video_key && (
             <button
               type="button"
               onClick={handleDownloadNarration}
@@ -411,7 +406,7 @@ export function JobDetailContent({
             )}
             <div className={job.error_message && job.status === "failed" ? "mt-4" : ""}>
               <p className="mb-2 text-sm text-muted-foreground">
-                {job.status === "stopped" ? "Stopped" : "Failed"} at step {job.current_step} of 7:{" "}
+                {job.status === "stopped" ? "Stopped" : "Failed"} at step {job.current_step} of 1:{" "}
                 {STEP_NAMES[job.current_step] || "Unknown"}
               </p>
               <StepProgressWithDownloads

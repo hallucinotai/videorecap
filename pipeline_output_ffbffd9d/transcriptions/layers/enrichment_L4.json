@@ -1,0 +1,1761 @@
+{
+  "pipeline_meta": {
+    "schema_version": "1.4",
+    "job_id": "ffbffd9d-3cca-45d3-a51d-8685b008eed6",
+    "layer_id": "L4",
+    "layer_status": {
+      "L0": "ok",
+      "L1": "ok",
+      "L2": "ok",
+      "LP": "ok",
+      "L3": "ok",
+      "L4": "ok"
+    },
+    "source_provider": "assemblyai",
+    "processed_at": "2026-07-10T14:37:18Z",
+    "sublayer_status": {
+      "L2.S1": "ok",
+      "L2.S2": "ok",
+      "LP.S1": "ok",
+      "LP.S2": "ok",
+      "LP.S3": "ok",
+      "L3.S1": "ok",
+      "L3.S2": "ok",
+      "L3.S3": "skipped:model_load_failed"
+    }
+  },
+  "L1_transcript": {
+    "utterances": [
+      {
+        "id": "u1",
+        "start": 37.094,
+        "end": 66.412,
+        "text": "Hey, you doing okay there? What, what happened? You in some kind of trouble? Yeah. Why don't you let me help you out?",
+        "speaker": "A",
+        "confidence": 0.9174054,
+        "words": [
+          {
+            "text": "Hey,",
+            "start": 37.094,
+            "end": 37.466,
+            "confidence": 0.39029497
+          },
+          {
+            "text": "you",
+            "start": 37.601,
+            "end": 37.702,
+            "confidence": 0.98948
+          },
+          {
+            "text": "doing",
+            "start": 37.702,
+            "end": 37.922,
+            "confidence": 0.9051247
+          },
+          {
+            "text": "okay",
+            "start": 37.955,
+            "end": 38.378,
+            "confidence": 0.98499876
+          },
+          {
+            "text": "there?",
+            "start": 38.378,
+            "end": 38.648,
+            "confidence": 0.9979561
+          },
+          {
+            "text": "What,",
+            "start": 40.823,
+            "end": 41.037,
+            "confidence": 0.32239354
+          },
+          {
+            "text": "what",
+            "start": 41.234,
+            "end": 41.398,
+            "confidence": 0.9997898
+          },
+          {
+            "text": "happened?",
+            "start": 41.398,
+            "end": 41.941,
+            "confidence": 0.9913928
+          },
+          {
+            "text": "You",
+            "start": 46.078,
+            "end": 46.258,
+            "confidence": 0.97635525
+          },
+          {
+            "text": "in",
+            "start": 46.258,
+            "end": 46.307,
+            "confidence": 0.99001956
+          },
+          {
+            "text": "some",
+            "start": 46.34,
+            "end": 46.521,
+            "confidence": 0.9999342
+          },
+          {
+            "text": "kind",
+            "start": 46.57,
+            "end": 46.75,
+            "confidence": 0.9980969
+          },
+          {
+            "text": "of",
+            "start": 46.75,
+            "end": 46.816,
+            "confidence": 0.999926
+          },
+          {
+            "text": "trouble?",
+            "start": 46.816,
+            "end": 47.226,
+            "confidence": 0.9941458
+          },
+          {
+            "text": "Yeah.",
+            "start": 49.86,
+            "end": 50.205,
+            "confidence": 0.69671375
+          },
+          {
+            "text": "Why",
+            "start": 65.004,
+            "end": 65.088,
+            "confidence": 0.88269585
+          },
+          {
+            "text": "don't",
+            "start": 65.172,
+            "end": 65.323,
+            "confidence": 0.99887496
+          },
+          {
+            "text": "you",
+            "start": 65.323,
+            "end": 65.373,
+            "confidence": 0.999683
+          },
+          {
+            "text": "let",
+            "start": 65.424,
+            "end": 65.591,
+            "confidence": 0.989985
+          },
+          {
+            "text": "me",
+            "start": 65.591,
+            "end": 65.759,
+            "confidence": 0.9998276
+          },
+          {
+            "text": "help",
+            "start": 65.759,
+            "end": 65.993,
+            "confidence": 0.9998023
+          },
+          {
+            "text": "you",
+            "start": 65.993,
+            "end": 66.111,
+            "confidence": 0.99978286
+          },
+          {
+            "text": "out?",
+            "start": 66.178,
+            "end": 66.412,
+            "confidence": 0.9930508
+          }
+        ],
+        "dialogue_act": "greeting",
+        "mood": "warm",
+        "addressee_hint": "B",
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:A:0.15",
+          "llm:A:0.35",
+          "visual:A:0.40",
+          "llm:Asks if B is doing okay, showing concern.",
+          "visual:cooccur:A:char_1:9.0"
+        ]
+      },
+      {
+        "id": "u2",
+        "start": 68.24,
+        "end": 70.844,
+        "text": "I, uh, I don't think that's a good idea.",
+        "speaker": "B",
+        "confidence": 0.8747144,
+        "words": [
+          {
+            "text": "I,",
+            "start": 68.24,
+            "end": 68.256,
+            "confidence": 0.5504199
+          },
+          {
+            "text": "uh,",
+            "start": 69.591,
+            "end": 69.674,
+            "confidence": 0.35146123
+          },
+          {
+            "text": "I",
+            "start": 69.921,
+            "end": 69.987,
+            "confidence": 0.9803836
+          },
+          {
+            "text": "don't",
+            "start": 69.987,
+            "end": 70.086,
+            "confidence": 0.99684083
+          },
+          {
+            "text": "think",
+            "start": 70.086,
+            "end": 70.234,
+            "confidence": 0.9998516
+          },
+          {
+            "text": "that's",
+            "start": 70.234,
+            "end": 70.416,
+            "confidence": 0.99674356
+          },
+          {
+            "text": "a",
+            "start": 70.416,
+            "end": 70.432,
+            "confidence": 0.99974865
+          },
+          {
+            "text": "good",
+            "start": 70.481,
+            "end": 70.646,
+            "confidence": 0.9998658
+          },
+          {
+            "text": "idea.",
+            "start": 70.646,
+            "end": 70.844,
+            "confidence": 0.99711406
+          }
+        ],
+        "character_id": "char_1",
+        "dialogue_act": "reaction",
+        "mood": "neutral",
+        "addressee_hint": "A",
+        "speaker_predicted": "B",
+        "character_predicted": "char_1",
+        "attribution_confidence": 0.56,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:B:0.15",
+          "llm:B:0.35",
+          "visual:A:0.40",
+          "llm:Expresses hesitance about A's offer for help.",
+          "visual:cooccur:B:char_1:4.9"
+        ]
+      },
+      {
+        "id": "u3",
+        "start": 73.413,
+        "end": 80.023,
+        "text": "Okay. Uh, well, I could call the police, so maybe they could get\u2014 No.",
+        "speaker": "A",
+        "confidence": 0.80832154,
+        "words": [
+          {
+            "text": "Okay.",
+            "start": 73.413,
+            "end": 73.656,
+            "confidence": 0.73742294
+          },
+          {
+            "text": "Uh,",
+            "start": 77.042,
+            "end": 77.091,
+            "confidence": 0.8271902
+          },
+          {
+            "text": "well,",
+            "start": 77.382,
+            "end": 77.544,
+            "confidence": 0.9079023
+          },
+          {
+            "text": "I",
+            "start": 78.03,
+            "end": 78.047,
+            "confidence": 0.99876875
+          },
+          {
+            "text": "could",
+            "start": 78.111,
+            "end": 78.257,
+            "confidence": 0.6446974
+          },
+          {
+            "text": "call",
+            "start": 78.257,
+            "end": 78.5,
+            "confidence": 0.9984688
+          },
+          {
+            "text": "the",
+            "start": 78.5,
+            "end": 78.598,
+            "confidence": 0.9995516
+          },
+          {
+            "text": "police,",
+            "start": 78.598,
+            "end": 79.084,
+            "confidence": 0.38205662
+          },
+          {
+            "text": "so",
+            "start": 79.148,
+            "end": 79.181,
+            "confidence": 0.4760845
+          },
+          {
+            "text": "maybe",
+            "start": 79.246,
+            "end": 79.472,
+            "confidence": 0.9733766
+          },
+          {
+            "text": "they",
+            "start": 79.472,
+            "end": 79.57,
+            "confidence": 0.9889237
+          },
+          {
+            "text": "could",
+            "start": 79.57,
+            "end": 79.732,
+            "confidence": 0.97396773
+          },
+          {
+            "text": "get\u2014",
+            "start": 79.732,
+            "end": 79.829,
+            "confidence": 0.85685724
+          },
+          {
+            "text": "No.",
+            "start": 79.829,
+            "end": 80.023,
+            "confidence": 0.55123323
+          }
+        ],
+        "character_id": "char_1",
+        "low_confidence": true,
+        "low_confidence_reason": "speaker_confidence < 0.85",
+        "dialogue_act": "statement",
+        "mood": "neutral",
+        "addressee_hint": "C",
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:A:0.15",
+          "llm:A:0.35",
+          "visual:A:0.40",
+          "llm:Suggests calling the police as a solution.",
+          "visual:cooccur:A:char_1:9.0"
+        ]
+      },
+      {
+        "id": "u4",
+        "start": 80.607,
+        "end": 83.7,
+        "text": "No, do not do that, okay? Don't.",
+        "speaker": "C",
+        "confidence": 0.8910551,
+        "words": [
+          {
+            "text": "No,",
+            "start": 80.607,
+            "end": 80.866,
+            "confidence": 0.60073835
+          },
+          {
+            "text": "do",
+            "start": 80.931,
+            "end": 81.012,
+            "confidence": 0.99780816
+          },
+          {
+            "text": "not",
+            "start": 81.012,
+            "end": 81.271,
+            "confidence": 0.9997048
+          },
+          {
+            "text": "do",
+            "start": 81.271,
+            "end": 81.32,
+            "confidence": 0.9996687
+          },
+          {
+            "text": "that,",
+            "start": 81.32,
+            "end": 81.466,
+            "confidence": 0.67471117
+          },
+          {
+            "text": "okay?",
+            "start": 81.776,
+            "end": 82.086,
+            "confidence": 0.97928524
+          },
+          {
+            "text": "Don't.",
+            "start": 83.308,
+            "end": 83.7,
+            "confidence": 0.9854694
+          }
+        ],
+        "dialogue_act": "reaction",
+        "mood": "assertive",
+        "addressee_hint": "A",
+        "speaker_predicted": "C",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:C:0.15",
+          "llm:C:0.35",
+          "visual:C:0.40",
+          "llm:Strongly opposes A's suggestion to call the police."
+        ]
+      },
+      {
+        "id": "u5",
+        "start": 87.123,
+        "end": 147.873,
+        "text": "Okay. Well, look, I mean, if you need help, I could be that. Just get in the truck. I mean, who knows? You know, you'd probably even like it in there. It's freezing out here. It's a lot warmer in there. Trust me. Look, what kind of guy would I be to let a pretty girl in need just walk alone down this road? I mean, I should be driving, and I could, I could really use the company too.",
+        "speaker": "A",
+        "confidence": 0.9179563,
+        "words": [
+          {
+            "text": "Okay.",
+            "start": 87.123,
+            "end": 87.399,
+            "confidence": 0.9856917
+          },
+          {
+            "text": "Well,",
+            "start": 91.517,
+            "end": 91.598,
+            "confidence": 0.74790466
+          },
+          {
+            "text": "look,",
+            "start": 91.615,
+            "end": 91.826,
+            "confidence": 0.9356501
+          },
+          {
+            "text": "I",
+            "start": 91.859,
+            "end": 91.875,
+            "confidence": 0.9882648
+          },
+          {
+            "text": "mean,",
+            "start": 91.875,
+            "end": 92.005,
+            "confidence": 0.9581894
+          },
+          {
+            "text": "if",
+            "start": 92.022,
+            "end": 92.136,
+            "confidence": 0.9447172
+          },
+          {
+            "text": "you",
+            "start": 92.184,
+            "end": 92.282,
+            "confidence": 0.9775189
+          },
+          {
+            "text": "need",
+            "start": 92.282,
+            "end": 92.477,
+            "confidence": 0.9972362
+          },
+          {
+            "text": "help,",
+            "start": 92.51,
+            "end": 92.917,
+            "confidence": 0.9665132
+          },
+          {
+            "text": "I",
+            "start": 93.08,
+            "end": 93.112,
+            "confidence": 0.9940493
+          },
+          {
+            "text": "could",
+            "start": 93.145,
+            "end": 93.21,
+            "confidence": 0.6651706
+          },
+          {
+            "text": "be",
+            "start": 93.21,
+            "end": 93.324,
+            "confidence": 0.99870574
+          },
+          {
+            "text": "that.",
+            "start": 93.324,
+            "end": 93.454,
+            "confidence": 0.75114316
+          },
+          {
+            "text": "Just",
+            "start": 97.552,
+            "end": 97.736,
+            "confidence": 0.16233626
+          },
+          {
+            "text": "get",
+            "start": 97.736,
+            "end": 97.803,
+            "confidence": 0.9784912
+          },
+          {
+            "text": "in",
+            "start": 97.803,
+            "end": 97.903,
+            "confidence": 0.99804914
+          },
+          {
+            "text": "the",
+            "start": 97.903,
+            "end": 98.054,
+            "confidence": 0.9954431
+          },
+          {
+            "text": "truck.",
+            "start": 98.054,
+            "end": 98.488,
+            "confidence": 0.9496873
+          },
+          {
+            "text": "I",
+            "start": 102.349,
+            "end": 102.365,
+            "confidence": 0.8013564
+          },
+          {
+            "text": "mean,",
+            "start": 102.446,
+            "end": 102.657,
+            "confidence": 0.97848964
+          },
+          {
+            "text": "who",
+            "start": 102.69,
+            "end": 102.771,
+            "confidence": 0.99739635
+          },
+          {
+            "text": "knows?",
+            "start": 102.771,
+            "end": 103.144,
+            "confidence": 0.5556236
+          },
+          {
+            "text": "You",
+            "start": 103.322,
+            "end": 103.387,
+            "confidence": 0.7930291
+          },
+          {
+            "text": "know,",
+            "start": 103.404,
+            "end": 103.468,
+            "confidence": 0.467032
+          },
+          {
+            "text": "you'd",
+            "start": 103.485,
+            "end": 104.134,
+            "confidence": 0.38114104
+          },
+          {
+            "text": "probably",
+            "start": 104.718,
+            "end": 105.172,
+            "confidence": 0.9980064
+          },
+          {
+            "text": "even",
+            "start": 105.189,
+            "end": 105.432,
+            "confidence": 0.9969863
+          },
+          {
+            "text": "like",
+            "start": 105.448,
+            "end": 105.594,
+            "confidence": 0.99817836
+          },
+          {
+            "text": "it",
+            "start": 105.594,
+            "end": 105.692,
+            "confidence": 0.98733056
+          },
+          {
+            "text": "in",
+            "start": 105.692,
+            "end": 105.74,
+            "confidence": 0.9951154
+          },
+          {
+            "text": "there.",
+            "start": 105.854,
+            "end": 106.13,
+            "confidence": 0.9967555
+          },
+          {
+            "text": "It's",
+            "start": 112.282,
+            "end": 112.395,
+            "confidence": 0.9761258
+          },
+          {
+            "text": "freezing",
+            "start": 113.877,
+            "end": 114.183,
+            "confidence": 0.6615273
+          },
+          {
+            "text": "out",
+            "start": 114.199,
+            "end": 114.344,
+            "confidence": 0.99962497
+          },
+          {
+            "text": "here.",
+            "start": 114.36,
+            "end": 114.634,
+            "confidence": 0.9903107
+          },
+          {
+            "text": "It's",
+            "start": 119.763,
+            "end": 120.218,
+            "confidence": 0.8292687
+          },
+          {
+            "text": "a",
+            "start": 120.267,
+            "end": 120.316,
+            "confidence": 0.99467164
+          },
+          {
+            "text": "lot",
+            "start": 120.316,
+            "end": 120.462,
+            "confidence": 0.99949086
+          },
+          {
+            "text": "warmer",
+            "start": 120.56,
+            "end": 120.82,
+            "confidence": 0.9998301
+          },
+          {
+            "text": "in",
+            "start": 120.82,
+            "end": 120.869,
+            "confidence": 0.9978563
+          },
+          {
+            "text": "there.",
+            "start": 120.901,
+            "end": 121.226,
+            "confidence": 0.746479
+          },
+          {
+            "text": "Trust",
+            "start": 122.608,
+            "end": 122.901,
+            "confidence": 0.9997292
+          },
+          {
+            "text": "me.",
+            "start": 122.917,
+            "end": 123.063,
+            "confidence": 0.99101365
+          },
+          {
+            "text": "Look,",
+            "start": 127.6,
+            "end": 127.778,
+            "confidence": 0.8421798
+          },
+          {
+            "text": "what",
+            "start": 127.794,
+            "end": 127.957,
+            "confidence": 0.9970975
+          },
+          {
+            "text": "kind",
+            "start": 127.957,
+            "end": 128.119,
+            "confidence": 0.9683973
+          },
+          {
+            "text": "of",
+            "start": 128.119,
+            "end": 128.168,
+            "confidence": 0.99980897
+          },
+          {
+            "text": "guy",
+            "start": 128.201,
+            "end": 128.282,
+            "confidence": 0.99437416
+          },
+          {
+            "text": "would",
+            "start": 128.509,
+            "end": 128.672,
+            "confidence": 0.99960846
+          },
+          {
+            "text": "I",
+            "start": 128.672,
+            "end": 128.85,
+            "confidence": 0.99927896
+          },
+          {
+            "text": "be",
+            "start": 128.915,
+            "end": 129.11,
+            "confidence": 0.9998061
+          },
+          {
+            "text": "to",
+            "start": 129.175,
+            "end": 129.256,
+            "confidence": 0.9584429
+          },
+          {
+            "text": "let",
+            "start": 129.256,
+            "end": 129.419,
+            "confidence": 0.99907815
+          },
+          {
+            "text": "a",
+            "start": 129.419,
+            "end": 129.5,
+            "confidence": 0.9992855
+          },
+          {
+            "text": "pretty",
+            "start": 129.5,
+            "end": 129.711,
+            "confidence": 0.9998894
+          },
+          {
+            "text": "girl",
+            "start": 129.744,
+            "end": 129.987,
+            "confidence": 0.9997807
+          },
+          {
+            "text": "in",
+            "start": 129.987,
+            "end": 130.036,
+            "confidence": 0.99499196
+          },
+          {
+            "text": "need",
+            "start": 130.15,
+            "end": 131.124,
+            "confidence": 0.9998801
+          },
+          {
+            "text": "just",
+            "start": 131.124,
+            "end": 131.335,
+            "confidence": 0.9932579
+          },
+          {
+            "text": "walk",
+            "start": 131.449,
+            "end": 131.774,
+            "confidence": 0.9997365
+          },
+          {
+            "text": "alone",
+            "start": 131.774,
+            "end": 132.229,
+            "confidence": 0.99875593
+          },
+          {
+            "text": "down",
+            "start": 132.343,
+            "end": 132.554,
+            "confidence": 0.999553
+          },
+          {
+            "text": "this",
+            "start": 132.586,
+            "end": 132.862,
+            "confidence": 0.9990626
+          },
+          {
+            "text": "road?",
+            "start": 132.895,
+            "end": 133.041,
+            "confidence": 0.9938636
+          },
+          {
+            "text": "I",
+            "start": 136.886,
+            "end": 136.937,
+            "confidence": 0.99135405
+          },
+          {
+            "text": "mean,",
+            "start": 136.937,
+            "end": 137.175,
+            "confidence": 0.95810026
+          },
+          {
+            "text": "I",
+            "start": 137.294,
+            "end": 137.311,
+            "confidence": 0.98482776
+          },
+          {
+            "text": "should",
+            "start": 137.379,
+            "end": 137.6,
+            "confidence": 0.9969903
+          },
+          {
+            "text": "be",
+            "start": 137.617,
+            "end": 137.719,
+            "confidence": 0.9994066
+          },
+          {
+            "text": "driving,",
+            "start": 137.787,
+            "end": 138.246,
+            "confidence": 0.4163528
+          },
+          {
+            "text": "and",
+            "start": 145.573,
+            "end": 145.638,
+            "confidence": 0.9796108
+          },
+          {
+            "text": "I",
+            "start": 145.654,
+            "end": 145.751,
+            "confidence": 0.99937314
+          },
+          {
+            "text": "could,",
+            "start": 145.751,
+            "end": 145.913,
+            "confidence": 0.4076267
+          },
+          {
+            "text": "I",
+            "start": 146.237,
+            "end": 146.318,
+            "confidence": 0.99930775
+          },
+          {
+            "text": "could",
+            "start": 146.318,
+            "end": 146.399,
+            "confidence": 0.9396122
+          },
+          {
+            "text": "really",
+            "start": 146.464,
+            "end": 146.772,
+            "confidence": 0.9996501
+          },
+          {
+            "text": "use",
+            "start": 146.804,
+            "end": 147.015,
+            "confidence": 0.9999511
+          },
+          {
+            "text": "the",
+            "start": 147.112,
+            "end": 147.209,
+            "confidence": 0.9987704
+          },
+          {
+            "text": "company",
+            "start": 147.209,
+            "end": 147.663,
+            "confidence": 0.9999734
+          },
+          {
+            "text": "too.",
+            "start": 147.679,
+            "end": 147.873,
+            "confidence": 0.90233606
+          }
+        ],
+        "character_id": "char_1",
+        "dialogue_act": "statement",
+        "mood": "warm",
+        "addressee_hint": "B",
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:A:0.15",
+          "llm:A:0.35",
+          "visual:A:0.40",
+          "llm:Offers help and assures warmth and safety.",
+          "visual:cooccur:A:char_1:9.0"
+        ]
+      },
+      {
+        "id": "u6",
+        "start": 151.88,
+        "end": 154.001,
+        "text": "Okay, I think it's best if you just get back in the car, okay?",
+        "speaker": "B",
+        "confidence": 0.9473018,
+        "words": [
+          {
+            "text": "Okay,",
+            "start": 151.88,
+            "end": 152.062,
+            "confidence": 0.46431953
+          },
+          {
+            "text": "I",
+            "start": 152.095,
+            "end": 152.145,
+            "confidence": 0.96254957
+          },
+          {
+            "text": "think",
+            "start": 152.145,
+            "end": 152.31,
+            "confidence": 0.99989665
+          },
+          {
+            "text": "it's",
+            "start": 152.31,
+            "end": 152.476,
+            "confidence": 0.99952585
+          },
+          {
+            "text": "best",
+            "start": 152.476,
+            "end": 152.675,
+            "confidence": 0.9998235
+          },
+          {
+            "text": "if",
+            "start": 152.675,
+            "end": 152.807,
+            "confidence": 0.99872005
+          },
+          {
+            "text": "you",
+            "start": 152.807,
+            "end": 152.841,
+            "confidence": 0.9987896
+          },
+          {
+            "text": "just",
+            "start": 152.89,
+            "end": 153.056,
+            "confidence": 0.9992817
+          },
+          {
+            "text": "get",
+            "start": 153.056,
+            "end": 153.155,
+            "confidence": 0.9995443
+          },
+          {
+            "text": "back",
+            "start": 153.155,
+            "end": 153.305,
+            "confidence": 0.99984944
+          },
+          {
+            "text": "in",
+            "start": 153.338,
+            "end": 153.421,
+            "confidence": 0.99949265
+          },
+          {
+            "text": "the",
+            "start": 153.421,
+            "end": 153.553,
+            "confidence": 0.999895
+          },
+          {
+            "text": "car,",
+            "start": 153.553,
+            "end": 153.686,
+            "confidence": 0.8652915
+          },
+          {
+            "text": "okay?",
+            "start": 153.752,
+            "end": 154.001,
+            "confidence": 0.975246
+          }
+        ],
+        "character_id": "char_1",
+        "dialogue_act": "reaction",
+        "mood": "assertive",
+        "addressee_hint": "A",
+        "speaker_predicted": "B",
+        "character_predicted": "char_1",
+        "attribution_confidence": 0.56,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:B:0.15",
+          "llm:B:0.35",
+          "visual:A:0.40",
+          "llm:Advises A to return to the car, indicating authority.",
+          "visual:cooccur:B:char_1:4.9"
+        ]
+      },
+      {
+        "id": "u7",
+        "start": 160.749,
+        "end": 180.393,
+        "text": "No, just get in the truck. You need to\u2014 Easy. Relax. Relax, relax. We're going in. It's okay. You're okay. I'm okay. We're okay. Okay.",
+        "speaker": "A",
+        "confidence": 0.7740945,
+        "words": [
+          {
+            "text": "No,",
+            "start": 160.749,
+            "end": 160.862,
+            "confidence": 0.3021802
+          },
+          {
+            "text": "just",
+            "start": 160.91,
+            "end": 161.329,
+            "confidence": 0.9972324
+          },
+          {
+            "text": "get",
+            "start": 161.409,
+            "end": 161.57,
+            "confidence": 0.56235015
+          },
+          {
+            "text": "in",
+            "start": 161.586,
+            "end": 161.618,
+            "confidence": 0.99805427
+          },
+          {
+            "text": "the",
+            "start": 161.618,
+            "end": 161.715,
+            "confidence": 0.9989095
+          },
+          {
+            "text": "truck.",
+            "start": 161.715,
+            "end": 162.053,
+            "confidence": 0.8619731
+          },
+          {
+            "text": "You",
+            "start": 162.761,
+            "end": 163.018,
+            "confidence": 0.4498218
+          },
+          {
+            "text": "need",
+            "start": 163.018,
+            "end": 163.244,
+            "confidence": 0.98085105
+          },
+          {
+            "text": "to\u2014",
+            "start": 163.244,
+            "end": 163.437,
+            "confidence": 0.40255105
+          },
+          {
+            "text": "Easy.",
+            "start": 164.209,
+            "end": 164.483,
+            "confidence": 0.12309706
+          },
+          {
+            "text": "Relax.",
+            "start": 165.191,
+            "end": 165.754,
+            "confidence": 0.73722076
+          },
+          {
+            "text": "Relax,",
+            "start": 166.221,
+            "end": 166.704,
+            "confidence": 0.95104194
+          },
+          {
+            "text": "relax.",
+            "start": 166.8,
+            "end": 167.251,
+            "confidence": 0.51000065
+          },
+          {
+            "text": "We're",
+            "start": 168.78,
+            "end": 168.957,
+            "confidence": 0.97499996
+          },
+          {
+            "text": "going",
+            "start": 168.957,
+            "end": 169.102,
+            "confidence": 0.70315856
+          },
+          {
+            "text": "in.",
+            "start": 169.134,
+            "end": 169.231,
+            "confidence": 0.9997664
+          },
+          {
+            "text": "It's",
+            "start": 169.296,
+            "end": 170.344,
+            "confidence": 0.98692816
+          },
+          {
+            "text": "okay.",
+            "start": 170.409,
+            "end": 170.763,
+            "confidence": 0.9982433
+          },
+          {
+            "text": "You're",
+            "start": 172.102,
+            "end": 172.263,
+            "confidence": 0.6145757
+          },
+          {
+            "text": "okay.",
+            "start": 172.263,
+            "end": 172.457,
+            "confidence": 0.9675893
+          },
+          {
+            "text": "I'm",
+            "start": 173.909,
+            "end": 174.054,
+            "confidence": 0.982329
+          },
+          {
+            "text": "okay.",
+            "start": 174.054,
+            "end": 174.392,
+            "confidence": 0.9961216
+          },
+          {
+            "text": "We're",
+            "start": 176.28,
+            "end": 176.41,
+            "confidence": 0.9982179
+          },
+          {
+            "text": "okay.",
+            "start": 176.41,
+            "end": 176.671,
+            "confidence": 0.9970659
+          },
+          {
+            "text": "Okay.",
+            "start": 179.822,
+            "end": 180.393,
+            "confidence": 0.9927855
+          }
+        ],
+        "character_id": "char_1",
+        "low_confidence": true,
+        "low_confidence_reason": "speaker_confidence < 0.85",
+        "dialogue_act": "statement",
+        "mood": "other",
+        "addressee_hint": "B",
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed",
+        "attribution_evidence": [
+          "diarization:A:0.15",
+          "llm:A:0.35",
+          "visual:A:0.40",
+          "llm:Attempts to calm and reassure B while insisting on helping.",
+          "visual:cooccur:A:char_1:9.0"
+        ]
+      }
+    ],
+    "diarization_summary": {
+      "speaker_count": 3,
+      "utterance_count": 7
+    }
+  },
+  "L2_reconciliation": {
+    "method": "character_observation_v1",
+    "status": "ok",
+    "diarization_speaker_count": 3,
+    "canonical_speaker_count": 3,
+    "visual_cluster_count": 1,
+    "character_count_visual": 1,
+    "character_count_significant": 1,
+    "count_mismatch": true,
+    "utterances_relabeled": 0,
+    "utterances_visual_corrected": 0,
+    "utterances_merge_corrected": 0,
+    "over_segmentation_corrected": false,
+    "faces_sampled": 17,
+    "sample_points": 60,
+    "embedding_method": "histogram"
+  },
+  "L2_character_observation": {
+    "method": "character_observation_v1",
+    "diarization_speaker_count": 3,
+    "diarization_speaker_ids": [
+      "A",
+      "B",
+      "C"
+    ],
+    "character_count_visual": 1,
+    "character_count_significant": 1,
+    "min_cluster_samples": 3,
+    "count_mismatch": true,
+    "embedding_method": "histogram",
+    "sample_points": 60,
+    "faces_sampled": 17,
+    "characters": {
+      "char_1": {
+        "character_id": "char_1",
+        "sample_count": 17,
+        "first_seen_sec": 69.113,
+        "last_seen_sec": 169.948,
+        "utterances_visible": [
+          "u2",
+          "u3",
+          "u5",
+          "u6",
+          "u7"
+        ],
+        "aai_speaker_cooccurrence": {
+          "B": 6,
+          "A": 11
+        },
+        "appearance": null,
+        "portrait": null
+      }
+    },
+    "speaker_character_votes": {
+      "A": {
+        "char_1": 8.98
+      },
+      "B": {
+        "char_1": 4.89
+      }
+    }
+  },
+  "L2_speakers": {
+    "A": {
+      "speaker_id": "A",
+      "name": null,
+      "name_source": null,
+      "name_confidence": 0.0,
+      "name_evidence": [],
+      "corrected_from": [],
+      "total_speech_sec": 116.3,
+      "utterance_count": 4,
+      "avg_confidence": 0.854
+    },
+    "B": {
+      "speaker_id": "B",
+      "name": null,
+      "name_source": null,
+      "name_confidence": 0.0,
+      "name_evidence": [],
+      "corrected_from": [],
+      "total_speech_sec": 4.7,
+      "utterance_count": 2,
+      "avg_confidence": 0.911
+    },
+    "C": {
+      "speaker_id": "C",
+      "name": null,
+      "name_source": null,
+      "name_confidence": 0.0,
+      "name_evidence": [],
+      "corrected_from": [],
+      "total_speech_sec": 3.1,
+      "utterance_count": 1,
+      "avg_confidence": 0.891
+    }
+  },
+  "narration_context": {
+    "cast_summary": "",
+    "pronoun_hints": {
+      "A": "he",
+      "C": "she"
+    },
+    "review_queue": [],
+    "scene_summary": "The narrative begins with a black screen for the initial three seconds. At 6.00s, the scene transitions to a wide desert landscape marked by distant hills and rock formations under a clear, daylight sky. A person wearing a light-colored denim shirt, with their hair tied back, emerges, walking across the barren desert surface. By 8.00s, the person's profile is clearly visible as they traverse from left to right, and a signpost appears faintly in the background. The ongoing scene depicts their thoughtful demeanor against the unchanged, arid backdrop through 10.00s, as they walk forward with a contemplative expression. At 12.00s, a brief downward glance indicates introspection before they resume their steady gaze by 14.00s.\n\nTransitioning into the next segment at 16.0s, the solitary woman continues her progress along a desolate roadside, her expression solemn, suggesting deep contemplation or distress amidst tire-marked sandy terrain. As the camera captures her upper body from 18.0s, her thoughtful visage contrasts starkly with the expansive, empty road set under soft lighting characteristic of twilight. A vehicle soon appears in the distance at 22.0s, drawing closer by 24.0s, prompting her to glance over her shoulder. By 26.0s, she turns to scrutinize the approaching car more intently as it kicks up dust. A brief overexposure occurs at 28.0s before clarity returns at 30.0s, revealing her crossed arms and contemplative stance as she faces the vehicle against the barren backdrop.\n\nThe segment at 32.00s opens with the woman standing, her back to the camera, observing the vast desert. As a vehicle enters from the right by 34.00s, it presages an encounter, which begins at 36.00s with a shift to the driver's dim-lit interior, suggesting solitude. By 38.00s, the woman approaches the vehicle, engaging neutrally with the driver from 40.00s onwards. Throughout the encounter, her posture remains attentive but serious, suggesting an ongoing, thoughtful dialogue. By 44.00s, hints of decision-making surface in her expression, and as the vehicle door moves at 46.00s, it indicates the conversation's conclusion amidst the expansive, solitary setting.\n\nIn subsequent frames from 48.00s, the view through a vehicle\u2019s mirror briefly obscures the woman and landscape, before 50.00s shows her through a windshield, maintaining her pensive presence amidst rugged desert terrain. She shifts at 52.00s, her gaze contemplative against a vehicle foreground. Despite leaning against the vehicle through 54.00s, her introspective demeanor continues as lighting brightens at 58.00s, softly illuminating her inquisitive or alert expression. By 60.00s, her crossed arms suggest mild discomfort or reflection, highlighted by ethereal lighting effects enveloping her as she focuses rightward through 62.00s.\n\nIn the following section, the atmosphere remains serene. As seen from 64.0s, the woman stands gazing contemplatively toward the horizon, the soft sunlight adding a reflective glow. At 66.0s, she inspects her wrist or hand, possibly a sign of concern or curiosity, before resuming her survey of the surroundings. Close-ups at 70.0s emphasize her focused and composed gaze toward expansive fields. Amid slight positional shifts up to 74.0s, she remains attentive, with a partially visible nearby vehicle indicating a possible transit decision. By 76.0s, a turning of her head suggests a responsive stance to offscreen events, closing at 78.0s with her smoothing her hair, conveying resolution or deep thought as ambiguity lingers about any upcoming journey.\n\nFrom 80.00s, the scene within a vehicle shows a woman peering outward, embodying concern or contemplative thought. Outside, from 82.00s, a beanie-clad man stands, engaging with a seemingly serious demeanor. Their dialogue is portrayed at 84.00s with the man's expressive engagement hinting at possible tension or persuasion. This intensifies briefly at 86.00s as his gestures augment communication. As frames capture nuanced change\u2026",
+    "scene_segments": [
+      {
+        "start": 0.0,
+        "end": 14.0,
+        "description": "The video segment begins with three seconds of black screen, at timestamps 0.00s, 2.00s, and 4.00s. No visible content or movement is discernible in these frames.\n\nStarting from the frame at 6.00s, a scene emerges where a person is visible. The setting appears to be a wide, open desert landscape with distant hills and rock formations in the background. The sky is clear, suggesting it might be day\u2026"
+      },
+      {
+        "start": 16.0,
+        "end": 30.0,
+        "description": "In the video segment from 16.0s to 30.0s, the scene unfolds in a desolate, dusty landscape, likely a desert or barren roadside. \n\nAt 16.0s, a woman with dark hair, wearing a light-colored shirt, is visible. She appears to be walking slowly along the road, and her expression suggests she is deep in thought or feeling distressed. The background is a dry, sandy terrain with tire marks visible on the\u2026"
+      },
+      {
+        "start": 32.0,
+        "end": 46.0,
+        "description": "In this segment, the scene unfolds in a barren, open landscape with distant mountains. \n\nAt **32.00 seconds**, a woman with her hair tied back stands in the foreground, facing away from the camera. She's wearing a light-colored jacket and is looking towards the expansive desert, suggesting a moment of contemplation or waiting. \n\nBy **34.00 seconds**, the scene remains focused on the woman, but a\u2026"
+      },
+      {
+        "start": 48.0,
+        "end": 62.0,
+        "description": "In this video segment, a sequence of frames displays a solitary scene featuring a woman next to a vehicle in a vast, open landscape. \n\nAt 48.00s, the view is obscured partially by the rear wing of a side mirror, introducing a slightly obstructed perspective of the landscape behind her. The backdrop consists of shrubs and distant mountains under a muted sky, suggesting it may be early morning or l\u2026"
+      },
+      {
+        "start": 64.0,
+        "end": 78.0,
+        "description": "In the video segment from 64.0s to 78.0s, the scene unfolds in what appears to be a rural or remote setting, with a barren landscape visible in the background. The lighting is soft, likely indicating early morning or late afternoon sunlight.\n\nAt 64.0s, a woman is seen standing outside, her gaze directed to the side. Her posture is relaxed, but there is an air of contemplation as she looks out int\u2026"
+      },
+      {
+        "start": 80.0,
+        "end": 94.0,
+        "description": "In this segment, we observe a scene set in a rugged outdoor environment with a focus on two characters engaged in a conversation.\n\n**Frame at 80.00s:**\nThe scene begins with a close-up of a woman inside a vehicle, looking intently out the window. Her expression suggests concern or deep thought as she gazes at something outside the car.\n\n**Frame at 82.00s:**\nThe camera cuts to reveal a man standin\u2026"
+      },
+      {
+        "start": 96.0,
+        "end": 110.0,
+        "description": "The video segment from 96.0 to 110.0 seconds takes place in a desert-like setting, likely during daytime as indicated by the bright lighting and clear skies. Here is a detailed description of each frame:\n\n**Frame at 96.00s:**\nA man is in the foreground, facing to the right. He is wearing a beanie, a dark jacket over a plaid shirt, and a white undershirt. He has a beard and appears to be speaking\u2026"
+      },
+      {
+        "start": 112.0,
+        "end": 126.0,
+        "description": "In the video segment, the setting is a desolate outdoor area with mountains in the background, indicating a remote location. The light suggests it's daytime, possibly in the late afternoon given the long shadows. There are two individuals, a woman and a man, positioned next to a dark-colored vehicle.\n\n[Frame at 112.00s] \nThe woman stands near the car, her arms folded, indicating a defensive or co\u2026"
+      },
+      {
+        "start": 128.0,
+        "end": 142.0,
+        "description": "The video segment captures a scene set in a sparse, rugged outdoor location with two individuals interacting beside a vehicle.\n\n**Frame at 128.00s:** \nA woman stands beside a dark vehicle, leaning slightly on it with her arms crossed. She is wearing a light blue shirt and her hair is tied back. To her right, a man with a beard, wearing a beanie, jacket, and red inner layer, stands facing her. The\u2026"
+      },
+      {
+        "start": 144.0,
+        "end": 158.0,
+        "description": "The scene takes place in an outdoor setting along a rural, unpaved road. The lighting is subdued, suggesting either early morning or late afternoon. There are two people next to a pickup truck.\n\n- **Frame at 144.00s**: The view is partially blocked, but we can see a person standing next to an open car door. The focus is on the woman standing next to the truck, who appears pensive. Her head is sli\u2026"
+      },
+      {
+        "start": 160.0,
+        "end": 174.0,
+        "description": "The segment opens with a frame captured at 160.00 seconds. A woman is seen standing in front of a vehicle, likely a pickup truck, on a deserted, rural road. Her expression is somber and reflective, as she looks down slightly, hinting at a sense of contemplation or distress. The lighting is dim, suggesting early morning or late afternoon, casting a soft shadow on her face. The background reveals o\u2026"
+      },
+      {
+        "start": 176.0,
+        "end": 190.0,
+        "description": "At timestamp 176.00s, the scene opens with a close-up of a woman's profile sitting inside a vehicle. The background is out of focus, showing some kind of terrain, possibly desert or rural landscape. The lighting is subdued, creating a somewhat tense or contemplative mood.\n\nBy 178.00s, the camera has shifted outside, focusing on the back of a man's head. He is wearing a dark beanie and appears to\u2026"
+      },
+      {
+        "start": 192.0,
+        "end": 206.0,
+        "description": "In this video segment from 192.0s to 206.0s, several activities unfold around a black pickup truck in a desolate, desert-like environment.\n\nAt 192.00s, the focus is on the back of a black pickup truck, which is parked on a dirt road. The truck has two butterfly stickers on the rear window. To the left, a person wearing a hoodie begins moving towards the left side of the truck, where the driver's\u2026"
+      },
+      {
+        "start": 208.0,
+        "end": 222.0,
+        "description": "The video segment from 208.0s to 222.0s shows a consistent view of a black pickup truck driving down a deserted, unpaved road in a barren, possibly desert landscape.\n\n**Frame at 208.00s:**\nThe black pickup truck is centered in the frame, moving away from the camera down a broad, dusty road. The surrounding area appears desolate, with dry scrub and a few distant trees on the right.\n\n**Frame at 210\u2026"
+      },
+      {
+        "start": 224.0,
+        "end": 238.0,
+        "description": "At 224.00s, the scene opens with a wide view of a dusty, desolate road in what appears to be a desert environment. A black pickup truck is parked in the middle of the dirt road, and a person is walking towards it from the right. The area is expansive and barren, with a clear sky above and sparse vegetation, including a distinctive Joshua tree visible on the right side of the road. There are telep\u2026"
+      },
+      {
+        "start": 240.0,
+        "end": 254.0,
+        "description": "From 240.0s to 244.0s, the sequence features a dusty desert road. A black SUV is driving away from the camera, creating a trail of dust behind it. In the middle of the road, there is a person lying prone, suggesting an accident or incident. The SUV continues to move farther away, and the setting is barren with sparse desert vegetation and power poles lining the road.\n\nAt 246.0s, the video transit\u2026"
+      },
+      {
+        "start": 256.0,
+        "end": 270.0,
+        "description": "In this segment, we see a sequence of text-based credit frames, each displaying against a plain black background.\n\n[Frame at 256.00s and 258.00s]\nThe first two frames are identical, featuring the name \"ALEXANDRA RODRIGUEZ\" in white, capitalized text centered on the screen. These frames establish the beginning of the credit sequence.\n\n[Frame at 260.00s and 262.00s]\nThe next two frames display the\u2026"
+      },
+      {
+        "start": 272.0,
+        "end": 286.0,
+        "description": "The video segment consists of a series of end credits displayed against a solid black background.\n\n**Frame at 272.00s to 274.00s:**\nThe text \"DIRECTOR OF PHOTOGRAPHY THOMAS TAUGHER\" is prominently displayed in white capital letters. The text is centered on the screen, taking up a significant portion of the available space, ensuring readability.\n\n**Frame at 274.00s to 276.00s:**\nThis frame continu\u2026"
+      },
+      {
+        "start": 288.0,
+        "end": 294.0,
+        "description": "The video segment from 288.0s to 294.0s consists of a series of credit frames, each displayed against a plain black background with white text.\n\nAt 288.0 seconds, the frame displays the text \"VFX AND COLOR BY CHRIS NOELLERT.\" This frame credits an individual for their work on visual effects and color grading, typically indicating involvement in the visual post-production process.\n\nAt 290.0 second\u2026"
+      }
+    ],
+    "scene_method": "scene_understanding_v1",
+    "scene_model": "gpt-4o"
+  },
+  "metadata": {
+    "provider": "assemblyai",
+    "speaker_diarization_enabled": true,
+    "language_code": "en",
+    "enriched": true,
+    "utterances_source": "L1_transcript.utterances",
+    "segments_format": "utterance_refs",
+    "latest_layer": "L4",
+    "gender_analysis": "text_l3",
+    "enrichment_finalized": true
+  },
+  "speakers": {
+    "A": {
+      "speaker_id": "A",
+      "name": null,
+      "total_words": 142,
+      "total_duration_seconds": 116.3,
+      "avg_confidence": 0.854,
+      "gender": "male",
+      "gender_confidence": 0.88
+    },
+    "B": {
+      "speaker_id": "B",
+      "name": null,
+      "total_words": 23,
+      "total_duration_seconds": 4.7,
+      "avg_confidence": 0.911
+    },
+    "C": {
+      "speaker_id": "C",
+      "name": null,
+      "total_words": 7,
+      "total_duration_seconds": 3.1,
+      "avg_confidence": 0.891,
+      "gender": "female",
+      "gender_confidence": 1.0
+    }
+  },
+  "segments": {
+    "0": {
+      "utterance_id": "u1",
+      "speaker": "A",
+      "speaker_confidence": 0.9174054
+    },
+    "1": {
+      "utterance_id": "u2",
+      "speaker": "B",
+      "speaker_confidence": 0.8747144
+    },
+    "2": {
+      "utterance_id": "u3",
+      "speaker": "A",
+      "speaker_confidence": 0.80832154
+    },
+    "3": {
+      "utterance_id": "u4",
+      "speaker": "C",
+      "speaker_confidence": 0.8910551
+    },
+    "4": {
+      "utterance_id": "u5",
+      "speaker": "A",
+      "speaker_confidence": 0.9179563
+    },
+    "5": {
+      "utterance_id": "u6",
+      "speaker": "B",
+      "speaker_confidence": 0.9473018
+    },
+    "6": {
+      "utterance_id": "u7",
+      "speaker": "A",
+      "speaker_confidence": 0.7740945
+    }
+  },
+  "L2_identity": {
+    "A": {
+      "speaker_id": "A",
+      "name": {
+        "value": null,
+        "confidence": 0.0,
+        "sources": [],
+        "evidence": [],
+        "corrected_from": []
+      },
+      "face": {
+        "cluster_id": "char_1",
+        "visible_ratio": 1.0,
+        "alignment_confidence": 0.933,
+        "portrait_s3_key": "jobs/ffbffd9d-3cca-45d3-a51d-8685b008eed6/assets/speakers/A/portrait.jpg",
+        "frame_timestamp_sec": 161.82,
+        "visual_cluster_index": 1
+      },
+      "diarization": {
+        "utterance_count": 4,
+        "avg_confidence": 0.854,
+        "total_speech_sec": 116.3
+      }
+    },
+    "B": {
+      "speaker_id": "B",
+      "name": {
+        "value": null,
+        "confidence": 0.0,
+        "sources": [],
+        "evidence": [],
+        "corrected_from": []
+      },
+      "face": {
+        "cluster_id": "char_1",
+        "visible_ratio": 1.0,
+        "alignment_confidence": 0.933,
+        "portrait_s3_key": "jobs/ffbffd9d-3cca-45d3-a51d-8685b008eed6/assets/speakers/B/portrait.jpg",
+        "frame_timestamp_sec": 161.82,
+        "visual_cluster_index": 1
+      },
+      "diarization": {
+        "utterance_count": 2,
+        "avg_confidence": 0.911,
+        "total_speech_sec": 4.7
+      }
+    },
+    "C": {
+      "speaker_id": "C",
+      "name": {
+        "value": null,
+        "confidence": 0.0,
+        "sources": [],
+        "evidence": [],
+        "corrected_from": []
+      },
+      "face": null,
+      "diarization": {
+        "utterance_count": 1,
+        "avg_confidence": 0.891,
+        "total_speech_sec": 3.1
+      }
+    }
+  },
+  "LP_attribution": {
+    "method": "multimodal_fusion_v1",
+    "count_mismatch": true,
+    "pending_review_count": 0,
+    "speaker_merge_suggestions": [
+      {
+        "from_speaker": "B",
+        "to_speaker": "A",
+        "character_id": "char_1",
+        "reason": "shared_visual_cluster",
+        "confidence": 0.35
+      }
+    ],
+    "utterances": {
+      "u1": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u2": {
+        "speaker_predicted": "B",
+        "character_predicted": "char_1",
+        "attribution_confidence": 0.56,
+        "attribution_status": "proposed"
+      },
+      "u3": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u4": {
+        "speaker_predicted": "C",
+        "character_predicted": null,
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u5": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      },
+      "u6": {
+        "speaker_predicted": "B",
+        "character_predicted": "char_1",
+        "attribution_confidence": 0.56,
+        "attribution_status": "proposed"
+      },
+      "u7": {
+        "speaker_predicted": "A",
+        "character_predicted": "char_1",
+        "attribution_confidence": 1.0,
+        "attribution_status": "proposed"
+      }
+    }
+  },
+  "LP_character_profiles": {
+    "char_1": {
+      "speaking_style": "cautious and hesitant",
+      "typical_mood": "neutral",
+      "context_summary": "B is uncertain and wary of A's intentions, trying to maintain safety.",
+      "speaker_id": "B",
+      "character_id": "char_1"
+    },
+    "C": {
+      "speaking_style": "authoritative and assertive",
+      "typical_mood": "assertive",
+      "context_summary": "C acts protectively, opposing A's suggestion and prioritizing B's safety.",
+      "speaker_id": "C",
+      "character_id": null
+    }
+  },
+  "L3_gender": {
+    "A": {
+      "speaker_id": "A",
+      "gender": "male",
+      "gender_confidence": 0.88,
+      "gender_evidence": [
+        "self_rhetorical:u5:0.88"
+      ],
+      "requires_review": false,
+      "pronoun_hint": "he",
+      "gender_status": "proposed",
+      "gender_source": "text_analysis"
+    },
+    "B": {
+      "speaker_id": "B",
+      "gender": "unknown",
+      "gender_confidence": 0.0,
+      "gender_evidence": [],
+      "requires_review": false,
+      "pronoun_hint": null,
+      "gender_status": "proposed",
+      "gender_source": "text_analysis"
+    },
+    "C": {
+      "speaker_id": "C",
+      "gender": "female",
+      "gender_confidence": 1.0,
+      "gender_evidence": [
+        "address_female:u5:0.58"
+      ],
+      "requires_review": false,
+      "pronoun_hint": "she",
+      "gender_status": "confirmed",
+      "gender_source": "text_analysis"
+    }
+  },
+  "speaker_profiles": {
+    "A": {
+      "speaker_id": "A",
+      "gender": {
+        "value": "male",
+        "confidence": 0.88,
+        "status": "auto_accepted",
+        "sources": [
+          "L3:text"
+        ],
+        "evidence": [
+          "self_rhetorical:u5:0.88"
+        ]
+      },
+      "presentation": {
+        "display_label": "Person at 1:27 \u2014 \"Okay. Well, look, I mean, if you need help, I could be that. Just get in the ...\"",
+        "sample_quote": "Okay. Well, look, I mean, if you need help, I could be that. Just get in the ...",
+        "utterance_id": "u5",
+        "timestamp_sec": 87.123,
+        "thumbnail_s3_key": "jobs/ffbffd9d-3cca-45d3-a51d-8685b008eed6/assets/speakers/A/portrait.jpg",
+        "thumbnail_url": null
+      }
+    },
+    "B": {
+      "speaker_id": "B",
+      "gender": {
+        "value": "unknown",
+        "confidence": 0.0,
+        "status": "unknown",
+        "sources": [],
+        "evidence": []
+      },
+      "presentation": {
+        "display_label": "Person at 2:31 \u2014 \"Okay, I think it's best if you just get back in the car, okay?\"",
+        "sample_quote": "Okay, I think it's best if you just get back in the car, okay?",
+        "utterance_id": "u6",
+        "timestamp_sec": 151.88,
+        "thumbnail_s3_key": "jobs/ffbffd9d-3cca-45d3-a51d-8685b008eed6/assets/speakers/B/portrait.jpg",
+        "thumbnail_url": null
+      }
+    },
+    "C": {
+      "speaker_id": "C",
+      "gender": {
+        "value": "female",
+        "confidence": 1.0,
+        "status": "confirmed",
+        "sources": [
+          "L3:text"
+        ],
+        "evidence": [
+          "address_female:u5:0.58",
+          "user_override"
+        ]
+      },
+      "presentation": {
+        "display_label": "Person at 1:20 \u2014 \"No, do not do that, okay? Don't.\"",
+        "sample_quote": "No, do not do that, okay? Don't.",
+        "utterance_id": "u4",
+        "timestamp_sec": 80.607,
+        "thumbnail_s3_key": null,
+        "thumbnail_url": null
+      }
+    }
+  }
+}

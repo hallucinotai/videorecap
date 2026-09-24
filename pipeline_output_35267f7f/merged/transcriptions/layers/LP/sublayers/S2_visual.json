@@ -1,0 +1,70 @@
+{
+  "method": "l2_cooccurrence_v1",
+  "count_mismatch": true,
+  "utterances": {
+    "u1": {
+      "utterance_id": "u1",
+      "character_visual": "char_1",
+      "speaker_visual": "A",
+      "visual_confidence": 1.0,
+      "visual_evidence": [
+        "cooccur:A:char_1:9.0"
+      ]
+    },
+    "u2": {
+      "utterance_id": "u2",
+      "character_visual": "char_1",
+      "speaker_visual": "A",
+      "visual_confidence": 1.0,
+      "visual_evidence": [
+        "cooccur:B:char_1:4.9"
+      ]
+    },
+    "u3": {
+      "utterance_id": "u3",
+      "character_visual": "char_1",
+      "speaker_visual": "A",
+      "visual_confidence": 1.0,
+      "visual_evidence": [
+        "cooccur:A:char_1:9.0"
+      ]
+    },
+    "u4": {
+      "utterance_id": "u4",
+      "character_visual": null,
+      "speaker_visual": "C",
+      "visual_confidence": 0.5,
+      "visual_evidence": []
+    },
+    "u5": {
+      "utterance_id": "u5",
+      "character_visual": "char_1",
+      "speaker_visual": "A",
+      "visual_confidence": 1.0,
+      "visual_evidence": [
+        "cooccur:A:char_1:9.0"
+      ]
+    },
+    "u6": {
+      "utterance_id": "u6",
+      "character_visual": "char_1",
+      "speaker_visual": "A",
+      "visual_confidence": 1.0,
+      "visual_evidence": [
+        "cooccur:B:char_1:4.9"
+      ]
+    },
+    "u7": {
+      "utterance_id": "u7",
+      "character_visual": "char_1",
+      "speaker_visual": "A",
+      "visual_confidence": 1.0,
+      "visual_evidence": [
+        "cooccur:A:char_1:9.0"
+      ]
+    }
+  },
+  "char_to_speaker": {
+    "char_1": "A"
+  }
+}

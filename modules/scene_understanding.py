@@ -5,7 +5,8 @@ narration_context for clip selection / narration prompts.
 
 Boundary modes (SCENE_BOUNDARY_MODE):
   - fixed (default): sample at SCENE_SAMPLE_FPS, chunk by SCENE_BATCH_FRAMES
-  - pyscenedetect: PySceneDetect shot cuts → merge short shots → sample frames per scene
+  - pyscenedetect: PySceneDetect shot cuts → merge short shots → hard-split
+    long windows at SCENE_MAX_DURATION_SEC → sample frames per scene from duration
 """
 
 from __future__ import annotations
@@ -20,6 +21,8 @@ from typing import Any
 from modules.scene_boundaries import (
     boundary_mode_from_env,
     detect_merged_scenes,
+    frame_count_for_duration,
+    max_frames_per_scene_from_env,
     pyscenedetect_available,
     sample_timestamps_in_window,
 )
@@ -322,7 +325,8 @@ def run_scene_understanding(
 
     boundary_mode:
       - fixed: uniform sampling + SCENE_BATCH_FRAMES chunks
-      - pyscenedetect: ContentDetector shots merged into scenes, then sample per scene
+      - pyscenedetect: ContentDetector shots → merge → hard-split long windows,
+        then sample ceil(duration * sample_fps) frames per scene (capped)
 
     Returns:
       {
@@ -404,25 +408,33 @@ def run_scene_understanding(
         if not scene_windows:
             raise ValueError("PySceneDetect produced no scene windows.")
 
+        frames_cap = max_frames_per_scene_from_env()
         logger.info(
             "Scene understanding [pyscenedetect]: video=%s duration=%.1fs scenes=%d "
-            "sample_fps=%s max_frames/scene=%d model=%s",
+            "sample_fps=%s max_frames/scene=%s model=%s",
             path.name,
             duration or 0.0,
             len(scene_windows),
             resolved_fps,
-            resolved_batch,
+            frames_cap if frames_cap is not None else "none",
             resolved_model,
         )
 
         batch_specs = []
         all_timestamps: list[float] = []
         for i, (start_sec, end_sec) in enumerate(scene_windows):
+            scene_dur = max(0.0, end_sec - start_sec)
+            n_frames = frame_count_for_duration(
+                scene_dur,
+                resolved_fps,
+                min_frames=1,
+                max_frames=frames_cap,
+            )
             ts_list = sample_timestamps_in_window(
                 start_sec,
                 end_sec,
                 sample_fps=resolved_fps,
-                max_frames=resolved_batch,
+                max_frames=n_frames,
             )
             all_timestamps.extend(ts_list)
             frames = extract_frames(video_path=path, timestamps=ts_list, output_dir=save_frames_dir)
@@ -430,6 +442,14 @@ def run_scene_understanding(
             if not usable:
                 logger.warning("Scene %d (%.1f–%.1fs): no readable frames; skipping", i, start_sec, end_sec)
                 continue
+            logger.info(
+                "Scene %d (%.1f–%.1fs): duration=%.1fs → %d frames",
+                i,
+                start_sec,
+                end_sec,
+                scene_dur,
+                len(usable),
+            )
             batch_specs.append(
                 {
                     "batch_index": i,

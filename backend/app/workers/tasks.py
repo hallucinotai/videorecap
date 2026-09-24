@@ -213,28 +213,34 @@ def process_recap_job(self, job_id: str, resume_from_step: int = 0):
                     "step": 1,
                     "step_name": "Enrichment review required",
                     "progress_pct": 15.0,
-                    "message": "Confirm gender suggestions to continue processing",
+                    "message": "Confirm gender suggestions to complete the job",
                 }),
             )
             logger.info(f"Job {job_id} awaiting enrichment review")
             return
 
-        # Explicitly ensure output_video_key is persisted
-        _update_job_sync(job_id, output_video_key=result["output_key"])
+        output_key = result.get("output_key")
+        # Explicitly persist output_video_key (may be None for Step-1-only completion)
+        _update_job_sync(job_id, output_video_key=output_key)
 
         payload = {
             "type": "completed",
-            "step": 7,
+            "step": 1 if output_key is None else 7,
             "progress_pct": 100.0,
-            "output_video_key": result["output_key"],
         }
+        if output_key is not None:
+            payload["output_video_key"] = output_key
         if result.get("input_removed"):
             payload["input_removed"] = True
         _redis_client.publish(
             f"job:{job_id}:progress",
             json.dumps(payload),
         )
-        logger.info(f"Pipeline completed for job {job_id} with output_video_key: {result['output_key']}")
+        logger.info(
+            "Pipeline completed for job %s with output_video_key: %s",
+            job_id,
+            output_key,
+        )
     except Exception as e:
         logger.exception(f"Pipeline failed for job {job_id}: {e}")
         # Check if the job was intentionally stopped before publishing failure

@@ -237,6 +237,7 @@ async def _download_intermediate_debug(
         "tts_audio": ("recap_narration.mp3", "audio/mpeg"),
         "recap_video": ("recap_video.mp4", "video/mp4"),
         "emotions": ("emotions.json", "application/json"),
+        "scene_understanding": ("scene_understanding.json", "application/json"),
     }
     default_name, default_media = filename_map.get(
         intermediate_key, (f"{intermediate_key}.bin", "application/octet-stream")
@@ -357,18 +358,22 @@ async def submit_enrichment_review(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_or_api_key),
 ):
-    """Apply gender review decisions and resume pipeline from translation step."""
+    """Apply gender + attribution review decisions and complete the job (Step 1 terminal)."""
+    from datetime import datetime, timedelta, timezone
+
     from app.enrichment.load import load_layer_json_from_storage, save_layer_json_to_storage
     from app.enrichment.registry import terminal_layer_id
-    from app.enrichment.review import apply_gender_review_decisions, review_required
+    from app.enrichment.review import (
+        apply_attribution_review_decisions,
+        apply_gender_review_decisions,
+        review_required,
+    )
 
     job = await job_service.get_job(db, job_id, current_user.id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     if job.status != "awaiting_enrichment_review":
         raise HTTPException(status_code=400, detail="Job is not awaiting enrichment review")
-    if not job.input_video_key:
-        raise HTTPException(status_code=400, detail="Original upload no longer available")
 
     layer_id = terminal_layer_id() or "L4"
     intermediate_keys = dict(job.intermediate_keys or {})
@@ -377,7 +382,18 @@ async def submit_enrichment_review(
         raise HTTPException(status_code=404, detail="Enrichment review layer not available")
 
     decisions = [d.model_dump() for d in body.decisions]
-    updated = apply_gender_review_decisions(doc, decisions)
+    gender_decisions = [
+        d for d in decisions
+        if (d.get("type") or "gender") == "gender" and d.get("speaker_id")
+    ]
+    attribution_decisions = [
+        d for d in decisions
+        if d.get("type") == "attribution" and d.get("utterance_id")
+    ]
+
+    updated = apply_gender_review_decisions(doc, gender_decisions)
+    if attribution_decisions:
+        updated = apply_attribution_review_decisions(updated, attribution_decisions)
     save_layer_json_to_storage(job_id, layer_id, updated, intermediate_keys)
 
     if review_required(updated):
@@ -389,17 +405,18 @@ async def submit_enrichment_review(
             detail="Review queue still has pending items — confirm or override all proposals",
         )
 
-    job.status = "processing"
+    now = datetime.now(timezone.utc)
+    job.status = "completed"
     job.error_message = None
     job.current_step = 1
-    job.current_step_name = "Resuming after enrichment review"
-    job.progress_pct = 15.0
+    job.current_step_name = "Complete"
+    job.progress_pct = 100.0
+    job.output_video_key = None
     job.intermediate_keys = intermediate_keys
+    job.completed_at = now
+    job.expires_at = now + timedelta(days=7)
     await db.commit()
     await db.refresh(job)
-
-    from app.workers.tasks import process_recap_job
-    process_recap_job.delay(job.id, resume_from_step=2)
 
     return job_to_response(job)
 
@@ -462,6 +479,16 @@ async def download_emotions_debug(
 ):
     """Download the audio emotion analysis JSON (PREMIUM tier only). Only available when DEBUG=true."""
     return await _download_intermediate_debug(job_id, "emotions", db, current_user)
+
+
+@router.get("/{job_id}/debug/scene-understanding")
+async def download_scene_understanding_debug(
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_or_api_key),
+):
+    """Download scene understanding JSON (injected into L4). Only available when DEBUG=true."""
+    return await _download_intermediate_debug(job_id, "scene_understanding", db, current_user)
 
 
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)

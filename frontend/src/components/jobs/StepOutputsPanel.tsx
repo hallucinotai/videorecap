@@ -1,20 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileJson, FileAudio, FileVideo, Sparkles, Layers } from "lucide-react";
+import { Download, FileJson, Sparkles, Layers } from "lucide-react";
 import { toast } from "sonner";
 import type { EnrichmentLayerFile, Job, IntermediateFile } from "@/lib/types";
 
-type IntermediateKey =
-  | "translation"
-  | "recap_data"
-  | "tts_audio"
-  | "recap_video"
-  | "emotions";
+type IntermediateKey = "emotions" | "scene_understanding";
 
 interface StepOutput {
   key: IntermediateKey;
-  step: number | null;
   label: string;
   description: string;
   defaultFilename: string;
@@ -22,10 +16,10 @@ interface StepOutput {
   iconWrapClass: string;
 }
 
+/** Step-1-only extras (enrichment layers are listed separately). */
 const STEP_OUTPUTS: StepOutput[] = [
   {
     key: "emotions",
-    step: null,
     label: "Audio emotions",
     description: "Per-segment emotion analysis (JSON, PREMIUM)",
     defaultFilename: "emotions.json",
@@ -34,44 +28,13 @@ const STEP_OUTPUTS: StepOutput[] = [
       "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300",
   },
   {
-    key: "translation",
-    step: 2,
-    label: "Translation",
-    description: "Translated transcript (JSON)",
-    defaultFilename: "translated.json",
-    icon: FileJson,
-    iconWrapClass:
-      "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300",
-  },
-  {
-    key: "recap_data",
-    step: 3,
-    label: "Recap plan",
-    description: "Selected clips + narration text (JSON)",
-    defaultFilename: "recap_data.json",
+    key: "scene_understanding",
+    label: "Scene understanding",
+    description: "Visual scene describe (injected into L4)",
+    defaultFilename: "scene_understanding.json",
     icon: FileJson,
     iconWrapClass:
       "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
-  },
-  {
-    key: "tts_audio",
-    step: 4,
-    label: "Narration audio",
-    description: "TTS-generated voiceover (MP3)",
-    defaultFilename: "recap_narration.mp3",
-    icon: FileAudio,
-    iconWrapClass:
-      "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300",
-  },
-  {
-    key: "recap_video",
-    step: 5,
-    label: "Clipped video",
-    description: "Concatenated clips, no narration (MP4)",
-    defaultFilename: "recap_video.mp4",
-    icon: FileVideo,
-    iconWrapClass:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
   },
 ];
 
@@ -165,18 +128,22 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
   };
 
   const hasEnrichmentSection = enrichmentLayers.length > 0;
-  const hasPipelineSection = STEP_OUTPUTS.some((output) => {
+  const hasExtrasSection = STEP_OUTPUTS.some((output) => {
     const file = intermediates[output.key];
     return !!file?.download_url;
   });
+
+  if (!hasEnrichmentSection && !hasExtrasSection) {
+    return null;
+  }
 
   return (
     <div className="rounded-lg border p-4 sm:p-6">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold">Step outputs</h3>
+          <h3 className="text-sm font-semibold">Step 1 outputs</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Download intermediate files and enrichment layer artifacts.
+            Enrichment layers and scene understanding artifacts.
           </p>
         </div>
         <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
@@ -185,7 +152,7 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
       </div>
 
       {hasEnrichmentSection && (
-        <div className="mb-4">
+        <div className={hasExtrasSection ? "mb-4" : undefined}>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Enrichment layers
           </h4>
@@ -218,11 +185,11 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
         </div>
       )}
 
-      {hasPipelineSection && (
+      {hasExtrasSection && (
         <div>
           {hasEnrichmentSection && (
             <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Pipeline outputs
+              Step 1 extras
             </h4>
           )}
           <ul className="divide-y rounded-md border">
@@ -234,19 +201,15 @@ export function StepOutputsPanel({ job, onDownload }: StepOutputsPanelProps) {
               return (
                 <li key={output.key}>
                   <OutputRow
-                  icon={output.icon}
-                  iconWrapClass={output.iconWrapClass}
-                  label={
-                    output.step !== null
-                      ? `Step ${output.step}: ${output.label}`
-                      : output.label
-                  }
-                  description={output.description}
-                  sizeMb={file?.size_mb}
-                  available={available}
-                  busy={busy}
-                  onDownload={() => file && handleStepDownload(output, file)}
-                />
+                    icon={output.icon}
+                    iconWrapClass={output.iconWrapClass}
+                    label={output.label}
+                    description={output.description}
+                    sizeMb={file?.size_mb}
+                    available={available}
+                    busy={busy}
+                    onDownload={() => file && handleStepDownload(output, file)}
+                  />
                 </li>
               );
             })}

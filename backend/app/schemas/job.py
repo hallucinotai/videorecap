@@ -111,12 +111,17 @@ class ReviewPresentation(BaseModel):
 
 
 class GenderReviewItem(BaseModel):
+    """Review queue item — gender (per speaker) or attribution (per utterance)."""
+
+    type: str = "gender"  # gender | attribution
     speaker_id: str
     field: str = "gender"
     proposed: str
     confidence: float
     evidence: list[str] = Field(default_factory=list)
     presentation: ReviewPresentation | None = None
+    utterance_id: str | None = None
+    character_predicted: str | None = None
 
 
 class EnrichmentReviewResponse(BaseModel):
@@ -126,9 +131,12 @@ class EnrichmentReviewResponse(BaseModel):
 
 
 class EnrichmentReviewDecision(BaseModel):
-    speaker_id: str
+    type: str = "gender"  # gender | attribution
     action: str  # confirm | override | reject
+    speaker_id: str | None = None
     gender: str | None = None
+    utterance_id: str | None = None
+    speaker_confirmed: str | None = None
 
 
 class EnrichmentReviewSubmit(BaseModel):
@@ -224,6 +232,7 @@ def job_to_response(job: RecapJob) -> JobResponse:
             "step_06.video_with_clips": "recap_video",
             "emotions": "emotions",
             "step_01.emotions": "emotions",
+            "scene_understanding": "scene_understanding",
         }
 
         # Path slug used in the download URL for each canonical intermediate.
@@ -235,6 +244,7 @@ def job_to_response(job: RecapJob) -> JobResponse:
             "tts_audio": "tts-audio",
             "recap_video": "recap-video",
             "emotions": "emotions",
+            "scene_understanding": "scene-understanding",
         }
 
         for key_name, s3_path in job.intermediate_keys.items():
